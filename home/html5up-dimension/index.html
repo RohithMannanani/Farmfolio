@@ -1,0 +1,95 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<title>FarmFolio</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+		<link rel="stylesheet" href="assets/css/main.css" />
+		<noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
+	</head>
+	<body class="is-preload">
+<div class="con">
+<!-- Wrapper -->
+<div id="wrapper">
+	<div class="header-buttons">
+		<button><a href="http://localhost/Mini%20project/login/login.php">Login</a></button>
+		<button id="register-btn">Register</button>
+	</div>
+	<!-- Header -->
+	<header id="header">
+	
+		<div class="logo">
+			<img src="images/farmicon.png" alt="">
+		</div>
+		<div class="content">
+
+			<div class="inner">
+				<h1>FarmFolio</h1>
+				<p>Farmfolio is a web platform designed to showcase farms to the world, <br>helping farm owners introduce their produce, practices, and stories to a global audience</p>
+			</div>
+		</div>
+		<nav>
+			<ul>
+				<li><a href="#intro">Intro</a></li>
+			</ul>
+		</nav>
+	</header>
+
+	<!-- Main -->
+	<div id="main">
+		<!-- Intro -->
+		<article id="intro">
+			<h2 class="major">Intro</h2>
+			<span class="image main"><img src="images/main logo.jpg" alt="" /></span>
+			<p>Farmfolio is an innovative web platform designed to bridge the gap between farm owners 
+				and consumers by creating a direct and user-friendly interface. The platform allows farm 
+				owners to list their farms, provide details about their products, and share contact 
+				information, enabling consumers to connect with them directly. Unlike conventional 
+				marketplaces, Farmfolio emphasizes simplicity and transparency, excluding chat 
+				functionality while providing direct phone numbers for quick and efficient communication.</p>
+		</article>
+	</div>
+
+	<!-- Footer -->
+	<footer id="footer">
+		<p class="copyright">&copy; Farmfolio</p>
+	</footer>
+
+	<!-- Pop-up -->
+	<div id="popup-overlay"></div>
+	<div id="popup">
+		<h2> register As </h2>
+		<div class="btn">
+			<img src="../../img/logs/farmer.png" alt="farmer">
+			<a href="http://localhost/Mini%20project/sign%20up/register_farm_owner.php"><button>Farm Owner</button></a>
+			<img src="../../img/logs/customer.png" alt="farmer">
+			<a href="http://localhost/Mini%20project/sign%20up/register_customer.php"><button>Customer</button></a>
+			<img src="../../img/logs/delivery.png" alt="farmer">
+			<a href="http://localhost/Mini%20project/sign%20up/register_delivery_boy.php"><button>Delivery Boy</button></a>
+		</div>
+	</div>
+</div>
+
+</div>
+		
+		<!-- Scripts -->
+		<script src="assets/js/jquery.min.js"></script>
+		<script>
+			// JavaScript for pop-up
+			document.getElementById('register-btn').addEventListener('click', function () {
+				document.getElementById('popup').style.display = 'block';
+				document.getElementById('popup-overlay').style.display = 'block';
+			});
+
+			document.getElementById('popup-overlay').addEventListener('click', function () {
+				document.getElementById('popup').style.display = 'none';
+				document.getElementById('popup-overlay').style.display = 'none';
+			});
+		</script>
+		<script src="assets/js/browser.min.js"></script>
+		<script src="assets/js/breakpoints.min.js"></script>
+		<script src="assets/js/util.js"></script>
+		<script src="assets/js/main.js"></script>
+
+	</body>
+</html>

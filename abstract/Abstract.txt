@@ -1,0 +1,13 @@
+Abstract
+Farmfolio is an innovative web platform designed to bridge the gap between farm owners and consumers by creating a direct and user-friendly interface. The platform allows farm owners to list their farms, provide details about their produce, and share contact information, enabling consumers to connect with them directly. Unlike conventional marketplaces, Farmfolio emphasizes simplicity and transparency, excluding chat functionality while providing direct phone numbers for quick and efficient communication.
+
+The platform is structured to cater to three types of users:
+
+Farm Owners – Who can register their farms, list available products, and update their offerings.
+Consumers – Who can browse through farms, contact owners, and access fresh, locally-sourced produce.
+Admin – Responsible for managing platform activities and ensuring smooth operations.
+Farmfolio also introduces two standout features:
+
+Farm Ratings and Reviews: Empower consumers to rate and review farms, helping others make informed choices and fostering trust.
+Farm Events: Enable farm owners to promote activities such as farm visits, workshops, and local markets, enriching the consumer experience and supporting community engagement.
+The platform is developed using HTML, CSS, JavaScript, and PHP, ensuring a robust and responsive interface. By streamlining the connection between farms and consumers, Farmfolio aims to support sustainable agricultural practices, promote local businesses, and provide fresh, high-quality produce to communities.

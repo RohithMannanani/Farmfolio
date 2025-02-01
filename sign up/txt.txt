@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Farmfolio - Sign Up</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            display: flex;
+            min-height: 100vh;
+            background: #f0fdf4;
+            overflow: hidden;
+        }
+
+        .left-container {
+            width: 40%;
+            background: white;
+            padding: 3rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .title {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #1a4d2e;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #374151;
+            font-weight: 500;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="tel"] {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+
+        input:focus {
+            border-color: #1a4d2e;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(26, 77, 46, 0.2);
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .radio-option {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .error {
+            color: #dc2626;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+            display: none;
+        }
+
+        button {
+            width: 100%;
+            padding: 1rem;
+            background: #1a4d2e;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #2d6a4f;
+        }
+
+        .right-container {
+            width: 60%;
+            background: url('https://source.unsplash.com/1200x900/?farms') no-repeat center center/cover;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+        }
+
+        .motion-text {
+            position: relative;
+            z-index: 1;
+            color: white;
+            text-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            font-size: 1.5rem;
+            animation: slideText 10s infinite alternate;
+        }
+
+        @keyframes slideText {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+    </style>
+</head>
+<body>
+    <div class="left-container">
+        <h1 class="title">Sign Up for Farmfolio</h1>
+        <form id="signupForm" onsubmit="return validateForm(event)">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" required>
+                <div class="error" id="username-error">Username must be at least 3 characters</div>
+            </div>
+
+            <div class="form-group">
+                <label for="mobile">Mobile Number</label>
+                <input type="tel" id="mobile" name="mobile" required>
+                <div class="error" id="mobile-error">Please enter a valid 10-digit mobile number</div>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" required>
+                <div class="error" id="email-error">Please enter a valid email address</div>
+            </div>
+
+            <div class="form-group">
+                <label>Account Type</label>
+                <div class="radio-group">
+                    <div class="radio-option">
+                        <input type="radio" id="farm-owner" name="account-type" value="farm-owner" required>
+                        <label for="farm-owner">Farm Owner</label>
+                    </div>
+                    <div class="radio-option">
+                        <input type="radio" id="user" name="account-type" value="user">
+                        <label for="user">User</label>
+                    </div>
+                    <div class="radio-option">
+                        <input type="radio" id="admin" name="account-type" value="admin">
+                        <label for="admin">Admin</label>
+                    </div>
+                    <div class="radio-option">
+                        <input type="radio" id="delivery-boy" name="account-type" value="delivery-boy">
+                        <label for="delivery-boy">Delivery Boy</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="house">House Name</label>
+                <input type="text" id="house" name="house" required>
+                <div class="error" id="house-error">Please enter your house name</div>
+            </div>
+
+            <div class="form-group">
+                <label for="state">State</label>
+                <input type="text" id="state" name="state" required>
+                <div class="error" id="state-error">Please enter your state</div>
+            </div>
+
+            <div class="form-group">
+                <label for="district">District</label>
+                <input type="text" id="district" name="district" required>
+                <div class="error" id="district-error">Please enter your district</div>
+            </div>
+
+            <div class="form-group">
+                <label for="pin">PIN Code</label>
+                <input type="text" id="pin" name="pin" required>
+                <div class="error" id="pin-error">Please enter a valid 6-digit PIN code</div>
+            </div>
+
+            <button type="submit" id="submitBtn">Sign Up</button>
+        </form>
+    </div>
+
+    <div class="right-container">
+        <div class="overlay"></div>
+        <div class="motion-text">Discover the beauty of farms around the world!</div>
+    </div>
+
+    <script>
+        // Add your validation JavaScript here.
+    </script>
+</body>
+</html>

@@ -1,0 +1,196 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: #f0fdf4;
+    overflow: auto;
+    background-image: url('http://localhost/mini%20project/sign%20up/farm.jpeg');
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center;
+    padding: 2rem 1rem;
+}
+
+.home-button-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 100;
+}
+
+.home-button {
+    padding: 0.8rem 1.5rem;
+    background: linear-gradient(135deg, #0b5d2c 0%, #2d6a4f 100%);
+    color: white;
+    text-decoration: none;
+    border-radius: 25px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(11, 93, 44, 0.2);
+}
+
+.home-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(11, 93, 44, 0.3);
+}
+
+.left-container {
+    width: 800px;
+    max-width: 90%;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 2.5rem;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    backdrop-filter: blur(10px);
+}
+
+.title {
+    font-size: 2.2rem;
+    background: linear-gradient(135deg, #059f2b 0%, #0b5d2c 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 2rem;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+}
+
+#signup-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: space-between;
+}
+
+.form-group {
+    flex: 0 0 calc(50% - 10px);
+    margin-bottom: 2rem;  /* Increased to accommodate error messages */
+    position: relative;
+}
+
+/* Make password fields full width */
+.form-group:nth-last-child(2),
+.form-group:nth-last-child(1) {
+    flex: 0 0 100%;
+}
+
+label {
+    display: block;
+    margin-bottom: 0.6rem;
+    color: #1a1a1a;
+    font-weight: 600;
+    font-size: 25px;
+    text-align: left;
+    margin-top: 25px;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="tel"],
+input[type="password"],
+select {
+    width: 100%;
+    padding: 1rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    font-size: 1rem;
+    background: rgba(255, 255, 255, 0.9);
+}
+
+input:focus,
+select:focus {
+    outline: none;
+    border-color: #059f2b;
+    box-shadow: 0 0 0 4px rgba(5, 159, 43, 0.1);
+}
+
+.error {
+    color: #dc2626;
+    font-size: 0.85rem;
+    font-weight: 500;
+    position: absolute;
+    left: 0;
+    top: calc(100% - 1.5rem);  /* Position below input field */
+    width: 100%;
+    text-align: left;
+    padding-left: 2px;
+    margin-top: 25px;
+    margin-bottom: 25px;
+    font-size: 18px;
+}
+
+button {
+    width: 40%;  /* Reduced from 100% */
+    padding: 0.9rem;  /* Slightly reduced padding */
+    background: linear-gradient(135deg, #0b5d2c 0%, #2d6a4f 100%);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;  /* Slightly reduced font size */
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin: 1.5rem auto 0;  /* Center the button */
+    box-shadow: 0 4px 15px rgba(11, 93, 44, 0.2);
+    display: block;  /* Helps with centering */
+}
+
+button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(173, 235, 198, 0.3);
+    background: #4da864;
+}
+
+button:active {
+    transform: translateY(0);
+}
+
+.login-link {
+    margin-top: 2rem;
+}
+
+.login-link p {
+    color: #4b5563;
+    font-size: 0.95rem;
+}
+
+.login-link a {
+    color: #059f2b;
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.3s ease;
+}
+
+.login-link a:hover {
+    color: #0b5d2c;
+    text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+    .left-container {
+        width: 95%;
+        padding: 2rem 1.5rem;
+    }
+
+    .form-group {
+        flex: 0 0 100%;
+    }
+    
+    .title {
+        font-size: 1.8rem;
+    }
+    
+    button {
+        width: 60%;  /* Slightly wider on mobile */
+        margin-top: 1.5rem;
+    }
+}

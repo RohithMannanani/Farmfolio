@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Farm Dashboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+    <link rel="stylesheet" href="farm.css">
+</head>
+<body>
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <h2>Farmfolio</h2>
+            <button id="sidebarToggle" class="menu-icon">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+        <ul class="sidebar-menu">
+            <li><a href="#" class="active"><i class="fas fa-home"></i><span>Dashboard</span></a></li>
+            <li><a href="#"><i class="fas fa-box"></i><span>Products</span></a></li>
+            <li><a href="#"><i class="fas fa-cart-plus"></i><span>Add Product</span></a></li>
+            <li><a href="#"><i class="fas fa-calendar"></i><span>Events</span></a></li>
+            <li><a href="#"><i class="fas fa-star"></i><span>Reviews</span></a></li>
+            <li><a href="#"><i class="fas fa-truck"></i><span>Orders</span></a></li>
+            <li><a href="#"><i class="fas fa-cog"></i><span>Settings</span></a></li>
+            <li><a href="#"><i class="fas fa-info-circle"></i><span>About</span></a></li>
+        </ul>
+    </nav>
+
+    <div class="main-content">
+        <div class="container">
+            <div class="dashboard-header">
+                <h1>Farm Dashboard</h1>
+                <div class="user-section">
+                    <span>Welcome, John Doe</span>
+                    <button class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</button>
+                </div>
+            </div>
+            
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>Active Products</h3>
+                    <div class="value">24</div>
+                    <small>3 new this month</small>
+                </div>
+                <div class="stat-card">
+                    <h3>Total Customers</h3>
+                    <div class="value">156</div>
+                    <small>+12% this month</small>
+                </div>
+                <div class="stat-card">
+                    <h3>Average Rating</h3>
+                    <div class="value">4.8</div>
+                    <small>From 45 reviews</small>
+                </div>
+                <div class="stat-card">
+                    <h3>Upcoming Events</h3>
+                    <div class="value">3</div>
+                    <small>Next event in 2 days</small>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <div class="chart-card">
+                    <h2>Sales Overview</h2>
+                    <canvas id="salesChart"></canvas>
+                </div>
+                <div class="chart-card">
+                    <h2>Recent Notifications</h2>
+                    <ul class="notifications" id="notificationsList"></ul>
+                </div>
+            </div>
+        </div>
+
+        <footer class="footer">
+            <p>© 2025 Farmfolio. All rights reserved.</p>
+            <p style="margin-top: 5px; font-size: 0.9em;">Connecting Farms to Communities</p>
+        </footer>
+    </div>
+
+    <script src="farm.js"></script>
+</body>
+</html>
