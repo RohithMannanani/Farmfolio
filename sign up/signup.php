@@ -31,25 +31,25 @@
                     $data[$field] = htmlspecialchars($value);
                 }
             }
-
+        
             validate("username", $_POST["username"], "/^[A-Za-z][A-Za-z\s.'-]{1,49}$/", "Invalid username.");
             validate("mobile", $_POST["mobile"], "/^[6-9]\d{9}$/", "Invalid mobile number.");
             validate("email", $_POST["email"], "/^[^\s@]+@[^\s@]+\.[^\s@]+$/", "Invalid email.");
             validate("house", $_POST["house"], "/^[a-zA-Z0-9 .,-]+$/", "Invalid house name.");
             validate("pin", $_POST["pin"], "/^\d{6}$/", "Invalid PIN code.");
-
+        
             if (empty($_POST["state"])) {
                 $errors["state"] = "State is required.";
             } else {
                 $data["state"] = htmlspecialchars($_POST["state"]);
             }
-
+        
             if (empty($_POST["district"])) {
                 $errors["district"] = "District is required.";
             } else {
                 $data["district"] = htmlspecialchars($_POST["district"]);
             }
-
+        
             $password = $_POST["password"];
             $confirmPassword = $_POST["confirm-password"];
             if (!preg_match("/^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/", $password)) {
@@ -57,21 +57,33 @@
             } elseif ($password !== $confirmPassword) {
                 $errors["confirm-password"] = "Passwords do not match.";
             } else {
-                $data["password"] = password_hash($password, PASSWORD_BCRYPT); // Use hashed passwords
+                $data["password"] =$password;
             }
-
+        
             if (empty($errors)) {
-                $stmt1 = $conn->prepare("INSERT INTO tbl_signup (username, mobile, email, house, state, district, pin, password, type) 
-                                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-                $stmt1->bind_param("sssssssss", $data['username'], $data['mobile'], $data['email'], $data['house'], $data['state'], $data['district'], $data['pin'], $data['password'], $type);
-
-                $stmt2 = $conn->prepare("INSERT INTO tbl_login (email, password, type, username) VALUES (?, ?, ?, ?)");
-                $stmt2->bind_param("ssss", $data['email'], $data['password'], $type, $data['username']);
-
-                if ($stmt1->execute() && $stmt2->execute()) {
+                $conn->begin_transaction(); // Start transaction
+                try {
+                    // Insert into tbl_signup
+                    $stmt1 = $conn->prepare("INSERT INTO tbl_signup (username, mobile, email, house, state, district, pin, password) 
+                                             VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+                    $stmt1->bind_param("ssssssss", $data['username'], $data['mobile'], $data['email'], $data['house'], $data['state'], $data['district'], $data['pin'], $data['password']);
+                    $stmt1->execute();
+        
+                    // Get the last inserted ID for tbl_signup
+                    $userid = $conn->insert_id;
+        
+                    // Insert into tbl_login
+                    $stmt2 = $conn->prepare("INSERT INTO tbl_login (email, password, type, username, userid) VALUES (?, ?, ?, ?, ?)");
+                    $stmt2->bind_param("ssssi", $data['email'], $data['password'], $type, $data['username'], $userid);
+                    $stmt2->execute();
+        
+                    $conn->commit(); // Commit transaction
+        
+                    // Redirect to login page
                     header('Location: http://localhost/mini%20project/login/login.php');
                     exit;
-                } else {
+                } catch (Exception $e) {
+                    $conn->rollback(); // Rollback transaction on error
                     echo "<p class='error'>Error in registration. Please try again later.</p>";
                 }
             }
@@ -136,7 +148,7 @@
         </div>
     </div>
 
-    <script >
+    <script src="validation.js">
 
 
 </script>

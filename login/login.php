@@ -39,16 +39,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $_SESSION['username']="$username";
             // Redirect based on user type
             switch ($type) {
-                case "customer":
+                case 0 :
                     header('Location: http://localhost/Mini%20project/user/html5up-massively/elements.html');
                     break;
-                case "delivery":
+                case 2:
                     header('Location: http://localhost/Mini%20project/delivery%20boy/delivery.php');
                     break;
-                case "farm":
+                case 1 :
                     header('Location: http://localhost/Mini%20project/farm/farm.html');
                     break;
-                case "admin":
+                case 4 :
                     header('Location: http://localhost/Mini%20project/admin/admin.html');
                     break;
                 default:
@@ -61,78 +61,78 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             exit;
         }
     } else {
-        // If user is not found in tbl_login, check in tbl_signup
-$stmt = $conn->prepare("SELECT * FROM tbl_signup WHERE email = ?");
-if (!$stmt) {
-    echo "Prepare failed for tbl_signup: " . $conn->error;
-    exit;
-}
-$stmt->bind_param("s", $email);
-$stmt->execute();
-$result = $stmt->get_result();
+//         // If user is not found in tbl_login, check in tbl_signup
+// $stmt = $conn->prepare("SELECT * FROM tbl_signup WHERE email = ?");
+// if (!$stmt) {
+//     echo "Prepare failed for tbl_signup: " . $conn->error;
+//     exit;
+// }
+// $stmt->bind_param("s", $email);
+// $stmt->execute();
+// $result = $stmt->get_result();
 
-if ($result && $result->num_rows > 0) {
-    $row = $result->fetch_assoc();
-    $demail = trim($row['email']);
-    $dpassword = trim($row['password']);
-    $type = trim($row['type']);
-    $userid = trim($row['userid']);
-    $username = trim($row['username']);
+// if ($result && $result->num_rows > 0) {
+//     $row = $result->fetch_assoc();
+//     $demail = trim($row['email']);
+//     $dpassword = trim($row['password']);
+//     $type = trim($row['type']);
+//     $userid = trim($row['userid']);
+//     $username = trim($row['username']);
 
-    // Debug the fetched values
-    var_dump($demail, $dpassword, $type, $userid, $username);
+//     // Debug the fetched values
+//     var_dump($demail, $dpassword, $type, $userid, $username);
 
-    if (empty($username)) {
-        echo "Error: Username is empty or invalid.";
-        exit;
-    }
+//     if (empty($username)) {
+//         echo "Error: Username is empty or invalid.";
+//         exit;
+//     }
 
-    if ($email === $demail && $password === $dpassword) {
-        $_SESSION['username'] = $username;
+//     if ($email === $demail && $password === $dpassword) {
+//         $_SESSION['username'] = $username;
 
-        // Insert into tbl_login
-        $stmt = $conn->prepare("INSERT INTO tbl_login (email, password, type, userid, username) VALUES (?, ?, ?, ?, ?)");
-        if (!$stmt) {
-            echo "Prepare failed for tbl_login insert: " . $conn->error;
-            exit;
-        }
-        $stmt->bind_param("sssis", $email, $dpassword, $type, $userid, $username);
+//         // Insert into tbl_login
+//         $stmt = $conn->prepare("INSERT INTO tbl_login (email, password, type, userid, username) VALUES (?, ?, ?, ?, ?)");
+//         if (!$stmt) {
+//             echo "Prepare failed for tbl_login insert: " . $conn->error;
+//             exit;
+//         }
+//         $stmt->bind_param("sssis", $email, $dpassword, $type, $userid, $username);
 
-        if ($stmt->execute()) {
-            // Redirect based on user type
-            switch ($type) {
-                case "customer":
-                    header('Location: http://localhost/Mini%20project/user/html5up-massively/elements.html');
-                    break;
-                case "delivery":
-                    header('Location: http://localhost/Mini%20project/delivery%20boy/delivery.php');
-                    break;
-                case "farm":
-                    header('Location: http://localhost/Mini%20project/farm/farm.html');
-                    break;
-                case "admin":
-                    header('Location: http://localhost/Mini%20project/admin/admin.html');
-                    break;
-                default:
-                    echo "Invalid user type.";
-                    exit;
-            }
-            exit;
-        } else {
-            echo "Error inserting into tbl_login: " . $conn->error;
-            exit;
-        }
-    } else {
-        echo "Incorrect email or password.";
-        exit;
-    }
-} else {
-    echo "No user found with that email.";
-    exit;
-}
+//         if ($stmt->execute()) {
+//             // Redirect based on user type
+//             switch ($type) {
+//                 case "customer":
+//                     header('Location: http://localhost/Mini%20project/user/html5up-massively/elements.html');
+//                     break;
+//                 case "delivery":
+//                     header('Location: http://localhost/Mini%20project/delivery%20boy/delivery.php');
+//                     break;
+//                 case "farm":
+//                     header('Location: http://localhost/Mini%20project/farm/farm.html');
+//                     break;
+//                 case "admin":
+//                     header('Location: http://localhost/Mini%20project/admin/admin.html');
+//                     break;
+//                 default:
+//                     echo "Invalid user type.";
+//                     exit;
+//             }
+//             exit;
+//         } else {
+//             echo "Error inserting into tbl_login: " . $conn->error;
+//             exit;
+//         }
+//     } else {
+//         echo "Incorrect email or password.";
+//         exit;
+//     }
+// } else {
+//     echo "No user found with that email.";
+//     exit;
+// }
 
-}
-}
+ }
+ }
 ?>
 
 

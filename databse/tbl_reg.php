@@ -10,8 +10,7 @@ $sql="CREATE TABLE tbl_signup (
     state VARCHAR(100) NOT NULL,            
     district VARCHAR(100) NOT NULL,         
     pin CHAR(6) NOT NULL,                 
-    password VARCHAR(255) NOT NULL,    
-    type VARCHAR(50) NOT NULL,              
+    password VARCHAR(255) NOT NULL,                 
     signup_time DATETIME DEFAULT CURRENT_TIMESTAMP 
 )
 ";
