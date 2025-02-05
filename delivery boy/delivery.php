@@ -9,7 +9,7 @@
     <?php
     session_start();
     include "../databse/connect.php";
-    echo $_SESSION['username'];
+    // echo $_SESSION['username'];
     ?>
     <nav class="sidebar">
         <button class="menu-btn"><i class="fas fa-bars"></i></button>
@@ -32,7 +32,7 @@
             <h2>Farmfolio</h2>
         </div>
         <div class="user-section">
-            <span>Welcome, <?php echo ucfirst($_SESSION['username']);?></span>
+            <!-- <span>Welcome, <?php echo ucfirst($_SESSION['username']);?></span> -->
             <button class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</button>
         </div>
     </header>
