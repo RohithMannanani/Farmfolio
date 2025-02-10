@@ -3,7 +3,7 @@ session_start();
 $error_message = '';
 
 if (!isset($_SESSION['email'])) {
-    header('Location: forgetpassword.php');
+    header('Location: reading mail.php.php');
     exit(); 
 }
 $conn= new mysqli('localhost','root','','farmfolio');

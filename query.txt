@@ -78,3 +78,20 @@ sign up page for farmfolio with username mobile number email account type- farm 
             .catch(error => console.error('Error fetching districts:', error));
     });
 </script>
+
+
+
+   $stmt1 = $conn->prepare("INSERT INTO tbl_signup (username, mobile, email, house, state, district, pin, password) 
+                                             VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+                    $stmt1->bind_param("ssssssss", $data['username'], $data['mobile'], $data['email'], $data['house'], $data['state'], $data['district'], $data['pin'], $data['password']);
+                    $stmt1->execute();
+        
+                    // Get the last inserted ID for tbl_signup
+                    $userid = $conn->insert_id;
+        
+                    // Insert into tbl_login
+                    $stmt2 = $conn->prepare("INSERT INTO tbl_login (email, password, type, username, userid) VALUES (?, ?, ?, ?, ?)");
+                    $stmt2->bind_param("ssssi", $data['email'], $data['password'], $type, $data['username'], $userid);
+                    $stmt2->execute();
+        
+                    $conn->commit();
