@@ -37,7 +37,7 @@ if ($conn->connect_error) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TaskMate - Reset Password</title>
+    <title>FarmFolio - Reset Password</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -158,7 +158,7 @@ if ($conn->connect_error) {
 <body>
     <div class="login-container">
         <div class="logo">
-            <span class="task">Task</span><span class="mate">Mate</span>
+            <span class="task">Farm</span><span class="mate">Folio</span>
         </div>
         <h2>Reset Password</h2>
         <?php if (!empty($error_message)): ?>

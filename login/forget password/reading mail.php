@@ -173,7 +173,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <body>
     <div class="login-container">
         <div class="logo">
-            <span class="task">Task</span><span class="mate">Mate</span>
+            <span class="task">Farm</span><span class="mate">Folio</span>
         </div>
         <h2>Forgot Password</h2>
         <p class="description">Enter your email to receive an otp.</p>
