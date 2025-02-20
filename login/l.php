@@ -4,6 +4,239 @@
     <title>Farmfolio Login</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="login.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-image: url('farm.jpeg');
+            background-size: 100%;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-color: #f0fdf4;
+        }
+
+        .home-button-container {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 10;
+        }
+
+        .home-button {
+            padding: 0.8rem 1.2rem;
+            background: #0b5d2c;
+            color: white;
+            font-size: 1.1rem;
+            text-decoration: none;
+            border-radius: 4px;
+            display: inline-block;
+            font-weight: 600;
+            transition: background 0.3s ease;
+        }
+
+        .home-button:hover {
+            background: #2d6a4f;
+        }
+
+        .background-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: -1;
+        }
+
+        .container {
+            position: relative;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            margin-top: 8vh;
+        }
+
+        .login-container {
+            background: rgba(21, 21, 21, 0.8);
+            padding: 3rem;
+            border-radius: 12px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 500px;
+            color: #e1eaf8;
+        }
+
+        .title {
+            font-size: 2.2rem;
+            font-weight: bold;
+            color: #00ff66;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        .form-group i {
+            position: absolute;
+            left: 15px;
+            top: 45px;
+            color: #6b7280;
+            font-size: 1.2rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.6rem;
+            color: #e1eaf8;
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="password"] {
+            width: 100%;
+            padding: 0.8rem 0.8rem 0.8rem 2.8rem;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 1.1rem;
+            background-color: rgba(255, 255, 255, 0.9);
+        }
+
+        input:focus {
+            border-color: #00ff66;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(0, 255, 102, 0.2);
+        }
+
+        .error {
+            color: #dc2626;
+            font-size: 0.9rem;
+            margin-top: 0.3rem;
+            display: none;
+        }
+
+        button {
+            width: 100%;
+            padding: 1rem;
+            background: #0b5d2c;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #2d6a4f;
+        }
+
+        .forgot-password {
+            text-align: right;
+            margin-bottom: 1.8rem;
+        }
+
+        .forgot-password a {
+            color: #00ff66;
+            text-decoration: none;
+            font-size: 1rem;
+        }
+
+        .register-link {
+            margin-top: 1.8rem;
+            text-align: center;
+            color: #6b7280;
+            font-size: 1rem;
+        }
+
+        .register-link a {
+            color: #00ff66;
+            text-decoration: none;
+            font-weight: 500;
+        }
+/* Pop-up styles */
+#popup {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 500px;
+    height: 500px;
+    background-color: rgb(0, 0, 0);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    padding: 20px;
+    z-index: 1000;
+    color: #1b1f22;
+}
+#popup h2 {
+    margin: 0 0 20px;
+    font-size: 18px;
+    text-align: center;
+    color: #ffffff;
+}
+#popup button {
+    width: 100%;
+    padding: 5px;
+    margin-top: 0px ;
+    border: none;
+    background-color: #4CAF50;
+    color: white;
+    border-radius: 4px;
+    cursor: pointer;
+    box-shadow: none;
+    font-weight: 600;
+
+}
+#popup button:hover {
+    background-color: #45a049;
+}
+#popup-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+}
+.btn{
+    justify-content: center;
+    text-align: center;
+}
+.btn img{
+    height: 50px;
+    width: 50px;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+@media (max-width: 480px) {
+    .login-container {
+        margin: 1rem;
+        padding: 1.5rem;
+    }
+}
+    </style>
 </head>
 <body>
 <?php
@@ -60,82 +293,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             echo "Incorrect email or password.";
             exit;
         }
-    } else {
-//         // If user is not found in tbl_login, check in tbl_signup
-// $stmt = $conn->prepare("SELECT * FROM tbl_signup WHERE email = ?");
-// if (!$stmt) {
-//     echo "Prepare failed for tbl_signup: " . $conn->error;
-//     exit;
-// }
-// $stmt->bind_param("s", $email);
-// $stmt->execute();
-// $result = $stmt->get_result();
+    } 
 
-// if ($result && $result->num_rows > 0) {
-//     $row = $result->fetch_assoc();
-//     $demail = trim($row['email']);
-//     $dpassword = trim($row['password']);
-//     $type = trim($row['type']);
-//     $userid = trim($row['userid']);
-//     $username = trim($row['username']);
-
-//     // Debug the fetched values
-//     var_dump($demail, $dpassword, $type, $userid, $username);
-
-//     if (empty($username)) {
-//         echo "Error: Username is empty or invalid.";
-//         exit;
-//     }
-
-//     if ($email === $demail && $password === $dpassword) {
-//         $_SESSION['username'] = $username;
-
-//         // Insert into tbl_login
-//         $stmt = $conn->prepare("INSERT INTO tbl_login (email, password, type, userid, username) VALUES (?, ?, ?, ?, ?)");
-//         if (!$stmt) {
-//             echo "Prepare failed for tbl_login insert: " . $conn->error;
-//             exit;
-//         }
-//         $stmt->bind_param("sssis", $email, $dpassword, $type, $userid, $username);
-
-//         if ($stmt->execute()) {
-//             // Redirect based on user type
-//             switch ($type) {
-//                 case "customer":
-//                     header('Location: http://localhost/Mini%20project/user/html5up-massively/elements.html');
-//                     break;
-//                 case "delivery":
-//                     header('Location: http://localhost/Mini%20project/delivery%20boy/delivery.php');
-//                     break;
-//                 case "farm":
-//                     header('Location: http://localhost/Mini%20project/farm/farm.html');
-//                     break;
-//                 case "admin":
-//                     header('Location: http://localhost/Mini%20project/admin/admin.html');
-//                     break;
-//                 default:
-//                     echo "Invalid user type.";
-//                     exit;
-//             }
-//             exit;
-//         } else {
-//             echo "Error inserting into tbl_login: " . $conn->error;
-//             exit;
-//         }
-//     } else {
-//         echo "Incorrect email or password.";
-//         exit;
-//     }
-// } else {
-//     echo "No user found with that email.";
-//     exit;
-// }
-
- }
  }
 ?>
-
-
     <div class="background-overlay"></div>
     <div class="home-button-container">
         <a href="/mini%20project/home/html5up-dimension/index.html" class="home-button">Home</a>
@@ -147,16 +308,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <form id="loginForm" method="POST">
                 <div class="form-group">
                     <label for="email">Email</label>
+                    <i class="fas fa-envelope"></i>
                     <input type="email" id="email" name="email" placeholder="Enter your email" required>
                 </div>
 
                 <div class="form-group">
                     <label for="password">Password</label>
+                    <i class="fas fa-lock"></i>
                     <input type="password" id="password" name="password" placeholder="Enter your password" required>
                 </div>
 
                 <div class="forgot-password">
-                    <a href="#">Forgot Password?</a>
+                    <a href="forget password/reading mail.php">Forgot Password?</a>
                 </div>
 
                 <button type="submit">Login</button>

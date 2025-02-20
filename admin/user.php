@@ -1,25 +1,9 @@
 <?php
-session_start();
 include '../databse/connect.php';
-if(!isset($_SESSION['type'])){
-    header('location: http://localhost/mini%20project/login/login.php');
-}
+// listed users
+$stmt = "SELECT tbl_signup.username,tbl_signup.email,tbl_signup.mobile,tbl_signup.state,tbl_signup.district,tbl_login.type  FROM tbl_signup INNER JOIN tbl_login  ON tbl_signup.userid=tbl_login.userid AND tbl_login.type IN (0, 1, 2)";
+$result = mysqli_query($conn, $stmt);
 
-// user count
-$stmt = "SELECT COUNT(*) AS total FROM tbl_login WHERE type IN (0, 1, 2)";
-$count_result = mysqli_query($conn, $stmt);
-
-if ($count_result) {
-    $row = mysqli_fetch_assoc($count_result);
-    $user_count = $row['total'];
-}
-//farm count
-$stmt1 = "SELECT COUNT(*) AS total FROM tbl_farms";
-$count_result1 = mysqli_query($conn, $stmt1);
-if ($count_result1) {
-    $row1 = mysqli_fetch_assoc($count_result1);
-    $farm_count = $row1['total'];
-}
 ?>
 <!DOCTYPE html>
 <html>
@@ -89,8 +73,9 @@ if ($count_result1) {
             background: #f1f5f9;
             color: #1a4d2e;
         }
-        /* logout */
-        .logout-btn {
+
+         /* logout */
+         .logout-btn {
         background-color: #d9534f;
         color: white;
         border: none;
@@ -156,49 +141,6 @@ if ($count_result1) {
             padding: 90px 24px 24px;
         }
 
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: repeat(3, minmax(250px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
-        }
-
-        .stat-card {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            text-align: center;
-        }
-
-        .stat-card h3 {
-            font-size: 18px;
-            color: #1a4d2e;
-            margin-bottom: 10px;
-        }
-
-        .stat-card .value {
-            font-size: 24px;
-            font-weight: bold;
-            color: #334155;
-        }
-
-        .stat-card button {
-            margin-top: 10px;
-            padding: 8px 16px;
-            background: #1a4d2e;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-
-        .stat-card button:hover {
-    background: #2d6a4f;
-    transform: translateY(-10px);
-    transition: transform 0.5s ease-in-out, background 0.2s ease-in-out;
-}
 
 
         .footer {
@@ -207,25 +149,43 @@ if ($count_result1) {
             font-size: 14px;
             color: #64748b;
         }
+        .admin-table {
+          width: 100%;
+          border-collapse: collapse;
+        }
+
+        .admin-table th {
+          background-color:#1a4d2e;
+          color: white;
+          padding: 12px;
+          text-align: left;
+          text-transform: uppercase;
+          font-size: 13px;
+        }
+
+        .admin-table td {
+          padding: 12px;
+          border-bottom: 1px solid #eee;
+          color: #232d39;
+        }
     </style>
 </head>
 <body>
-<header class="header">
-    <div class="head"><h1>🌱 FarmFolio</h1></div>
-    <div class="admin-controls">
-        <h2>Welcome, Admin</h2>
-        <button class="icon-btn" data-tooltip="Notifications"><i class="fas fa-bell"></i></button>
-        <button class="icon-btn" data-tooltip="Messages"><i class="fas fa-envelope"></i></button>
-        <button class="icon-btn" data-tooltip="Profile"><i class="fas fa-user-circle"></i></button>
-        <button class="logout-btn" onclick="window.location.href='http://localhost/mini%20project/logout/logout.php'">Logout</button>
-    </div>
-</header>
-
+    <header class="header">
+        <div class="head"><h1>🌱 FarmFolio</h1></div>
+        <div class="admin-controls">
+            <h2>Welcome, Admin</h2>
+            <button class="icon-btn" data-tooltip="Notifications"><i class="fas fa-bell"></i></button>
+            <button class="icon-btn" data-tooltip="Messages"><i class="fas fa-envelope"></i></button>
+            <button class="icon-btn" data-tooltip="Profile"><i class="fas fa-user-circle"></i></button>
+            <button class="logout-btn" onclick="window.location.href='http://localhost/mini%20project/logout/logout.php'">Logout</button>
+        </div>
+    </header>
 
     <nav class="sidebar">
         <ul class="sidebar-menu">
-            <li><a href="admin.php" class="active"><i class="fas fa-home"></i><span>Home</span></a></li>
-            <li><a href="user.php"><i class="fas fa-users"></i><span>Users</span></a></li>
+            <li><a href="admin.php"><i class="fas fa-home"></i><span>Home</span></a></li>
+            <li><a href="user.php" class="active"><i class="fas fa-users"></i><span>Users</span></a></li>
             <li><a href="farm.php"><i class="fas fa-store"></i><span>Farms</span></a></li>
             <li><a href="#"><i class="fas fa-box"></i><span>Products</span></a></li>
             <li><a href="#"><i class="fas fa-truck"></i><span>Deliveries</span></a></li>
@@ -236,23 +196,44 @@ if ($count_result1) {
     </nav>
 
     <main class="main-content">
-        <div class="dashboard-grid">
-            <div class="stat-card">
-                <h3>Total Users</h3>
-                <div class="value"><?php echo  $user_count; ?></div>
-                <a href="user.php"><button id="user">View</button></a>
-            </div>
-            <div class="stat-card">
-                <h3>Farms</h3>
-                <div class="value"><?php echo  $farm_count; ?></div>
-               <a href="farm.php"><button id="farm">View</button></a> 
-            </div>
-            <div class="stat-card">
-                <h3>Total Products</h3>
-                <div class="value">5</div>
-                <button id="product">View</button>
-            </div><br>
-        </div>
+    <div class="admin-card">
+        <h2>Total Users</h2>
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Username</th>
+              <th>Email</th>
+              <th>Mobile</th>
+              <th>State</th>
+              <th>District</th>
+              <th>Type</th>
+            </tr>
+          </thead>
+          <tbody>
+          <?php
+            while ($row = mysqli_fetch_assoc($result)) {
+                if($row['type']==0){
+                 $role='Consumer';
+                }
+                elseif($row['type']==1){
+                    $role='Farm';
+                }
+                else{
+                    $role='Delivery Boy';
+                }
+                echo "<tr>";
+                echo "<td>" . htmlspecialchars($row['username']) . "</td>";
+                echo "<td>" . htmlspecialchars($row['email']) . "</td>";
+                echo "<td>" . htmlspecialchars($row['mobile']) . "</td>";
+                echo "<td>" . ($row['state']) . "</td>";
+                echo "<td>" . htmlspecialchars($row['district']) . "</td>";
+               echo "<td>". $role ."</td>";
+                echo "</tr>";
+            }
+            ?>
+          </tbody>
+        </table>
+       
         <footer class="footer">
             <p>© 2025 Farmfolio Admin Panel. All rights reserved.</p>
         </footer>

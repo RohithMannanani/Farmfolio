@@ -49,7 +49,7 @@ if ($conn->connect_error) {
         }
 
         body {
-            background: linear-gradient(135deg, #f0f7ff 0%, #ffffff 100%);
+            background: linear-gradient(135deg, #e0ffe0 0%, #f7fdf7 100%);
             min-height: 100vh;
             display: flex;
             justify-content: center;
@@ -74,8 +74,8 @@ if ($conn->connect_error) {
             font-weight: 700;
         }
 
-        .task { color: #2563eb; }
-        .mate { color: #3b82f6; }
+        .task { color:  #34a853; }
+        .mate { color:  #34a853; }
 
         h2 {
             text-align: center;
@@ -90,7 +90,7 @@ if ($conn->connect_error) {
         .form-group label {
             display: block;
             margin-bottom: 0.5rem;
-            color: #64748b;
+            color:rgb(28, 48, 76);
             font-size: 0.9rem;
         }
 
@@ -105,14 +105,14 @@ if ($conn->connect_error) {
 
         .form-group input:focus {
             outline: none;
-            border-color: #2563eb;
+            border-color:rgb(15, 133, 17);
             box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
         }
 
         .login-btn {
             width: 100%;
             padding: 1rem;
-            background: #2563eb;
+            background:rgb(3, 149, 50);
             color: white;
             border: none;
             border-radius: 10px;
@@ -123,7 +123,7 @@ if ($conn->connect_error) {
         }
 
         .login-btn:hover {
-            background: #1d4ed8;
+            background:rgb(3, 105, 44);
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
         }

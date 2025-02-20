@@ -10,14 +10,20 @@ body {
     min-height: 100vh;
 }
 .dashboard-header {
+    padding: 30px 50px;
     display: flex;
     justify-content: space-between; /* Space between dashboard title and user section */
     align-items: center; /* Vertically align items */
     margin-bottom: 20px;
+    background: linear-gradient(135deg, #f5f5f5, #e0e0e0); /* Soft gradient */
+    border-radius: 12px; /* Rounded corners */
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1); /* Softer shadow */
+    border: 1px solid #d1d1d1; /* Light border for depth */
 }
 
+
 .dashboard-header h1 {
-    margin: 0; /* Remove default margin for better alignment */
+    margin: 15px; /* Remove default margin for better alignment */
 }
 
 .user-section {

@@ -1,3 +1,27 @@
+<?php
+session_start();
+include '../databse/connect.php';
+if(!isset($_SESSION['username'])){
+    header('location: http://localhost/mini%20project/login/login.php');
+}
+
+if(isset($_SESSION['userid'])){
+    $userid=$_SESSION['userid'];
+    $farm="SELECT * FROM tbl_farms WHERE user_id=$userid";//farm data
+    $result=mysqli_query($conn,$farm);
+    $row=$result->fetch_assoc();
+}
+//count products 
+$pcount = "SELECT COUNT(product_id) AS product_count FROM tbl_products"; // Use product_id instead of product_name for counting
+$count = $conn->query($pcount);
+
+if ($count) {
+    $count_result = $count->fetch_assoc();
+    $product_count = $count_result['product_count']; // Access the count value
+} else {
+    $product_count = 0; // Default value in case of an error
+}
+?>
 <!DOCTYPE html>
 <html>
 <head>
@@ -17,37 +41,43 @@
             </button>
         </div>
         <ul class="sidebar-menu">
-            <li><a href="#" class="active"><i class="fas fa-home"></i><span>Dashboard</span></a></li>
-            <li><a href="#"><i class="fas fa-box"></i><span>Products</span></a></li>
-            <li><a href="#"><i class="fas fa-cart-plus"></i><span>Add Product</span></a></li>
-            <li><a href="#"><i class="fas fa-calendar"></i><span>Events</span></a></li>
-            <li><a href="#"><i class="fas fa-star"></i><span>Reviews</span></a></li>
-            <li><a href="#"><i class="fas fa-truck"></i><span>Orders</span></a></li>
-            <li><a href="#"><i class="fas fa-cog"></i><span>Settings</span></a></li>
-            <li><a href="#"><i class="fas fa-info-circle"></i><span>About</span></a></li>
+            <li><a href="farm.php" class="active"><i class="fas fa-home"></i><span>Dashboard</span></a></li>
+            <li><a href="product.php"><i class="fas fa-box"></i><span>Products</span></a></li>
+            <li><a href="event.php"><i class="fas fa-calendar"></i><span>Events</span></a></li>
+            <li><a href="review.php"><i class="fas fa-star"></i><span>Reviews</span></a></li>
+            <li><a href="orders.php"><i class="fas fa-truck"></i><span>Orders</span></a></li>
+            <li><a href="setting.php"><i class="fas fa-cog"></i><span>Settings</span></a></li>
+            <li><a href="about.php"><i class="fas fa-info-circle"></i><span>About</span></a></li>
         </ul>
     </nav>
 
     <div class="main-content">
         <div class="container">
             <div class="dashboard-header">
-                <h1>Farm Dashboard</h1>
+                <?php if(isset($row['farm_name'])&&isset($_SESSION['username'])){?>
+                <h1><?php echo $row['farm_name'];?>Farm</h1>
                 <div class="user-section">
-                    <span>Welcome, John Doe</span>
-                    <button class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</button>
+                    <span>Welcome, <?php echo $_SESSION['username'];?></span>
+                    <a href="http://localhost/mini%20project/logout/logout.php"><button class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</button></a>
                 </div>
+                <?php }else{?>
+                    <h1>Farm Dashboard</h1>
+                <div class="user-section">
+                    <span>Welcome,</span>
+                    <a href="http://localhost/mini%20project/logout/logout.php"><button class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</button></a>
+                </div><?php }?>
             </div>
             
             
             <div class="stats-grid">
                 <div class="stat-card">
                     <h3>Active Products</h3>
-                    <div class="value">24</div>
-                    <small>3 new this month</small>
+                    <div class="value"><?php echo $product_count ;?></div>
+                   
                 </div>
                 <div class="stat-card">
                     <h3>Total Customers</h3>
-                    <div class="value">156</div>
+                    <div class="value">1</div>
                     <small>+12% this month</small>
                 </div>
                 <div class="stat-card">
@@ -81,5 +111,6 @@
     </div>
 
     <script src="farm.js"></script>
+   
 </body>
 </html>

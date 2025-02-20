@@ -73,8 +73,8 @@ if (isset($_POST['verify'])) {
             $stmt1 = $conn->prepare("INSERT INTO tbl_signup (username, mobile, email, house, state, district, pin, password) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
             $stmt1->bind_param("ssssssss", $_SESSION['username'], $_SESSION['mobile'], $_SESSION['email'], $_SESSION['house'], $_SESSION['state'], $_SESSION['district'], $_SESSION['pin'], $_SESSION['password']);
             $stmt1->execute();
-
             $userId = $conn->insert_id;
+            $_SESSION['userid']=$userId;
             if (!$userId) die("Error: No userId generated.");
 
             $stmt2 = $conn->prepare("INSERT INTO tbl_login (email, password, type, username, userid) VALUES (?, ?, ?, ?, ?)");
@@ -83,8 +83,24 @@ if (isset($_POST['verify'])) {
 
             if ($stmt1->affected_rows > 0 && $stmt2->affected_rows > 0) {
                 $conn->commit();
-                header('Location: http://localhost/mini%20project/login/login.php');
-                exit();
+                switch ($_SESSION['type']) {
+                    case 0 :
+                        header('Location: http://localhost/Mini%20project/user/userindex.php');
+                        break;
+                    case 2:
+                        header('Location: http://localhost/Mini%20project/delivery%20boy/delivery.php');
+                        break;
+                    case 1 :
+                        header('Location: http://localhost/Mini%20project/farm/f.php');
+                        break;
+                    case 4 :
+                        header('Location: http://localhost/Mini%20project/admin/admin.php');
+                        break;
+                    default:
+                        echo "Invalid user type.";
+                        exit;
+                }
+                exit;
             } else {
                 $error_message = "Database transaction failed.";
             }
@@ -113,7 +129,7 @@ if (isset($_POST['verify'])) {
         }
 
         body {
-            background: linear-gradient(135deg, #f0f7ff 0%, #ffffff 100%);
+            background: linear-gradient(135deg, #e0ffe0 0%, #f7fdf7 100%);
             min-height: 100vh;
             display: flex;
             justify-content: center;
@@ -123,28 +139,28 @@ if (isset($_POST['verify'])) {
 
         .login-container {
             background: white;
-            padding: 2.5rem;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            padding: 3rem;
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
             width: 100%;
-            max-width: 400px;
-            animation: slideUp 0.5s ease-out;
+            max-width: 420px;
+            animation: fadeIn 0.6s ease-out;
         }
 
         .logo {
             text-align: center;
-            margin-bottom: 2rem;
+            margin-bottom: 1.5rem;
             font-size: 2rem;
             font-weight: 700;
         }
 
-        .task { color:#2d6a4f;}
-        .mate { color:#2d6a4f; }
+        .task { color: #34a853; }
+        .mate { color: #34a853; }
 
         h2 {
             text-align: center;
-            color: #1e293b;
-            margin-bottom: 2rem;
+            color: #1f2937;
+            margin-bottom: 1rem;
         }
 
         .form-group {
@@ -154,7 +170,7 @@ if (isset($_POST['verify'])) {
         .form-group label {
             display: block;
             margin-bottom: 0.5rem;
-            color: #64748b;
+            color: #6b7280;
             font-size: 0.9rem;
         }
 
@@ -164,28 +180,28 @@ if (isset($_POST['verify'])) {
         }
 
         .otp-inputs input {
-            width: 3rem;
-            height: 3rem;
+            width: 3.2rem;
+            height: 3.2rem;
             text-align: center;
-            font-size: 1.5rem;
-            border: 2px solid #e2e8f0;
-            border-radius: 10px;
+            font-size: 1.4rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
             transition: all 0.3s ease;
         }
 
         .otp-inputs input:focus {
             outline: none;
-            border-color:#2d6a4f;
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+            border-color: #34a853;
+            box-shadow: 0 0 8px rgba(52, 168, 83, 0.3);
         }
 
         .login-btn {
             width: 100%;
             padding: 1rem;
-            background: #059f2b;
+            background: #34a853;
             color: white;
             border: none;
-            border-radius: 10px;
+            border-radius: 8px;
             font-size: 1rem;
             font-weight: 500;
             cursor: pointer;
@@ -193,44 +209,54 @@ if (isset($_POST['verify'])) {
         }
 
         .login-btn:hover {
-            background:rgb(5, 120, 34);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+            background: #2d8547;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(52, 168, 83, 0.2);
         }
 
         .resend-text {
             text-align: center;
             margin-top: 1.5rem;
-            color: #64748b;
+            color: #6b7280;
         }
 
         .resend-text a {
-            color:rgb(14, 198, 97);
+            color: #34a853;
             text-decoration: none;
             font-weight: 500;
             transition: color 0.3s ease;
         }
 
         .resend-text a:hover {
-            color:rgb(13, 142, 69);
+            color: #2d8547;
         }
+
         .error-message {
-            background-color: #fee2e2;
-            color: #dc2626;
+            background-color: #fef2f2;
+            color: #b91c1c;
             padding: 0.75rem;
             border-radius: 8px;
             margin-bottom: 1rem;
             text-align: center;
+            border: 1px solid #fee2e2;
         }
 
-        @keyframes slideUp {
+        @keyframes fadeIn {
             from {
                 opacity: 0;
-                transform: translateY(20px);
+                transform: scale(0.95);
             }
             to {
                 opacity: 1;
-                transform: translateY(0);
+                transform: scale(1);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .otp-inputs input {
+                width: 2.8rem;
+                height: 2.8rem;
+                font-size: 1.2rem;
             }
         }
     </style>
@@ -240,13 +266,13 @@ if (isset($_POST['verify'])) {
         <div class="logo">
             <span class="task">Farm</span><span class="mate">Folio</span>
         </div>
-        <h2>OTP Verification </h2>
+        <h2>OTP Verification</h2>
         <?php if (!empty($error_message)): ?>
             <div class="error-message">
-                <?php echo htmlspecialchars( $error_message); ?>
+                <?php echo htmlspecialchars($error_message); ?>
             </div>
         <?php endif; ?>
-        <p style="text-align: center; color: #64748b; margin-bottom: 1.5rem;">Enter the 6-digit code sent to your email.</p>
+        <p style="text-align: center; color: #6b7280; margin-bottom: 1.5rem;">Enter the 6-digit code sent to your email.</p>
         <form method="POST" action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>">
             <div class="form-group otp-inputs">
                 <input type="text" maxlength="1" required oninput="moveToNext(this, 'otp2')" id="otp1" name="otp1">
@@ -258,9 +284,8 @@ if (isset($_POST['verify'])) {
             </div>
             <button type="submit" class="login-btn" name="verify">Verify OTP</button>
             <p class="resend-text">Didn't receive the code? 
-    <button type="submit" name="resend" style="border: none; background: none; color:rgb(255, 255, 255); cursor: pointer;">Resend OTP</button>
-</p>
-
+                <button type="submit" name="resend" style="border: none; background: none; color: #34a853; cursor: pointer; font-weight: 500;">Resend OTP</button>
+            </p>
         </form>
     </div>
 

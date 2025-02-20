@@ -70,7 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        * {
+      * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
@@ -78,7 +78,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
 
         body {
-            background: linear-gradient(135deg, #f0f7ff 0%, #ffffff 100%);
+            background: linear-gradient(135deg, #e0ffe0 0%, #f7fdf7 100%);
             min-height: 100vh;
             display: flex;
             justify-content: center;
@@ -88,28 +88,28 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         .login-container {
             background: white;
-            padding: 2.5rem;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            padding: 3rem;
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
             width: 100%;
-            max-width: 400px;
-            animation: slideUp 0.5s ease-out;
+            max-width: 420px;
+            animation: fadeIn 0.6s ease-out;
         }
 
         .logo {
             text-align: center;
-            margin-bottom: 2rem;
+            margin-bottom: 1.5rem;
             font-size: 2rem;
             font-weight: 700;
         }
 
-        .task { color: #2563eb; }
-        .mate { color: #3b82f6; }
+        .task { color: #34a853; }
+        .mate { color: #34a853; }
 
         h2 {
             text-align: center;
-            color: #1e293b;
-            margin-bottom: 2rem;
+            color: #1f2937;
+            margin-bottom: 1rem;
         }
 
         .form-group {
@@ -119,7 +119,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         .form-group label {
             display: block;
             margin-bottom: 0.5rem;
-            color: #64748b;
+            color: #6b7280;
             font-size: 0.9rem;
         }
 
@@ -129,28 +129,28 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
 
         .otp-inputs input {
-            width: 3rem;
-            height: 3rem;
+            width: 3.2rem;
+            height: 3.2rem;
             text-align: center;
-            font-size: 1.5rem;
-            border: 2px solid #e2e8f0;
-            border-radius: 10px;
+            font-size: 1.4rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
             transition: all 0.3s ease;
         }
 
         .otp-inputs input:focus {
             outline: none;
-            border-color: #2563eb;
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+            border-color: #34a853;
+            box-shadow: 0 0 8px rgba(52, 168, 83, 0.3);
         }
 
         .login-btn {
             width: 100%;
             padding: 1rem;
-            background: #2563eb;
+            background: #34a853;
             color: white;
             border: none;
-            border-radius: 10px;
+            border-radius: 8px;
             font-size: 1rem;
             font-weight: 500;
             cursor: pointer;
@@ -158,44 +158,54 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
 
         .login-btn:hover {
-            background: #1d4ed8;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+            background: #2d8547;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(52, 168, 83, 0.2);
         }
 
         .resend-text {
             text-align: center;
             margin-top: 1.5rem;
-            color: #64748b;
+            color: #6b7280;
         }
 
         .resend-text a {
-            color: #2563eb;
+            color: #34a853;
             text-decoration: none;
             font-weight: 500;
             transition: color 0.3s ease;
         }
 
         .resend-text a:hover {
-            color: #1d4ed8;
+            color: #2d8547;
         }
+
         .error-message {
-            background-color: #fee2e2;
-            color: #dc2626;
+            background-color: #fef2f2;
+            color: #b91c1c;
             padding: 0.75rem;
             border-radius: 8px;
             margin-bottom: 1rem;
             text-align: center;
+            border: 1px solid #fee2e2;
         }
 
-        @keyframes slideUp {
+        @keyframes fadeIn {
             from {
                 opacity: 0;
-                transform: translateY(20px);
+                transform: scale(0.95);
             }
             to {
                 opacity: 1;
-                transform: translateY(0);
+                transform: scale(1);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .otp-inputs input {
+                width: 2.8rem;
+                height: 2.8rem;
+                font-size: 1.2rem;
             }
         }
     </style>

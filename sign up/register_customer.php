@@ -1,3 +1,6 @@
+<?php 
+session_start();
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -17,7 +20,7 @@
 
         <?php
         include '../databse/connect.php';
-        $type = 0;//customer 4-admin
+        
         $errors = [];
         $data = [];
 
@@ -61,31 +64,19 @@
             }
         
             if (empty($errors)) {
-                $conn->begin_transaction(); // Start transaction
-                try {
-                    // Insert into tbl_signup
-                    $stmt1 = $conn->prepare("INSERT INTO tbl_signup (username, mobile, email, house, state, district, pin, password) 
-                                             VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-                    $stmt1->bind_param("ssssssss", $data['username'], $data['mobile'], $data['email'], $data['house'], $data['state'], $data['district'], $data['pin'], $data['password']);
-                    $stmt1->execute();
-        
-                    // Get the last inserted ID for tbl_signup
-                    $userid = $conn->insert_id;
-        
-                    // Insert into tbl_login
-                    $stmt2 = $conn->prepare("INSERT INTO tbl_login (email, password, type, username, userid) VALUES (?, ?, ?, ?, ?)");
-                    $stmt2->bind_param("ssisi", $data['email'], $data['password'], $type, $data['username'], $userid);
-                    $stmt2->execute();
-        
-                    $conn->commit(); // Commit transaction
-        
+                  $_SESSION['username']= $_POST["username"];
+                  $_SESSION['email']= $_POST["email"];
+                  $_SESSION['mobile']=$_POST["mobile"];
+                  $_SESSION['house']=$_POST["house"];
+                  $_SESSION['state']=$_POST["state"];
+                  $_SESSION['district']=$_POST["district"];
+                  $_SESSION['pin']= $_POST["pin"];
+                  $_SESSION['password']= $_POST["password"];
+                  $_SESSION['type'] = 0;//0-custemer,1-farm,2-delivery 4-admin
                     // Redirect to login page
-                    header('Location: http://localhost/mini%20project/login/login.php');
+                    header('Location: http://localhost/mini%20project/sign%20up/emailverify/send_reset_otp.php');
                     exit;
-                } catch (Exception $e) {
-                    $conn->rollback(); // Rollback transaction on error
-                    echo "<p class='error'>Error in registration. Please try again later.</p>";
-                }
+                
             }
         }
         ?>

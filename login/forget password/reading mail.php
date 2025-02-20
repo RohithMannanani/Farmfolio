@@ -48,7 +48,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
 
         body {
-            background: linear-gradient(135deg, #f0f7ff 0%, #ffffff 100%);
+            background: linear-gradient(135deg, #e0ffe0 0%, #f7fdf7 100%);
             min-height: 100vh;
             display: flex;
             justify-content: center;
@@ -73,8 +73,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             font-weight: 700;
         }
 
-        .task { color: #2563eb; }
-        .mate { color: #3b82f6; }
+        .task { color: #34a853;}
+        .mate { color:  #34a853; }
 
         h2 {
             text-align: center;
@@ -110,14 +110,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         .form-group input:focus {
             outline: none;
-            border-color: #2563eb;
+            border-color:rgb(10, 158, 59);
             box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
         }
 
         .login-btn {
             width: 100%;
             padding: 1rem;
-            background: #2563eb;
+            background:rgb(7, 133, 32);
             color: white;
             border: none;
             border-radius: 10px;
@@ -128,7 +128,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
 
         .login-btn:hover {
-            background: #1d4ed8;
+            background:rgb(3, 77, 20);
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
         }
@@ -140,14 +140,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
 
         .back-to-login a {
-            color: #2563eb;
+            color:rgb(5, 81, 33);
             text-decoration: none;
             font-weight: 500;
             transition: color 0.3s ease;
         }
 
         .back-to-login a:hover {
-            color: #1d4ed8;
+            color:rgb(4, 125, 37);
         }
         .error-message {
             background-color: #fee2e2;

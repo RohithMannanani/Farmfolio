@@ -1,11 +1,3 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Farmfolio Login</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="login.css">
-</head>
-<body>
 <?php
 session_start();
 include "../databse/connect.php";
@@ -24,9 +16,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $stmt->bind_param("s", $email);
     $stmt->execute();
     $result = $stmt->get_result();
+    $stmt1 = "SELECT tbl_signup.username,tbl_signup.email,tbl_signup.mobile,tbl_signup.state,tbl_signup.district,tbl_login.type  FROM tbl_signup INNER JOIN tbl_login  ON tbl_signup.userid=tbl_login.userid AND tbl_login.email='$email'";
+$result1 = mysqli_query($conn, $stmt1);
 
     if ($result && $result->num_rows > 0) {
-        $row = $result->fetch_assoc();
+        $row = $result->fetch_assoc();//
+        $row1=$result1->fetch_assoc();
         var_dump($row);
         $demail =trim( $row['email']);
         $dpassword = trim($row['password']);
@@ -37,19 +32,22 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // Verify the password
         if ($email === $demail && $password === $dpassword) {
             $_SESSION['username']="$username";
+            $_SESSION['email']=$demail;
+            $_SESSION['type']=$type;
+            $_SESSION['userid']=$row['userid'];
             // Redirect based on user type
             switch ($type) {
                 case 0 :
-                    header('Location: http://localhost/Mini%20project/user/html5up-massively/elements.html');
+                    header('Location: http://localhost/Mini%20project/user/userindex.php');
                     break;
                 case 2:
                     header('Location: http://localhost/Mini%20project/delivery%20boy/delivery.php');
                     break;
                 case 1 :
-                    header('Location: http://localhost/Mini%20project/farm/farm.html');
+                    header('Location: http://localhost/Mini%20project/farm/farm.php');
                     break;
                 case 4 :
-                    header('Location: http://localhost/Mini%20project/admin/admin.html');
+                    header('Location: http://localhost/Mini%20project/admin/admin.php');
                     break;
                 default:
                     echo "Invalid user type.";
@@ -57,13 +55,22 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             }
             exit; // Always exit after a redirect
         } else {
-            echo "Incorrect email or password.";
+            $error= "Incorrect email or password.";
             exit;
         }
     } 
 
  }
 ?>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Farmfolio Login</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="login.css">
+</head>
+<body>
+
 
 
     <div class="background-overlay"></div>
@@ -75,6 +82,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <div class="login-container">
             <h1 class="title">Login</h1>
             <form id="loginForm" method="POST">
+                <div class="error"><?php echo $error;?></div>
                 <div class="form-group">
                     <label for="email">Email</label>
                     <input type="email" id="email" name="email" placeholder="Enter your email" required>

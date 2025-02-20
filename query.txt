@@ -95,3 +95,9 @@ sign up page for farmfolio with username mobile number email account type- farm 
                     $stmt2->execute();
         
                     $conn->commit();
+
+
+product img showing
+ <div class='product-image'>
+                             <img src='/api/placeholder/250/200' alt='" . htmlspecialchars($product['product_name']) . "' style='max-width: 100%; height: auto;'>
+                         </div>
