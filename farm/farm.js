@@ -1,15 +1,4 @@
-//sidebar
-document.addEventListener('DOMContentLoaded', function () {
-    const sidebar = document.querySelector('.sidebar');
-    const mainContent = document.querySelector('.main-content');
-    const toggleButton = document.getElementById('sidebarToggle');
-
-    toggleButton.addEventListener('click', () => {
-        sidebar.classList.toggle('shrink');
-        mainContent.classList.toggle('shrink');
-    });
-
-    // Initialize Sales Chart
+// Initialize Sales Chart
     const ctx = document.getElementById('salesChart').getContext('2d');
     new Chart(ctx, {
         type: 'line',
@@ -49,4 +38,4 @@ document.addEventListener('DOMContentLoaded', function () {
         `;
         notificationsList.appendChild(li);
     });
-});
+

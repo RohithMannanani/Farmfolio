@@ -1,3 +1,26 @@
+<?php 
+session_start();
+include '../databse/connect.php';
+
+if(isset($_POST['submit'])) {
+    $farm_name = mysqli_real_escape_string($conn, $_POST['farm_name']);
+    $location = mysqli_real_escape_string($conn, $_POST['location']);
+    $description = mysqli_real_escape_string($conn, $_POST['description']);
+    $user_id = $_SESSION['userid'];
+    
+    // Insert into tbl_farms
+    $insert_query = "INSERT INTO tbl_farms (user_id, farm_name, location, description, created_at, status) 
+                     VALUES ('$user_id', '$farm_name', '$location', '$description', NOW(), 'pending')";
+    
+    if(mysqli_query($conn, $insert_query)) {
+        $_SESSION['success_message'] = "Farm registered successfully!";
+        header("Location: http://localhost/mini%20project/farm/farm.php");
+        exit();
+    } else {
+        echo "<script>alert('Error registering farm: " . mysqli_error($conn) . "');</script>";
+    }
+}
+?>
 <!DOCTYPE html>
 <html>
 <head>
@@ -86,7 +109,7 @@
                 <div class="error" id="description_error"></div>
             </div>
 
-            <button type="submit">Register Farm</button>
+            <button type="submit" name="submit">Register Farm</button>
         </form>
     </div>
 

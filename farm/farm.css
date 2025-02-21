@@ -78,31 +78,7 @@ body {
     transition: width 0.3s ease;
 }
 
-.sidebar.shrink {
-    width: 80px;
-}
 
-.sidebar .sidebar-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.sidebar .sidebar-header h2 {
-    transition: opacity 0.3s ease, width 0.3s ease;
-}
-
-.sidebar.shrink .sidebar-header h2 {
-    opacity: 0;
-    visibility: hidden;
-    width: 0;
-}
-
-.sidebar .menu img {
-    width: 25px;
-    height: 25px;
-    cursor: pointer;
-}
 
 .sidebar-menu {
     list-style: none;
@@ -135,16 +111,9 @@ body {
     text-align: center;
 }
 
-.sidebar.shrink .sidebar-menu span {
-    opacity: 0;
-    visibility: hidden;
-    width: 0;
-    transition: opacity 0.3s ease, width 0.3s ease;
-}
 
-.sidebar.shrink .sidebar-menu i {
-    margin-right: 0;
-}
+
+
 
 .main-content {
     margin-left: 250px;

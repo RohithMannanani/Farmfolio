@@ -101,3 +101,56 @@ product img showing
  <div class='product-image'>
                              <img src='/api/placeholder/250/200' alt='" . htmlspecialchars($product['product_name']) . "' style='max-width: 100%; height: auto;'>
                          </div>
+
+
+fev button
+
+<div class="farm-card">
+    <button class="favorite-btn" onclick="toggleFavorite(this)">
+        <i class="fas fa-heart"></i>
+    </button>
+    <div class="farm-image">
+        <!-- Replace with actual farm image when available -->
+        <img src="../<?php echo htmlspecialchars($farm['farm_image']); ?>" alt="<?php echo htmlspecialchars($farm['farm_name']); ?>">
+    </div>
+    <div class="farm-details">
+        <h3><?php echo htmlspecialchars($farm['farm_name']); ?></h3>
+        <p class="location"><i class="fas fa-map-marker-alt"></i> <?php echo htmlspecialchars($farm['location']); ?></p>
+        <p class="description"><?php echo htmlspecialchars($farm['description']); ?></p>
+        <div class="farm-stats">
+            <span class="product-count"><i class="fas fa-box"></i> <?php echo $farm['product_count']; ?> Products</span>
+        </div>
+        <a href="view_farm.php?farm_id=<?php echo $farm['farm_id']; ?>" class="view-farm">View Farm</a>
+    </div>
+</div>
+
+.favorite-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: rgba(255, 255, 255, 0.8);
+    border: none;
+    border-radius: 50%;
+    width: 35px;
+    height: 35px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.favorite-btn i {
+    color: #d1d5db; /* Gray by default */
+    font-size: 1.2rem;
+    transition: color 0.3s ease;
+}
+
+.favorite-btn.active i {
+    color: #e63946; /* Red when active */
+}
+
+function toggleFavorite(button) {
+    button.classList.toggle('active');
+}

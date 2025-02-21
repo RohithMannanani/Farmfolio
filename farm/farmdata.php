@@ -32,17 +32,15 @@
 <nav class="sidebar">
         <div class="sidebar-header">
             <h2>Farmfolio</h2>
-            <button id="sidebarToggle" class="menu-icon">
-                <i class="fas fa-bars"></i>
-            </button>
         </div>
         <ul class="sidebar-menu">
-            <li><a href="farm.php" class="active"><i class="fas fa-home"></i><span>Dashboard</span></a></li>
-            <li><a href="product.php"><i class="fas fa-box"></i><span>Products</span></a></li>
+            <li><a href="farm.php"><i class="fas fa-home"></i><span>Dashboard</span></a></li>
+            <li><a href="product.php" class="active"><i class="fas fa-box"></i><span>Products</span></a></li>
+            <li><a href="image.php"><i class="fas fa-image"></i><span>Farm Images</span></a></li>
             <li><a href="event.php"><i class="fas fa-calendar"></i><span>Events</span></a></li>
             <li><a href="review.php"><i class="fas fa-star"></i><span>Reviews</span></a></li>
             <li><a href="orders.php"><i class="fas fa-truck"></i><span>Orders</span></a></li>
-            <li><a href="setting.php"><i class="fas fa-cog"></i><span>Settings</span></a></li>
+            <li><a href="settings.php"><i class="fas fa-cog"></i><span>Settings</span></a></li>
             <li><a href="about.php"><i class="fas fa-info-circle"></i><span>About</span></a></li>
         </ul>
     </nav>

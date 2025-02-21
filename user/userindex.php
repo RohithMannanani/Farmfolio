@@ -1,8 +1,40 @@
 <?php
+include '../databse/connect.php';
 session_start();
 if(!isset($_SESSION['username'])){
     header('location: http://localhost/mini%20project/login/login.php');
 }
+
+// Modified query to show all active farms, even without images
+$farms_query = "SELECT 
+    f.farm_id,
+    f.farm_name,
+    f.location,
+    f.description,
+    f.created_at,
+    f.status,
+    COUNT(p.product_id) as product_count,
+    MIN(fi.path) as farm_image  -- Get first image if exists
+FROM tbl_farms f
+LEFT JOIN tbl_products p ON f.farm_id = p.farm_id
+LEFT JOIN tbl_farm_image fi ON f.farm_id = fi.farm_id
+WHERE f.status = 'active'
+GROUP BY f.farm_id
+ORDER BY f.created_at DESC";
+
+$farms_result = mysqli_query($conn, $farms_query);
+
+// Check if farm is favorited by current user
+function isFarmFavorited($conn, $farm_id, $user_id) {
+    $query = "SELECT * FROM tbl_favorites WHERE farm_id = ? AND user_id = ?";
+    $stmt = mysqli_prepare($conn, $query);
+    mysqli_stmt_bind_param($stmt, "ii", $farm_id, $user_id);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
+    return mysqli_num_rows($result) > 0;
+}
+?>
+
 ?><!DOCTYPE html>
 <html lang="en">
 <head>
@@ -334,6 +366,7 @@ if(!isset($_SESSION['username'])){
             border-radius: 12px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.05);
             transition: transform 0.3s ease;
+            position: relative;
         }
 
         .farm-card:hover {
@@ -406,6 +439,183 @@ if(!isset($_SESSION['username'])){
             padding: 20px;
             box-sizing: border-box;
         }
+
+        .recent-farms {
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .recent-farms h2 {
+            color: #1a4d2e;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+
+        .farms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .favorite-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 1;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .favorite-btn i {
+            color: #d1d5db;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+        }
+
+        .favorite-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .favorite-btn.active i {
+            color: #e63946;
+        }
+
+        .favorite-btn:hover i {
+            color: #e63946;
+        }
+
+        .favorite-btn.active:hover i {
+            color: #d1d5db;
+        }
+
+        .farm-image {
+            width: 100%;
+            height: 200px;
+            overflow: hidden;
+            background: #f3f4f6;
+            position: relative;
+        }
+
+        .farm-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .farm-details {
+            padding: 20px;
+        }
+
+        .farm-details h3 {
+            color: #1a4d2e;
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+        }
+
+        .location {
+            color: #666;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .location i {
+            color: #1a4d2e;
+        }
+
+        .description {
+            color: #666;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+
+        .farm-stats {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .product-count {
+            background: #e8f5e9;
+            color: #1a4d2e;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .view-farm {
+            display: inline-block;
+            padding: 8px 16px;
+            background: #1a4d2e;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            transition: background 0.3s ease;
+            width: 100%;
+            text-align: center;
+        }
+
+        .view-farm:hover {
+            background: #2d6a4f;
+        }
+
+        .no-farms {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            font-size: 1.1rem;
+            grid-column: 1 / -1;
+        }
+
+        @media (max-width: 768px) {
+            .farms-grid {
+                grid-template-columns: 1fr;
+                padding: 10px;
+            }
+        }
+
+        .no-image {
+            width: 100%;
+            height: 100%;
+            background: #f3f4f6;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #6b7280;
+        }
+
+        .no-image i {
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+
+        .no-image p {
+            font-size: 0.9rem;
+        }
+
+        /* Ensure header/navbar has higher z-index */
+        .header, 
+        .navbar,
+        .profile-section {
+            z-index: 100; /* Higher z-index for header elements */
+            position: relative;
+        }
     </style>
 </head>
 <body>
@@ -474,6 +684,62 @@ if(!isset($_SESSION['username'])){
                  <?php
                 ?> 
             </div>  -->
+
+            <!-- Add this section where you want to display farms -->
+            <div class="recent-farms">
+                <h2>Available Farms</h2>
+                <div class="farms-grid">
+                    <?php
+                    if(mysqli_num_rows($farms_result) > 0) {
+                        while($farm = mysqli_fetch_assoc($farms_result)) {
+                            $is_favorited = isFarmFavorited($conn, $farm['farm_id'], $_SESSION['userid']);
+                            ?>
+                            <div class="farm-card">
+                                <button class="favorite-btn <?php echo $is_favorited ? 'active' : ''; ?>" 
+                                        data-farm-id="<?php echo $farm['farm_id']; ?>"
+                                        onclick="addToFavorites(this, <?php echo $farm['farm_id']; ?>)">
+                                    <i class="fas fa-heart"></i>
+                                </button>
+                                <div class="farm-image">
+                                    <?php if($farm['farm_image']): ?>
+                                        <img src="../<?php echo htmlspecialchars($farm['farm_image']); ?>" 
+                                             alt="<?php echo htmlspecialchars($farm['farm_name']); ?>">
+                                    <?php else: ?>
+                                        <!-- Default image when no farm image is available -->
+                                        <div class="no-image">
+                                            <i class="fas fa-farm"></i>
+                                            <p>No Image Available</p>
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
+                                <div class="farm-details">
+                                    <h3><?php echo htmlspecialchars($farm['farm_name']); ?></h3>
+                                    <p class="location">
+                                        <i class="fas fa-map-marker-alt"></i> 
+                                        <?php echo htmlspecialchars($farm['location']); ?>
+                                    </p>
+                                    <p class="description">
+                                        <?php echo htmlspecialchars(substr($farm['description'], 0, 100)) . '...'; ?>
+                                    </p>
+                                    <div class="farm-stats">
+                                        <span class="product-count">
+                                            <i class="fas fa-box"></i> 
+                                            <?php echo $farm['product_count']; ?> Products
+                                        </span>
+                                    </div>
+                                    <a href="farm_details.php?id=<?php echo $farm['farm_id']; ?>" class="view-farm">
+                                        View Farm
+                                    </a>
+                                </div>
+                            </div>
+                            <?php
+                        }
+                    } else {
+                        echo "<div class='no-farms'>No farms available at the moment</div>";
+                    }
+                    ?>
+                </div>
+            </div>
         </div>
 
         <!-- Footer -->
@@ -534,5 +800,57 @@ if(!isset($_SESSION['username'])){
         })
 
            </script>
+
+    <script>
+    async function addToFavorites(button, farmId) {
+        try {
+            // Add loading state
+            button.classList.add('loading');
+            
+            console.log('Managing favorites for farm:', farmId);
+            
+            const response = await fetch('add_favorite.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `farm_id=${farmId}`
+            });
+
+            console.log('Response status:', response.status);
+            
+            const data = await response.json();
+            console.log('Response data:', data);
+            
+            // Remove loading state
+            button.classList.remove('loading');
+            
+            if (data.success) {
+                // Toggle the active class based on the action
+                if (data.action === 'added') {
+                    button.classList.add('active');
+                } else if (data.action === 'removed') {
+                    button.classList.remove('active');
+                }
+                
+                // Update favorite count if it exists
+                const favoriteCount = document.querySelector('.value');
+                if (favoriteCount) {
+                    let count = parseInt(favoriteCount.textContent);
+                    count = data.action === 'added' ? count + 1 : count - 1;
+                    favoriteCount.textContent = count;
+                }
+            } else {
+                throw new Error(data.message || 'Error managing favorites');
+            }
+        } catch (error) {
+            // Remove loading state
+            button.classList.remove('loading');
+            
+            console.error('Error:', error);
+            alert(error.message || 'An error occurred while managing favorites');
+        }
+    }
+    </script>
 
 </body>

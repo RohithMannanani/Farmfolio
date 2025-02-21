@@ -98,16 +98,6 @@ if(!isset($_SESSION['username'])){
             background: #2d6a4f;
             font-weight: 500;
         }
-        .sidebar.shrink .sidebar-menu span {
-            opacity: 0;
-            visibility: hidden;
-            width: 0;
-            transition: opacity 0.3s ease, width 0.3s ease;
-        }
-
-        .sidebar.shrink .sidebar-menu i {
-            margin-right: 0;
-        }
 
         .pro {
             display: flex;
@@ -210,9 +200,6 @@ if(!isset($_SESSION['username'])){
             background-color: #f0f2f5;
         }
 
-        .main-content.shrink {
-            margin-left: 80px;
-        }
 
         @media (max-width: 768px) {
             .sidebar {
@@ -224,13 +211,7 @@ if(!isset($_SESSION['username'])){
                 margin-left: 60px;
             }
 
-            .sidebar.shrink {
-                width: 60px;
-            }
-
-            .main-content.shrink {
-                margin-left: 60px;
-            }
+            
         }
 
         .dashboard-header {
@@ -246,118 +227,7 @@ if(!isset($_SESSION['username'])){
             font-size: 1.8rem;
         }
 
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 25px;
-            margin-bottom: 30px;
-        }
-
-        .stat-card {
-            background: white;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            transition: transform 0.3s ease;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-5px);
-        }
-
-        .stat-card h3 {
-            color: #4b5563;
-            font-size: 1rem;
-            margin-bottom: 15px;
-        }
-
-        .stat-card .value {
-            font-size: 2rem;
-            font-weight: 600;
-            color: #1a4d2e;
-        }
-
-        .chart-container {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 25px;
-            margin-bottom: 30px;
-        }
-
-        .chart-card {
-            background: white;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-        }
-
-        .chart-card h2 {
-            color: #1a4d2e;
-            margin-bottom: 20px;
-            font-size: 1.3rem;
-        }
-
-        .order-item {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            transition: all 0.3s ease;
-        }
-
-        .order-item:hover {
-            background: #fff;
-            box-shadow: 0 2px 15px rgba(0,0,0,0.08);
-        }
-
-        .notification-item {
-            padding: 15px;
-            border-left: 4px solid #1a4d2e;
-            background: #f8f9fa;
-            margin-bottom: 10px;
-            border-radius: 0 8px 8px 0;
-        }
-
-        .notification-message {
-            color: #1f2937;
-            margin-bottom: 5px;
-        }
-
-        .notification-time {
-            color: #6b7280;
-        }
-
-        .farm-card {
-            background: white;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            transition: transform 0.3s ease;
-        }
-
-        .farm-card:hover {
-            transform: translateY(-5px);
-        }
-
-        .farm-card h3 {
-            color: #1a4d2e;
-            margin-bottom: 15px;
-        }
-
-        .view-farm {
-            display: inline-block;
-            padding: 8px 16px;
-            background: #1a4d2e;
-            color: white;
-            border-radius: 6px;
-            text-decoration: none;
-            margin-top: 15px;
-            transition: background 0.3s ease;
-        }
-
-        .view-farm:hover {
-            background: #2d6a4f;
-        }
+        
 
         .footer {
             background: white;
@@ -384,22 +254,9 @@ if(!isset($_SESSION['username'])){
             box-shadow: 0 2px 10px rgba(220,38,38,0.2);
         }
 
-        @media (max-width: 1024px) {
-            .chart-container {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .main-content {
-                padding: 15px;
-            }
-
-            .stats-grid {
-                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-                gap: 15px;
-            }
-        }
+       
+            
+        
     </style>
 </head>
 <body>
@@ -441,68 +298,6 @@ if(!isset($_SESSION['username'])){
                 </div>
             </div>
 
-            <!-- Stats Grid -->
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <h3>Total Orders</h3>
-                    <div class="value">24</div>
-                </div>
-                <div class="stat-card">
-                    <h3>Favorite Farms</h3>
-                    <div class="value">12</div>
-                </div>
-                <div class="stat-card">
-                    <h3>Upcoming Events</h3>
-                    <div class="value">3</div>
-                </div>
-                <div class="stat-card">
-                    <h3>Active Orders</h3>
-                    <div class="value">2</div>
-                </div>
-            </div>
-
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <h3>Total Orders</h3>
-                    <div class="value">24</div>
-                </div>
-                <div class="stat-card">
-                    <h3>Favorite Farms</h3>
-                    <div class="value">12</div>
-                </div>
-                <div class="stat-card">
-                    <h3>Upcoming Events</h3>
-                    <div class="value">3</div>
-                </div>
-                <div class="stat-card">
-                    <h3>Active Orders</h3>
-                    <div class="value">2</div>
-                </div>
-            </div>
-
-
-            <!-- Favorite Farms -->
-            <h2>Your Favorite Farms</h2>
-            <div class="stats-grid">
-                <?php
-                // Fetch favorite farms (mock data)
-                $favorite_farms = [
-                    ['name' => 'Green Valley Farm', 'rating' => '4.5', 'products' => '15'],
-                    ['name' => 'Sunrise Organics', 'rating' => '4.8', 'products' => '23'],
-                    ['name' => 'Fresh Fields', 'rating' => '4.2', 'products' => '18']
-                ];
-
-                foreach($favorite_farms as $farm) {
-                    echo "<div class='farm-card'>
-                        <h3>{$farm['name']}</h3>
-                        <p>Rating: {$farm['rating']} ⭐</p>
-                        <p>Available Products: {$farm['products']}</p>
-                        <a href='#' class='view-farm'>View Farm</a>
-                    </div>";
-                }
-                ?>
-            </div>
-        </div>
 
         <!-- Footer -->
         <div class="footer">
