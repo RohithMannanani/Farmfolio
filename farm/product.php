@@ -1,9 +1,9 @@
 <?php
 session_start();
 include '../databse/connect.php';
-if(!isset($_SESSION['username'])){
-    header('location: http://localhost/mini%20project/login/login.php');
-}
+// if(!isset($_SESSION['username'])){
+//     header('location: http://localhost/mini%20project/login/login.php');
+// }
 
 // Check farm status
 $is_farm_active = false;
@@ -12,18 +12,30 @@ if(isset($_SESSION['userid'])){
     $farm = "SELECT * FROM tbl_farms WHERE user_id=$userid";
     $result = mysqli_query($conn, $farm);
     $row = $result->fetch_assoc();
-    
+    $_SESSION['farm_id']=$row['farm_id'];
     if($row && $row['status'] == 'active') {
         $is_farm_active = true;
         $farm_id = $row['farm_id'];
     }
 }
-
+ 
 // Only proceed with other queries if farm is active
 if($is_farm_active) {
-    // Fetch categories from database
-    $category_query = "SELECT * FROM tbl_category";
+    // Fetch categories and subcategories for the current farm
+    $category_query = "SELECT c.category_id, c.category, c.sub 
+                      FROM tbl_category c 
+                      INNER JOIN tbl_fc ON c.category_id = tbl_fc.category_id 
+                      WHERE tbl_fc.farm_id = $farm_id";
     $category_result = mysqli_query($conn, $category_query);
+    $farm_subcategories = array();
+    
+    while($category = mysqli_fetch_assoc($category_result)) {
+        $farm_subcategories[] = array(
+            'id' => $category['category_id'],
+            'category' => $category['category'],
+            'sub' => $category['sub']
+        );
+    }
 
     // Fetch products for the current farm
     $products_query = "SELECT p.*, c.category 
@@ -35,22 +47,20 @@ if($is_farm_active) {
 }
 
 // Add product form submission handling
-// Add product form submission handling
 if(isset($_POST['submit'])) {
     $product_name = mysqli_real_escape_string($conn, $_POST['productName']);
     $price = mysqli_real_escape_string($conn, $_POST['productPrice']);
     $stock = mysqli_real_escape_string($conn, $_POST['productStock']);
     $description = mysqli_real_escape_string($conn, $_POST['productDescription']);
-    $category_id = mysqli_real_escape_string($conn, $_POST['productCategory']); 
+    $category_id = mysqli_real_escape_string($conn, $_POST['productCategory']);
+    $unit = mysqli_real_escape_string($conn, $_POST['productUnit']);
 
-    // Insert into tbl_products
-    $insert_query = "INSERT INTO tbl_products (farm_id, product_name, price, stock, description, created_at, category_id) 
-                     VALUES ('$farm_id', '$product_name', '$price', '$stock', '$description', NOW(), '$category_id')";
+    $insert_query = "INSERT INTO tbl_products (farm_id, product_name, price, stock, description, category_id, unit) 
+                     VALUES ('$farm_id', '$product_name', '$price', '$stock', '$description', '$category_id', '$unit')";
 
     if(mysqli_query($conn, $insert_query)) {
-        // Redirect to prevent form resubmission on page refresh
-        header("Location: product.php");
-        exit(); // Make sure to exit after redirection
+        echo "<script>alert('Product added successfully!');</script>";
+        echo "<script>window.location.href='product.php';</script>";
     } else {
         echo "<script>alert('Error adding product: " . mysqli_error($conn) . "');</script>";
     }
@@ -64,19 +74,20 @@ if(isset($_POST['edit_submit'])) {
     $stock = mysqli_real_escape_string($conn, $_POST['productStock']);
     $description = mysqli_real_escape_string($conn, $_POST['productDescription']);
     $category_id = mysqli_real_escape_string($conn, $_POST['productCategory']);
+    $unit = mysqli_real_escape_string($conn, $_POST['productUnit']);
 
     $update_query = "UPDATE tbl_products 
                     SET product_name = '$product_name',
                         price = '$price',
                         stock = '$stock',
                         description = '$description',
-                        category_id = '$category_id'
+                        category_id = '$category_id',
+                        unit = '$unit'
                     WHERE product_id = '$product_id' AND farm_id = '$farm_id'";
 
     if(mysqli_query($conn, $update_query)) {
         echo "<script>alert('Product updated successfully!');</script>";
-        header("Location: product.php");
-        exit();
+        echo "<script>window.location.href='product.php';</script>";
     } else {
         echo "<script>alert('Error updating product: " . mysqli_error($conn) . "');</script>";
     }
@@ -91,17 +102,43 @@ if(isset($_GET['get_product']) && isset($_GET['id'])) {
     echo json_encode($product);
     exit();
 }
-// Handle delete product request
-if(isset($_GET['delete_product']) && isset($_GET['id'])) {
-    $product_id = mysqli_real_escape_string($conn, $_GET['id']);
+// Handle activate product request
+if (isset($_GET['activate_product']) && isset($_GET['id'])) {
+    $product_id = intval($_GET['id']);
     
-    // Ensure the product belongs to the current farm
-    $delete_query = "DELETE FROM tbl_products WHERE product_id = '$product_id' AND farm_id = '$farm_id'";
+    // Update the status to '1' to activate the product
+    $update_query = "UPDATE tbl_products SET status = '0' WHERE product_id = ?";
+    $stmt = $conn->prepare($update_query);
     
-    if(mysqli_query($conn, $delete_query)) {
-        echo json_encode(["success" => true, "message" => "Product deleted successfully."]);
+    if ($stmt) {
+        $stmt->bind_param("i", $product_id);
+        if ($stmt->execute()) {
+            echo json_encode(["success" => true, "message" => "Product activated successfully."]);
+        } else {
+            echo json_encode(["success" => false, "message" => "Error activating product: " . $stmt->error]);
+        }
     } else {
-        echo json_encode(["success" => false, "message" => "Error deleting product: " . mysqli_error($conn)]);
+        echo json_encode(["success" => false, "message" => "Error preparing statement: " . $conn->error]);
+    }
+    exit();
+}
+// Handle deactivate product request
+if (isset($_GET['deactivate_product']) && isset($_GET['id'])) {
+    $product_id = intval($_GET['id']);
+    
+    // Update the status to '0' to deactivate the product
+    $update_query = "UPDATE tbl_products SET status = '1' WHERE product_id = ?";
+    $stmt = $conn->prepare($update_query);
+    
+    if ($stmt) {
+        $stmt->bind_param("i", $product_id);
+        if ($stmt->execute()) {
+            echo json_encode(["success" => true, "message" => "Product deactivated successfully."]);
+        } else {
+            echo json_encode(["success" => false, "message" => "Error deactivating product: " . $stmt->error]);
+        }
+    } else {
+        echo json_encode(["success" => false, "message" => "Error preparing statement: " . $conn->error]);
     }
     exit();
 }
@@ -302,24 +339,105 @@ if(isset($_GET['delete_product']) && isset($_GET['id'])) {
             color: #1a4d2e;
             margin-bottom: 20px;
         }
+        .error-message {
+    color: red;
+    font-size: 0.9em;
+    margin-top: 5px;
+    display: block;
+}
+.deactivate-btn {
+    background-color: #dc2626; /* Red for deactivating */
+    color: white;
+}
+
+.activate-btn {
+    background-color: #1a4d2e; /* Green for activating */
+    color: white;
+}
+
+.deactivate-btn:hover {
+    background-color: #c62828; /* Darker red on hover */
+}
+
+.activate-btn:hover {
+    background-color: #155724; /* Darker green on hover */
+}
+.inactive-product {
+        opacity: 0.7;
+        position: relative;
+        background: #f8f8f8;
+        border: 1px solid #ddd;
+    }
+
+    .inactive-label {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background-color: #dc2626;
+        color: white;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 0.8em;
+        font-weight: bold;
+    }
+
+    .inactive-product .product-details {
+        position: relative;
+    }
+
+    .inactive-product::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255, 255, 255, 0.1);
+        pointer-events: none;
+    }
+
+    .activate-btn {
+        background-color: #1a4d2e;
+        color: white;
+        padding: 5px 10px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    .deactivate-btn {
+        background-color: #dc2626;
+        color: white;
+        padding: 5px 10px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    .activate-btn:hover {
+        background-color: #155724;
+    }
+
+    .deactivate-btn:hover {
+        background-color: #c62828;
+    }
     </style>
 </head>
 <body>
     <nav class="sidebar">
         <div class="sidebar-header">
             <h2>Farmfolio</h2>
-            <button id="sidebarToggle" class="menu-icon">
-                <i class="fas fa-bars"></i>
-            </button>
+           
         </div>
         <ul class="sidebar-menu">
             <li><a href="farm.php"><i class="fas fa-home"></i><span>Dashboard</span></a></li>
             <li><a href="product.php" class="active"><i class="fas fa-box"></i><span>Products</span></a></li>
-            <li><a href="#"><i class="fas fa-calendar"></i><span>Events</span></a></li>
-            <li><a href="#"><i class="fas fa-star"></i><span>Reviews</span></a></li>
+            <li><a href="image.php"><i class="fas fa-image"></i><span>Farm Images</span></a></li>
+            <li><a href="event.php"><i class="fas fa-calendar"></i><span>Events</span></a></li>
+            <li><a href="review.php"><i class="fas fa-star"></i><span>Reviews</span></a></li>
             <li><a href="#"><i class="fas fa-truck"></i><span>Orders</span></a></li>
-            <li><a href="#"><i class="fas fa-cog"></i><span>Settings</span></a></li>
-            <li><a href="#"><i class="fas fa-info-circle"></i><span>About</span></a></li>
+            <!-- <li><a href="#"><i class="fas fa-cog"></i><span>Settings</span></a></li>
+            <li><a href="#"><i class="fas fa-info-circle"></i><span>About</span></a></li> -->
         </ul>
     </nav>
 
@@ -360,34 +478,58 @@ if(isset($_GET['delete_product']) && isset($_GET['id'])) {
                     <form id="productForm" method="POST">
                         <input type="hidden" id="product_id" name="product_id">
                         <div class="form-group">
-                            <label for="productName">Product Name</label>
-                            <input type="text" id="productName" name="productName" required>
-                        </div>
+    <label for="productName">Product Name</label>
+    <input type="text" id="productName" name="productName" required>
+    <!-- Error message will be inserted here -->
+</div>
                         <div class="form-group">
-                            <label for="productDescription">Description</label>
-                            <textarea id="productDescription" name="productDescription" rows="3" required></textarea>
-                        </div>
-                        <div class="form-group">
-                            <label for="productPrice">Price (₹)</label>
-                            <input type="number" id="productPrice" name="productPrice" step="0.01" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="productCategory">Category</label>
-                            <select id="productCategory" name="productCategory" required>
-                                <option value="">Select Category</option>
-                                <?php
-                                // Reset the category result pointer
-                                mysqli_data_seek($category_result, 0);
-                                while($category = mysqli_fetch_assoc($category_result)) {
-                                    echo "<option value='" . $category['category_id'] . "'>" . htmlspecialchars($category['category']) . "</option>";
-                                }
-                                ?>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="productStock">Stock Quantity</label>
-                            <input type="number" id="productStock" name="productStock" required>
-                        </div>
+        <label for="productCategory">Category*</label>
+        <select id="productCategory" name="productCategory" required>
+            <option value="">Select Category</option>
+            <?php 
+            if (!empty($farm_subcategories)): 
+                foreach($farm_subcategories as $category): 
+            ?>
+                <option value="<?php echo htmlspecialchars($category['id']); ?>">
+                    <?php echo htmlspecialchars(ucfirst($category['sub'])); ?>
+                </option>
+            <?php 
+                endforeach; 
+            endif;
+            ?>
+        </select>
+        <div class="error-message"></div>
+        <?php if (empty($farm_subcategories)): ?>
+            <div class="error-message">No categories available. Please contact administrator.</div>
+        <?php endif; ?>
+    </div>
+<div class="form-group">
+    <label for="productDescription">Description</label>
+    <textarea id="productDescription" name="productDescription" rows="3" required></textarea>
+    <!-- Error message will be inserted here -->
+</div>
+<div class="form-group">
+    <label for="productPrice">Price (₹)</label>
+    <input type="number" id="productPrice" name="productPrice" step="0.01" required>
+    <!-- Error message will be inserted here -->
+</div>
+
+<div class="form-group">
+    <label for="productStock">Stock Quantity</label>
+    <input type="number" id="productStock" name="productStock" required>
+    <!-- Error message will be inserted here -->
+</div>
+<div class="form-group">
+    <label for="productUnit">Unit</label>
+    <select id="productUnit" name="productUnit" required>
+        <option value="">Select Unit</option>
+        <option value="kg">Kilogram (kg)</option>
+        <option value="g">Gram (g)</option>
+        <option value="l">Liter (l)</option>
+        <option value="ml">Milliliter (ml)</option>
+    </select>
+    <!-- Error message will be inserted here -->
+</div>
                         <div class="modal-actions">
                             <button type="button" class="cancel-btn" onclick="closeModal()">Cancel</button>
                             <button type="submit" name="submit" class="save-btn" id="submitBtn">Save Product</button>
@@ -413,21 +555,28 @@ if(isset($_GET['delete_product']) && isset($_GET['id'])) {
             grid.innerHTML = `
                 <?php
                 while($product = mysqli_fetch_assoc($products_result)) {
+                    $statusClass = $product['status'] == '1' ? 'inactive-product' : '';
+                    $statusLabel = $product['status'] == '1' ? '<div class="inactive-label">Inactive</div>' : '';
+                    
+                    // Determine which button to show based on status
+                   // Determine which button to show based on status
+$actionButton = $product['status'] == '0' 
+? "<button class='deactivate-btn' onclick='deactivateProduct(" . $product['product_id'] . ")'><i class='fas fa-times'></i> Deactivate</button>"
+: "<button class='activate-btn' onclick='activateProduct(" . $product['product_id'] . ")'><i class='fas fa-check'></i> Activate</button>";
+                    
                     echo "
-                    <div class='product-card'>
-                       
+                    <div class='product-card {$statusClass}'>
                         <div class='product-details'>
+                            {$statusLabel}
                             <div class='product-title'>" . htmlspecialchars($product['product_name']) . "</div>
                             <div class='product-price'>₹" . number_format($product['price'], 2) . "</div>
-                            <div class='product-stock'>In Stock: " . htmlspecialchars($product['stock']) . "</div>
+                            <div class='product-stock'>In Stock: " . htmlspecialchars($product['stock']) . " " . htmlspecialchars(strtoupper($product['unit'])) . "</div>
                             <div class='product-category'>Category: " . htmlspecialchars($product['category']) . "</div>
                             <div class='product-actions'>
                                 <button class='edit-btn' onclick='editProduct(" . $product['product_id'] . ")'>
                                     <i class='fas fa-edit'></i> Edit
                                 </button>
-                                <button class='delete-btn' onclick='deleteProduct(" . $product['product_id'] . ")'>
-                                    <i class='fas fa-trash'></i> Delete
-                                </button>
+                                {$actionButton}
                             </div>
                         </div>
                     </div>
@@ -449,6 +598,7 @@ if(isset($_GET['delete_product']) && isset($_GET['id'])) {
             document.getElementById('productPrice').value = product.price;
             document.getElementById('productCategory').value = product.category_id;
             document.getElementById('productStock').value = product.stock;
+            document.getElementById('productUnit').value = product.unit;
             
             // Show edit button, hide submit button
             document.getElementById('submitBtn').style.display = 'none';
@@ -483,22 +633,149 @@ if(isset($_GET['delete_product']) && isset($_GET['id'])) {
         // Initialize the page
         renderProducts();
 
-        // Function to delete a product
-async function deleteProduct(productId) {
-    if (confirm("Are you sure you want to delete this product?")) {
-        const response = await fetch(`product.php?delete_product=1&id=${productId}`);
-        const result = await response.json();
+     
+        async function activateProduct(productId) {
+            if (confirm("Are you sure you want to activate this product?")) {
+                const response = await fetch(`product.php?activate_product=1&id=${productId}`);
+                const result = await response.json();
 
-        if (result.success) {
-            alert(result.message);
-            location.reload(); // Reload page to update product list
-        } else {
-            alert("Error: " + result.message);
+                if (result.success) {
+                    alert(result.message);
+                    location.reload(); // Reload the page to update the product list
+                } else {
+                    alert("Error: " + result.message);
+                }
+            }
         }
-    }
-}
+
+        async function deactivateProduct(productId) {
+            if (confirm("Are you sure you want to deactivate this product?")) {
+                const response = await fetch(`product.php?deactivate_product=1&id=${productId}`);
+                const result = await response.json();
+
+                if (result.success) {
+                    alert(result.message);
+                    location.reload(); // Reload the page to update the product list
+                } else {
+                    alert("Error: " + result.message);
+                }
+            }
+        }
 
     </script>
     <?php endif; ?>
+<script>
+ document.addEventListener("DOMContentLoaded", function () {
+    const form = document.getElementById("productForm");
+    const submitBtn = document.getElementById("submitBtn");
+    const editBtn = document.getElementById("editBtn");
+
+    // Function to validate the form
+    function validateForm() {
+        let isValid = true;
+
+        const productName = document.getElementById("productName");
+        const productDescription = document.getElementById("productDescription");
+        const productPrice = document.getElementById("productPrice");
+        const productStock = document.getElementById("productStock");
+        const productCategory = document.getElementById("productCategory");
+        const productUnit = document.getElementById("productUnit");
+
+        const namePattern = /^[a-zA-Z-_ ]{4,50}$/;
+        const descriptionPattern = /^[a-zA-Z0-9.,'"\-_\s]{10,}$/;
+
+        // Function to show error messages
+        function showError(input, message) {
+            let errorDiv = input.nextElementSibling;
+            
+            // Check if the error message element already exists
+            if (!errorDiv || !errorDiv.classList.contains("error-message")) {
+                errorDiv = document.createElement("span");
+                errorDiv.className = "error-message";
+                errorDiv.style.color = "red";
+                errorDiv.style.fontSize = "0.9em";
+                input.parentNode.appendChild(errorDiv);
+            }
+
+            errorDiv.textContent = message; // Set the error message
+            isValid = false; // Mark the form as invalid
+        }
+
+        // Function to clear error messages
+        function clearError(input) {
+            let errorDiv = input.nextElementSibling;
+            if (errorDiv && errorDiv.classList.contains("error-message")) {
+                errorDiv.textContent = ""; // Clear the error message
+            }
+        }
+
+        // Validate Product Name
+        if (productName.value.trim() === "") {
+            showError(productName, "Product name is required.");
+        } else if (!namePattern.test(productName.value.trim())) {
+            showError(productName, "Name must be 3-50 characters long and contain only letters, numbers, - or _.");
+        } else {
+            clearError(productName);
+        }
+
+        // Validate Description
+        if (productDescription.value.trim() === "") {
+            showError(productDescription, "Description is required.");
+        } else if (!descriptionPattern.test(productDescription.value.trim())) {
+            showError(productDescription, "Description must be at least 10 characters long.");
+        } else {
+            clearError(productDescription);
+        }
+
+        // Validate Price
+        if (productPrice.value.trim() === "" || isNaN(productPrice.value) || productPrice.value <= 0) {
+            showError(productPrice, "Enter a valid price.");
+        } else {
+            clearError(productPrice);
+        }
+
+        // Validate Stock
+        if (productStock.value.trim() === "" || isNaN(productStock.value) || productStock.value < 0) {
+            showError(productStock, "Enter a valid stock quantity.");
+        } else {
+            clearError(productStock);
+        }
+
+        // Validate Category
+        if (productCategory.value === "") {
+            showError(productCategory, "Please select a category.");
+        } else {
+            clearError(productCategory);
+        }
+
+        // Validate Unit
+        if (productUnit.value === "") {
+            showError(productUnit, "Please select a unit.");
+        } else {
+            clearError(productUnit);
+        }
+
+        // Enable/disable buttons based on form validity
+        submitBtn.disabled = !isValid;
+        editBtn.disabled = !isValid;
+
+        console.log("Form validation completed. Form is valid:", isValid); // Debugging
+    }
+
+    // Add event listeners for live validation
+    form.addEventListener("input", function (e) {
+        validateForm();
+    });
+
+    form.addEventListener("change", function (e) {
+        validateForm();
+    });
+
+    // Initial validation on page load
+    validateForm();
+});
+</script>
+
+
 </body>
 </html>

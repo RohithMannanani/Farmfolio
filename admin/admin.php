@@ -227,6 +227,7 @@ if ($count_result1) {
             <li><a href="admin.php" class="active"><i class="fas fa-home"></i><span>Home</span></a></li>
             <li><a href="user.php"><i class="fas fa-users"></i><span>Users</span></a></li>
             <li><a href="farm.php"><i class="fas fa-store"></i><span>Farms</span></a></li>
+            <li><a href="category.php"><i class="fas fa-th-large"></i><span>category</span></a></li>
             <li><a href="#"><i class="fas fa-box"></i><span>Products</span></a></li>
             <li><a href="#"><i class="fas fa-truck"></i><span>Deliveries</span></a></li>
             <li><a href="#"><i class="fas fa-star"></i><span>Reviews</span></a></li>
@@ -251,7 +252,12 @@ if ($count_result1) {
                 <h3>Total Products</h3>
                 <div class="value">5</div>
                 <button id="product">View</button>
-            </div><br>
+            </div>
+            <div class="stat-card">
+                <h3>Category</h3>
+                <div class="value"></div>
+                <a href="user.php"><button id="user">View</button></a>
+            </div>
         </div>
         <footer class="footer">
             <p>© 2025 Farmfolio Admin Panel. All rights reserved.</p>

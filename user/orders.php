@@ -3,6 +3,54 @@ session_start();
 if(!isset($_SESSION['username'])){
     header('location: http://localhost/mini%20project/login/login.php');
 }
+
+// Include database connection
+include '../databse/connect.php';
+
+// Fetch all orders for the current user
+$userId = $_SESSION['userid'];
+$query = "SELECT o.*, 
+          COUNT(oi.item_id) as total_items 
+          FROM tbl_orders o 
+          LEFT JOIN tbl_order_items oi ON o.order_id = oi.order_id 
+          WHERE o.user_id = ? 
+          GROUP BY o.order_id 
+          ORDER BY o.order_date DESC";
+
+$stmt = $conn->prepare($query);
+$stmt->bind_param("i", $userId);
+$stmt->execute();
+$result = $stmt->get_result();
+$orders = $result->fetch_all(MYSQLI_ASSOC);
+
+// Handle order cancellation
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cancel_order'])) {
+    $orderId = intval($_POST['order_id']);
+    $userId = $_SESSION['userid']; // Make sure this matches your session variable name
+    
+    // Verify the order belongs to the user
+    $verifyQuery = "SELECT order_id FROM tbl_orders WHERE order_id = ? AND user_id = ? AND order_status = 'pending'";
+    $stmt = $conn->prepare($verifyQuery);
+    $stmt->bind_param("ii", $orderId, $userId);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    if ($result->num_rows > 0) {
+        // Update order status to cancelled
+        $updateQuery = "UPDATE tbl_orders SET order_status = 'cancelled' WHERE order_id = ?";
+        $stmt = $conn->prepare($updateQuery);
+        $stmt->bind_param("i", $orderId);
+        
+        if ($stmt->execute()) {
+            echo json_encode(['success' => true]);
+        } else {
+            echo json_encode(['success' => false, 'error' => 'Failed to cancel order']);
+        }
+    } else {
+        echo json_encode(['success' => false, 'error' => 'Invalid order']);
+    }
+    exit;
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -400,20 +448,226 @@ if(!isset($_SESSION['username'])){
                 gap: 15px;
             }
         }
+
+        .orders-section {
+            padding: 20px;
+        }
+
+        .orders-section h1 {
+            color: #1a4d2e;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+
+        .empty-orders {
+            text-align: center;
+            padding: 40px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .empty-orders i {
+            font-size: 48px;
+            color: #1a4d2e;
+            margin-bottom: 15px;
+        }
+
+        .empty-orders p {
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .browse-btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #1a4d2e;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            transition: background-color 0.3s;
+        }
+
+        .browse-btn:hover {
+            background: #2d6a4f;
+        }
+
+        .orders-list {
+            display: grid;
+            gap: 20px;
+        }
+
+        .order-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+
+        .order-header {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .order-info h3 {
+            color: #1a4d2e;
+            margin-bottom: 5px;
+        }
+
+        .order-date {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .order-status {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 500;
+        }
+
+        .order-status.pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .order-status.processing {
+            background: #cce5ff;
+            color: #004085;
+        }
+
+        .order-status.shipped {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .order-status.delivered {
+            background: #c3e6cb;
+            color: #155724;
+        }
+
+        .order-status.cancelled {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .order-details {
+            padding: 20px;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding: 5px 0;
+        }
+
+        .detail-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .detail-row span:first-child {
+            color: #666;
+        }
+
+        .detail-row span:last-child {
+            color: #333;
+            font-weight: 500;
+        }
+
+        @media (max-width: 768px) {
+            .orders-section {
+                padding: 10px;
+            }
+
+            .order-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .order-status {
+                margin-top: 10px;
+            }
+        }
+
+        .order-actions {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .cancel-order-btn {
+            padding: 8px 16px;
+            background-color: #dc2626;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .cancel-order-btn:hover {
+            background-color: #b91c1c;
+        }
+
+        .cancel-order-btn:disabled {
+            background-color: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        .order-status.cancelled {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 4px;
+            color: white;
+            z-index: 1000;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .notification.success {
+            background-color: #22c55e;
+        }
+
+        .notification.error {
+            background-color: #ef4444;
+        }
     </style>
 </head>
 <body>
     <!-- Sidebar -->
     <div class="sidebar" id="sidebar">
         <ul class="sidebar-menu">
-     <l><a href="userindex.php" ><i class="fas fa-home"></i><span>Dashboard</span></a></l>
-    <li><a href="browse.php" ><i class="fas fa-store"></i><span>Browse Farms</span></a></li>
-    <li><a href="orders.php" class="active"><i class="fas fa-shopping-cart"></i><span>My Orders</span></a></li>
-    <li><a href="favorite.php" ><i class="fas fa-heart"></i><span>Favorite Farms</span></a></li>
-    <li><a href="events.php" ><i class="fas fa-calendar"></i><span>Farm Events</span></a></li>
-    <li><a href="profile.php" ><i class="fas fa-user"></i><span>Profile</span></a></li>
-    <li><a href="settings.php" ><i class="fas fa-cog"></i><span>Settings</span></a></li>
-</ul>
+            <li><a href="userindex.php" ><i class="fas fa-home"></i><span>Dashboard</span></a></li>
+            <li><a href="browse.php" ><i class="fas fa-store"></i><span>Browse Farms</span></a></li>
+            <li><a href="cart.php" ><i class="fas fa-shopping-cart"></i><span>My Cart</span></a></li>
+            <li><a href="orders.php" class="active" ><i class="fas fa-truck"></i><span>My Orders</span></a></li>
+            <li><a href="favorite.php" ><i class="fas fa-heart"></i><span>Favorite Farms</span></a></li>
+            <li><a href="events.php" ><i class="fas fa-calendar"></i><span>Farm Events</span></a></li>
+            <li><a href="profile.php" ><i class="fas fa-user"></i><span>Profile</span></a></li>
+            <!-- <li><a href="settings.php" ><i class="fas fa-cog"></i><span>Settings</span></a></li> -->
+        </ul>
     </div>
 
     <!-- Main Content -->
@@ -441,123 +695,128 @@ if(!isset($_SESSION['username'])){
                 </div>
             </div>
 
-            <!-- Stats Grid -->
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <h3>Total Orders</h3>
-                    <div class="value">24</div>
-                </div>
-                <div class="stat-card">
-                    <h3>Favorite Farms</h3>
-                    <div class="value">12</div>
-                </div>
-                <div class="stat-card">
-                    <h3>Upcoming Events</h3>
-                    <div class="value">3</div>
-                </div>
-                <div class="stat-card">
-                    <h3>Active Orders</h3>
-                    <div class="value">2</div>
-                </div>
+            <div class="orders-section">
+                <h1>My Orders</h1>
+                
+                <?php if (empty($orders)): ?>
+                    <div class="empty-orders">
+                        <i class="fas fa-shopping-bag"></i>
+                        <p>No orders found</p>
+                        <a href="browse.php" class="browse-btn">Browse Products</a>
+                    </div>
+                <?php else: $i=0;?>
+                    <div class="orders-list">
+                        <?php foreach ($orders as $order): ?>
+                            <div class="order-card">
+                                <div class="order-header">
+                                    <div class="order-info">
+                                        <h3>Order #<?php $i=$i+1;echo $i; ?></h3>
+                                        <span class="order-date">
+                                            <?php echo date('d M Y, h:i A', strtotime($order['order_date'])); ?>
+                                        </span>
+                                    </div>
+                                    <div class="order-actions">
+                                        <div class="order-status <?php echo strtolower($order['order_status']); ?>">
+                                            <?php echo ucfirst($order['order_status']); ?>
+                                        </div>
+                                        <?php if ($order['order_status'] == 'pending'): ?>
+                                            <button class="cancel-order-btn" 
+                                                    data-order-id="<?php echo $order['order_id']; ?>"
+                                                    onclick="cancelOrder(<?php echo $order['order_id']; ?>)">
+                                                Cancel Order
+                                            </button>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                                
+                                <div class="order-details">
+                                    <div class="detail-row">
+                                        <span>Total Items:</span>
+                                        <span><?php echo $order['total_items']; ?></span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span>Total Amount:</span>
+                                        <span>₹<?php echo number_format($order['total_amount'], 2); ?></span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span>Payment Method:</span>
+                                        <span><?php echo strtoupper($order['payment_method']); ?></span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span>Delivery Address:</span>
+                                        <span><?php echo htmlspecialchars($order['delivery_address']); ?></span>
+                                    </div>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
             </div>
 
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <h3>Total Orders</h3>
-                    <div class="value">24</div>
-                </div>
-                <div class="stat-card">
-                    <h3>Favorite Farms</h3>
-                    <div class="value">12</div>
-                </div>
-                <div class="stat-card">
-                    <h3>Upcoming Events</h3>
-                    <div class="value">3</div>
-                </div>
-                <div class="stat-card">
-                    <h3>Active Orders</h3>
-                    <div class="value">2</div>
-                </div>
+            <!-- Footer -->
+            <div class="footer">
+                <p>&copy; 2024 Farmfolio. All rights reserved.</p>
             </div>
-
-
-            <!-- Favorite Farms -->
-            <h2>Your Favorite Farms</h2>
-            <div class="stats-grid">
-                <?php
-                // Fetch favorite farms (mock data)
-                $favorite_farms = [
-                    ['name' => 'Green Valley Farm', 'rating' => '4.5', 'products' => '15'],
-                    ['name' => 'Sunrise Organics', 'rating' => '4.8', 'products' => '23'],
-                    ['name' => 'Fresh Fields', 'rating' => '4.2', 'products' => '18']
-                ];
-
-                foreach($favorite_farms as $farm) {
-                    echo "<div class='farm-card'>
-                        <h3>{$farm['name']}</h3>
-                        <p>Rating: {$farm['rating']} ⭐</p>
-                        <p>Available Products: {$farm['products']}</p>
-                        <a href='#' class='view-farm'>View Farm</a>
-                    </div>";
-                }
-                ?>
-            </div>
-        </div>
-
-        <!-- Footer -->
-        <div class="footer">
-            <p>&copy; 2024 Farmfolio. All rights reserved.</p>
         </div>
     </div>
 
+    <script src="profile.js"></script>
     <script>
-         document.addEventListener('DOMContentLoaded', function() {
-            const profileIcon = document.getElementById('profileIcon');
-            const profilePopup = document.getElementById('profilePopup');
-            let timeoutId;
+    function cancelOrder(orderId) {
+        if (!confirm('Are you sure you want to cancel this order?')) {
+            return;
+        }
 
-            function showPopup() {
-                profilePopup.classList.add('show');
-            }
+        const button = event.target;
+        button.disabled = true;
 
-            function hidePopup() {
-                profilePopup.classList.remove('show');
-            }
-
-            profileIcon.addEventListener('mouseenter', () => {
-                clearTimeout(timeoutId);
-                showPopup();
-            });
-
-            profileIcon.addEventListener('mouseleave', () => {
-                timeoutId = setTimeout(() => {
-                    if (!profilePopup.matches(':hover')) {
-                        hidePopup();
-                    }
-                }, 300);
-            });
-
-            profilePopup.addEventListener('mouseenter', () => {
-                console.log("Mouse entered icon");
-                clearTimeout(timeoutId);
-                showPopup(); 
-            });
-
-            profilePopup.addEventListener('mouseleave', () => {
-                
-                timeoutId = setTimeout(hidePopup, 300);
-            });
-
-            profileIcon.addEventListener('click', (e) => {
-                e.stopPropagation();
-                profilePopup.classList.toggle('show');
-            });
-
-            document.addEventListener('click', (e) => {
-                if (!profileIcon.contains(e.target) && !profilePopup.contains(e.target)) {
-                    hidePopup();
-                }
-            });
+        fetch('orders.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `cancel_order=1&order_id=${orderId}`
         })
-           </script>
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Update the UI
+                const orderCard = button.closest('.order-card');
+                const statusDiv = orderCard.querySelector('.order-status');
+                
+                // Update status
+                statusDiv.textContent = 'Cancelled';
+                statusDiv.className = 'order-status cancelled';
+                
+                // Remove cancel button
+                button.remove();
+                
+                // Show success message
+                showNotification('Order cancelled successfully', 'success');
+            } else {
+                showNotification(data.error || 'Failed to cancel order', 'error');
+                button.disabled = false;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('An error occurred', 'error');
+            button.disabled = false;
+        });
+    }
+
+    function showNotification(message, type) {
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        notification.textContent = message;
+        
+        document.body.appendChild(notification);
+        
+        // Remove notification after 3 seconds
+        setTimeout(() => {
+            notification.remove();
+        }, 3000);
+    }
+    </script>
 </body>
+</html>

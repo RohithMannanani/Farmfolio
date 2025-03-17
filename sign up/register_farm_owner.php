@@ -6,7 +6,7 @@ session_start();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Farmfolio - Delivery Boy Sign Up</title>
+    <title>Farmfolio - Farm Owner Sign Up</title>
     <link rel="stylesheet" href="c.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 </head>
@@ -16,7 +16,7 @@ session_start();
     </div>
 
     <div class="left-container">
-        <h1 class="title">Delivery Boy <br>Sign Up</h1>
+        <h1 class="title">Farm Owner <br>Sign Up</h1>
 
         <?php
         include '../databse/connect.php';

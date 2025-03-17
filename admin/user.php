@@ -187,6 +187,7 @@ $result = mysqli_query($conn, $stmt);
             <li><a href="admin.php"><i class="fas fa-home"></i><span>Home</span></a></li>
             <li><a href="user.php" class="active"><i class="fas fa-users"></i><span>Users</span></a></li>
             <li><a href="farm.php"><i class="fas fa-store"></i><span>Farms</span></a></li>
+            <li><a href="category.php"><i class="fas fa-th-large"></i><span>category</span></a></li>
             <li><a href="#"><i class="fas fa-box"></i><span>Products</span></a></li>
             <li><a href="#"><i class="fas fa-truck"></i><span>Deliveries</span></a></li>
             <li><a href="#"><i class="fas fa-star"></i><span>Reviews</span></a></li>

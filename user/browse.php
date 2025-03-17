@@ -9,7 +9,7 @@ if(!isset($_SESSION['username'])){
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Consumer Dashboard - Farmfolio</title>
+    <title> - Farmfolio</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         * {
@@ -406,14 +406,15 @@ if(!isset($_SESSION['username'])){
     <!-- Sidebar -->
     <div class="sidebar" id="sidebar">
         <ul class="sidebar-menu">
-     <l><a href="userindex.php" ><i class="fas fa-home"></i><span>Dashboard</span></a></l>
-    <li><a href="browse.php" class="active"><i class="fas fa-store"></i><span>Browse Farms</span></a></li>
-    <li><a href="orders.php" ><i class="fas fa-shopping-cart"></i><span>My Orders</span></a></li>
-    <li><a href="favorite.php" ><i class="fas fa-heart"></i><span>Favorite Farms</span></a></li>
-    <li><a href="events.php" ><i class="fas fa-calendar"></i><span>Farm Events</span></a></li>
-    <li><a href="profile.php" ><i class="fas fa-user"></i><span>Profile</span></a></li>
-    <li><a href="settings.php" ><i class="fas fa-cog"></i><span>Settings</span></a></li>
-</ul>
+            <li><a href="userindex.php" ><i class="fas fa-home"></i><span>Dashboard</span></a></li>
+            <li><a href="browse.php" class="active"><i class="fas fa-store"></i><span>Browse Farms</span></a></li>
+            <li><a href="cart.php" ><i class="fas fa-shopping-cart"></i><span>My Cart</span></a></li>
+            <li><a href="orders.php" ><i class="fas fa-truck"></i><span>My Orders</span></a></li>
+            <li><a href="favorite.php" ><i class="fas fa-heart"></i><span>Favorite Farms</span></a></li>
+            <li><a href="events.php" ><i class="fas fa-calendar"></i><span>Farm Events</span></a></li>
+            <li><a href="profile.php" ><i class="fas fa-user"></i><span>Profile</span></a></li>
+            <!-- <li><a href="settings.php" ><i class="fas fa-cog"></i><span>Settings</span></a></li> -->
+        </ul>
     </div>
 
     <!-- Main Content -->

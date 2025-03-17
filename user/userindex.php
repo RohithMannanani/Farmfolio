@@ -1,10 +1,11 @@
 <?php
+//0 active product 1-inactive product
 include '../databse/connect.php';
 session_start();
 if(!isset($_SESSION['username'])){
     header('location: http://localhost/mini%20project/login/login.php');
 }
-
+$user_id=$_SESSION['userid'];
 // Modified query to show all active farms, even without images
 $farms_query = "SELECT 
     f.farm_id,
@@ -13,7 +14,7 @@ $farms_query = "SELECT
     f.description,
     f.created_at,
     f.status,
-    COUNT(p.product_id) as product_count,
+    COUNT(DISTINCT CASE WHEN p.status ='0' THEN p.product_id END) AS product_count,
     MIN(fi.path) as farm_image  -- Get first image if exists
 FROM tbl_farms f
 LEFT JOIN tbl_products p ON f.farm_id = p.farm_id
@@ -23,6 +24,20 @@ GROUP BY f.farm_id
 ORDER BY f.created_at DESC";
 
 $farms_result = mysqli_query($conn, $farms_query);
+//favorite count
+$fev_count = "SELECT COUNT(favorite_id) AS fev_count FROM tbl_favorites WHERE user_id = $user_id";
+
+// Execute the query
+$fev_result = $conn->query($fev_count);
+// Check if the query was successful
+if ($fev_result) {
+    // Fetch the result
+    $fev = $fev_result->fetch_assoc();
+} else {
+    // Handle error if the query failed
+    echo "Error: " . $conn->error;
+}
+
 
 // Check if farm is favorited by current user
 function isFarmFavorited($conn, $farm_id, $user_id) {
@@ -305,6 +320,11 @@ function isFarmFavorited($conn, $farm_id, $user_id) {
         }
 
         .stat-card .value {
+            font-size: 2rem;
+            font-weight: 600;
+            color: #1a4d2e;
+        }
+        .stat-card .order {
             font-size: 2rem;
             font-weight: 600;
             color: #1a4d2e;
@@ -616,20 +636,82 @@ function isFarmFavorited($conn, $farm_id, $user_id) {
             z-index: 100; /* Higher z-index for header elements */
             position: relative;
         }
+
+        .farm-rating {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 10px 0;
+        }
+
+        .stars {
+            display: flex;
+            gap: 2px;
+        }
+
+        .stars i {
+            font-size: 14px;
+        }
+
+        .rating-count {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .farm-card {
+            position: relative;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .farm-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .farm-details {
+            padding: 15px;
+        }
+
+        .description {
+            color: #666;
+            margin: 10px 0;
+            line-height: 1.4;
+        }
+
+        .farm-stats {
+            display: flex;
+            gap: 10px;
+            margin: 10px 0;
+        }
+
+        .product-count {
+            background: #e8f5e9;
+            color: #1a4d2e;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
     </style>
 </head>
 <body>
     <!-- Sidebar -->
     <div class="sidebar" id="sidebar">
         <ul class="sidebar-menu">
-     <l><a href="userindex.php"class="active" ><i class="fas fa-home"></i><span>Dashboard</span></a></l>
-    <li><a href="browse.php" ><i class="fas fa-store"></i><span>Browse Farms</span></a></li>
-    <li><a href="orders.php" ><i class="fas fa-shopping-cart"></i><span>My Orders</span></a></li>
-    <li><a href="favorite.php" ><i class="fas fa-heart"></i><span>Favorite Farms</span></a></li>
-    <li><a href="events.php" ><i class="fas fa-calendar"></i><span>Farm Events</span></a></li>
-    <li><a href="profile.php" ><i class="fas fa-user"></i><span>Profile</span></a></li>
-    <li><a href="settings.php" ><i class="fas fa-cog"></i><span>Settings</span></a></li>
-</ul>
+            <li><a href="userindex.php" class="active"  ><i class="fas fa-home"></i><span>Dashboard</span></a></li>
+            <li><a href="browse.php" ><i class="fas fa-store"></i><span>Browse Farms</span></a></li>
+            <li><a href="cart.php" ><i class="fas fa-shopping-cart"></i><span>My Cart</span></a></li>
+            <li><a href="orders.php" ><i class="fas fa-truck"></i><span>My Orders</span></a></li>
+            <li><a href="favorite.php" ><i class="fas fa-heart"></i><span>Favorite Farms</span></a></li>
+            <li><a href="events.php" ><i class="fas fa-calendar"></i><span>Farm Events</span></a></li>
+            <li><a href="profile.php" ><i class="fas fa-user"></i><span>Profile</span></a></li>
+            <!-- <li><a href="settings.php" ><i class="fas fa-cog"></i><span>Settings</span></a></li> -->
+        </ul>
 
     </div>
 
@@ -663,11 +745,11 @@ function isFarmFavorited($conn, $farm_id, $user_id) {
             <div class="stats-grid">
                 <div class="stat-card">
                     <h3>Total Orders</h3>
-                    <div class="value">24</div>
+                    <div class="order">0</div>
                 </div>
                 <div class="stat-card">
                     <h3>Favorite Farms</h3>
-                    <div class="value">12</div>
+                    <div class="value"><?php echo  $fev['fev_count'];?></div>
                 </div>
                 <div class="stat-card">
                     <h3>Upcoming Events</h3>
@@ -692,6 +774,17 @@ function isFarmFavorited($conn, $farm_id, $user_id) {
                     <?php
                     if(mysqli_num_rows($farms_result) > 0) {
                         while($farm = mysqli_fetch_assoc($farms_result)) {
+                            // Get average rating and total reviews for this farm
+                            $review_query = "SELECT AVG(rating) as avg_rating, COUNT(*) as total_reviews 
+                                           FROM tbl_reviews WHERE farm_id = ?";
+                            $stmt = $conn->prepare($review_query);
+                            $stmt->bind_param("i", $farm['farm_id']);
+                            $stmt->execute();
+                            $review_result = $stmt->get_result()->fetch_assoc();
+                            
+                            $avg_rating = number_format($review_result['avg_rating'] ?? 0, 1);
+                            $total_reviews = $review_result['total_reviews'] ?? 0;
+                            
                             $is_favorited = isFarmFavorited($conn, $farm['farm_id'], $_SESSION['userid']);
                             ?>
                             <div class="farm-card">
@@ -714,6 +807,14 @@ function isFarmFavorited($conn, $farm_id, $user_id) {
                                 </div>
                                 <div class="farm-details">
                                     <h3><?php echo htmlspecialchars($farm['farm_name']); ?></h3>
+                                    <div class="farm-rating">
+                                        <div class="stars">
+                                            <?php for($i = 1; $i <= 5; $i++): ?>
+                                                <i class="fas fa-star" style="color: <?php echo $i <= $avg_rating ? '#ffd700' : '#ddd'; ?>"></i>
+                                            <?php endfor; ?>
+                                        </div>
+                                        <span class="rating-count">(<?php echo $total_reviews; ?> reviews)</span>
+                                    </div>
                                     <p class="location">
                                         <i class="fas fa-map-marker-alt"></i> 
                                         <?php echo htmlspecialchars($farm['location']); ?>

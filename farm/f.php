@@ -13,6 +13,19 @@ if(isset($_POST['submit'])) {
                      VALUES ('$user_id', '$farm_name', '$location', '$description', NOW(), 'pending')";
     
     if(mysqli_query($conn, $insert_query)) {
+        $farm_id = mysqli_insert_id($conn); // Get the newly inserted farm_id
+        
+        // Insert selected categories
+        if (isset($_POST['selected_categories']) && is_array($_POST['selected_categories'])) {
+            $insert_category = "INSERT INTO tbl_fc (farm_id, category_id) VALUES (?, ?)";
+            $stmt = $conn->prepare($insert_category);
+            
+            foreach ($_POST['selected_categories'] as $category_id) {
+                $stmt->bind_param("ii", $farm_id, $category_id);
+                $stmt->execute();
+            }
+        }
+        
         $_SESSION['success_message'] = "Farm registered successfully!";
         header("Location: http://localhost/mini%20project/farm/farm.php");
         exit();
@@ -48,6 +61,51 @@ if(isset($_POST['submit'])) {
     flex: 1;
     flex-direction: column;
     min-height: 100vh;
+}
+.category-selection {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.category-select {
+    flex: 1;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+#addCategoryBtn {
+    padding: 8px 15px;
+    background-color: #1a4d2e;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+#addCategoryBtn:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+.selected-categories {
+    margin-top: 10px;
+}
+
+.category-tag {
+    display: inline-flex;
+    align-items: center;
+    background-color: #e2e8f0;
+    padding: 5px 10px;
+    border-radius: 15px;
+    margin: 5px;
+}
+
+.remove-category {
+    margin-left: 8px;
+    cursor: pointer;
+    color: #ef4444;
 }
     </style>
 </head>
@@ -109,6 +167,34 @@ if(isset($_POST['submit'])) {
                 <div class="error" id="description_error"></div>
             </div>
 
+            <div class="form-group">
+                <label for="categories">Select Farm Categories*</label>
+                <div class="category-selection">
+                    <select id="mainCategory" class="category-select">
+                        <option value="">Select Farm Type</option>
+                        <?php
+                        $cat_query = "SELECT DISTINCT category FROM tbl_category ORDER BY category";
+                        $cat_result = mysqli_query($conn, $cat_query);
+                        while($cat_row = mysqli_fetch_assoc($cat_result)) {
+                            echo "<option value='" . htmlspecialchars($cat_row['category']) . "'>" . 
+                                 ucfirst(htmlspecialchars($cat_row['category'])) . "</option>";
+                        }
+                        ?>
+                    </select>
+
+                    <select id="subCategory" class="category-select" disabled>
+                        <option value="">Select Farm Products</option>
+                    </select>
+
+                    <button type="button" id="addCategoryBtn" disabled>Add Category</button>
+                </div>
+
+                <div id="selectedCategories" class="selected-categories">
+                    <!-- Selected categories will appear here -->
+                </div>
+                <div class="error" id="categories_error"></div>
+            </div>
+
             <button type="submit" name="submit">Register Farm</button>
         </form>
     </div>
@@ -166,6 +252,80 @@ if(isset($_POST['submit'])) {
         function hideError(elementId) {
             document.getElementById(elementId).style.display = 'none';
         }
+    </script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const mainCategory = document.getElementById('mainCategory');
+        const subCategory = document.getElementById('subCategory');
+        const addButton = document.getElementById('addCategoryBtn');
+        const selectedContainer = document.getElementById('selectedCategories');
+        const selectedCategories = new Set();
+
+        mainCategory.addEventListener('change', function() {
+            const category = this.value;
+            subCategory.disabled = !category;
+            subCategory.innerHTML = '<option value="">Select Farm Products</option>';
+            addButton.disabled = true;
+
+            if (category) {
+                fetch(`get_subcategories.php?category=${encodeURIComponent(category)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        data.forEach(sub => {
+                            const option = document.createElement('option');
+                            option.value = sub.category_id;
+                            option.textContent = sub.sub;
+                            subCategory.appendChild(option);
+                        });
+                    });
+            }
+        });
+
+        subCategory.addEventListener('change', function() {
+            addButton.disabled = !this.value;
+        });
+
+        addButton.addEventListener('click', function() {
+            const categoryId = subCategory.value;
+            const categoryText = `${mainCategory.options[mainCategory.selectedIndex].text} - ${subCategory.options[subCategory.selectedIndex].text}`;
+
+            if (!selectedCategories.has(categoryId)) {
+                selectedCategories.add(categoryId);
+                
+                const tag = document.createElement('div');
+                tag.className = 'category-tag';
+                tag.innerHTML = `
+                    ${categoryText}
+                    <input type="hidden" name="selected_categories[]" value="${categoryId}">
+                    <span class="remove-category" data-id="${categoryId}">&times;</span>
+                `;
+                
+                selectedContainer.appendChild(tag);
+            }
+
+            // Reset selections
+            mainCategory.value = '';
+            subCategory.innerHTML = '<option value="">Select Farm Products</option>';
+            subCategory.disabled = true;
+            addButton.disabled = true;
+        });
+
+        selectedContainer.addEventListener('click', function(e) {
+            if (e.target.classList.contains('remove-category')) {
+                const categoryId = e.target.dataset.id;
+                selectedCategories.delete(categoryId);
+                e.target.parentElement.remove();
+            }
+        });
+
+        // Add validation to the form submission
+        document.getElementById('farmForm').addEventListener('submit', function(e) {
+            if (selectedCategories.size === 0) {
+                e.preventDefault();
+                document.getElementById('categories_error').textContent = 'Please select at least one category';
+            }
+        });
+    });
     </script>
     <script src="farm.js"></script>
 </body>

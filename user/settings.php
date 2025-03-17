@@ -263,14 +263,15 @@ if(!isset($_SESSION['username'])){
     <!-- Sidebar -->
     <div class="sidebar" id="sidebar">
         <ul class="sidebar-menu">
-     <l><a href="userindex.php" ><i class="fas fa-home"></i><span>Dashboard</span></a></l>
-    <li><a href="browse.php" ><i class="fas fa-store"></i><span>Browse Farms</span></a></li>
-    <li><a href="orders.php" ><i class="fas fa-shopping-cart"></i><span>My Orders</span></a></li>
-    <li><a href="favorite.php" ><i class="fas fa-heart"></i><span>Favorite Farms</span></a></li>
-    <li><a href="events.php" ><i class="fas fa-calendar"></i><span>Farm Events</span></a></li>
-    <li><a href="profile.php" ><i class="fas fa-user"></i><span>Profile</span></a></li>
-    <li><a href="settings.php" class="active"><i class="fas fa-cog"></i><span>Settings</span></a></li>
-</ul>
+            <li><a href="userindex.php" ><i class="fas fa-home"></i><span>Dashboard</span></a></li>
+            <li><a href="browse.php" ><i class="fas fa-store"></i><span>Browse Farms</span></a></li>
+            <li><a href="cart.php" ><i class="fas fa-shopping-cart"></i><span>My Cart</span></a></li>
+            <li><a href="orders.php" ><i class="fas fa-truck"></i><span>My Orders</span></a></li>
+            <li><a href="favorite.php" ><i class="fas fa-heart"></i><span>Favorite Farms</span></a></li>
+            <li><a href="events.php" ><i class="fas fa-calendar"></i><span>Farm Events</span></a></li>
+            <li><a href="profile.php" ><i class="fas fa-user"></i><span>Profile</span></a></li>
+            <!-- <li><a href="settings.php" class="active" ><i class="fas fa-cog"></i><span>Settings</span></a></li> -->
+        </ul>
     </div>
 
     <!-- Main Content -->

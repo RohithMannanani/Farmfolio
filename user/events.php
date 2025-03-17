@@ -1,15 +1,76 @@
 <?php
+//0 active product 1-inactive product
+include '../databse/connect.php';
 session_start();
 if(!isset($_SESSION['username'])){
     header('location: http://localhost/mini%20project/login/login.php');
 }
+$user_id=$_SESSION['userid'];
+// Modified query to show all active farms, even without images
+$farms_query = "SELECT 
+    f.farm_id,
+    f.farm_name,
+    f.location,
+    f.description,
+    f.created_at,
+    f.status,
+    COUNT(DISTINCT CASE WHEN p.status ='0' THEN p.product_id END) AS product_count,
+    MIN(fi.path) as farm_image  -- Get first image if exists
+FROM tbl_farms f
+LEFT JOIN tbl_products p ON f.farm_id = p.farm_id
+LEFT JOIN tbl_farm_image fi ON f.farm_id = fi.farm_id
+WHERE f.status = 'active'
+GROUP BY f.farm_id
+ORDER BY f.created_at DESC";
+
+$farms_result = mysqli_query($conn, $farms_query);
+//favorite count
+$fev_count = "SELECT COUNT(favorite_id) AS fev_count FROM tbl_favorites WHERE user_id = $user_id";
+
+// Execute the query
+$fev_result = $conn->query($fev_count);
+// Check if the query was successful
+if ($fev_result) {
+    // Fetch the result
+    $fev = $fev_result->fetch_assoc();
+} else {
+    // Handle error if the query failed
+    echo "Error: " . $conn->error;
+}
+
+
+// Check if farm is favorited by current user
+function isFarmFavorited($conn, $farm_id, $user_id) {
+    $query = "SELECT * FROM tbl_favorites WHERE farm_id = ? AND user_id = ?";
+    $stmt = mysqli_prepare($conn, $query);
+    mysqli_stmt_bind_param($stmt, "ii", $farm_id, $user_id);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
+    return mysqli_num_rows($result) > 0;
+}
+
+// Get all upcoming events from active farms
+$events_query = "SELECT e.*, f.farm_name, f.location, f.farm_id,
+                COUNT(p.participant_id) as participant_count,
+                (SELECT MIN(path) FROM tbl_farm_image WHERE farm_id = f.farm_id) as farm_image
+                FROM tbl_events e 
+                JOIN tbl_farms f ON e.farm_id = f.farm_id 
+                LEFT JOIN tbl_participants p ON e.event_id = p.event_id 
+                WHERE e.status = '1' 
+                AND e.event_date >= CURDATE()
+                AND f.status = 'active'
+                GROUP BY e.event_id 
+                ORDER BY e.event_date ASC";
+
+$events_result = mysqli_query($conn, $events_query);
 ?>
-<!DOCTYPE html>
+
+?><!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Consumer Dashboard - Farmfolio</title>
+    <title>Farm Events - Farmfolio</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         * {
@@ -93,11 +154,13 @@ if(!isset($_SESSION['username'])){
             width: 20px;
             text-align: center;
         }
-
+       
         .active {
             background: #2d6a4f;
             font-weight: 500;
         }
+
+
         .sidebar.shrink .sidebar-menu span {
             opacity: 0;
             visibility: hidden;
@@ -248,7 +311,7 @@ if(!isset($_SESSION['username'])){
 
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            grid-template-columns: repeat(3, minmax(240px, 1fr));
             gap: 25px;
             margin-bottom: 30px;
         }
@@ -272,6 +335,11 @@ if(!isset($_SESSION['username'])){
         }
 
         .stat-card .value {
+            font-size: 2rem;
+            font-weight: 600;
+            color: #1a4d2e;
+        }
+        .stat-card .order {
             font-size: 2rem;
             font-weight: 600;
             color: #1a4d2e;
@@ -333,6 +401,7 @@ if(!isset($_SESSION['username'])){
             border-radius: 12px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.05);
             transition: transform 0.3s ease;
+            position: relative;
         }
 
         .farm-card:hover {
@@ -400,23 +469,387 @@ if(!isset($_SESSION['username'])){
                 gap: 15px;
             }
         }
+        #dynamic-content {
+            flex: 1;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .recent-farms {
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .recent-farms h2 {
+            color: #1a4d2e;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+
+        .farms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .favorite-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 1;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .favorite-btn i {
+            color: #d1d5db;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+        }
+
+        .favorite-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .favorite-btn.active i {
+            color: #e63946;
+        }
+
+        .favorite-btn:hover i {
+            color: #e63946;
+        }
+
+        .favorite-btn.active:hover i {
+            color: #d1d5db;
+        }
+
+        .farm-image {
+            width: 100%;
+            height: 200px;
+            overflow: hidden;
+            background: #f3f4f6;
+            position: relative;
+        }
+
+        .farm-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .farm-details {
+            padding: 20px;
+        }
+
+        .farm-details h3 {
+            color: #1a4d2e;
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+        }
+
+        .location {
+            color: #666;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .location i {
+            color: #1a4d2e;
+        }
+
+        .description {
+            color: #666;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+
+        .farm-stats {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .product-count {
+            background: #e8f5e9;
+            color: #1a4d2e;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .view-farm {
+            display: inline-block;
+            padding: 8px 16px;
+            background: #1a4d2e;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            transition: background 0.3s ease;
+            width: 100%;
+            text-align: center;
+        }
+
+        .view-farm:hover {
+            background: #2d6a4f;
+        }
+
+        .no-farms {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            font-size: 1.1rem;
+            grid-column: 1 / -1;
+        }
+
+        @media (max-width: 768px) {
+            .farms-grid {
+                grid-template-columns: 1fr;
+                padding: 10px;
+            }
+        }
+
+        .no-image {
+            width: 100%;
+            height: 100%;
+            background: #f3f4f6;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #6b7280;
+        }
+
+        .no-image i {
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+
+        .no-image p {
+            font-size: 0.9rem;
+        }
+
+        /* Ensure header/navbar has higher z-index */
+        .header, 
+        .navbar,
+        .profile-section {
+            z-index: 100; /* Higher z-index for header elements */
+            position: relative;
+        }
+
+        .events-container {
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .events-header {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .events-header h1 {
+            color: #1a4d2e;
+            margin-bottom: 10px;
+        }
+
+        .events-list {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .event-item {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            gap: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .event-item:hover {
+            transform: translateY(-2px);
+        }
+
+        .event-date {
+            min-width: 100px;
+            text-align: center;
+            padding: 15px;
+            background: #1a4d2e;
+            color: white;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .date-day {
+            font-size: 2rem;
+            font-weight: bold;
+            line-height: 1;
+        }
+
+        .date-month {
+            font-size: 1.1rem;
+            text-transform: uppercase;
+        }
+
+        .date-year {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .event-details {
+            flex: 1;
+        }
+
+        .event-title {
+            font-size: 1.3rem;
+            color: #1a4d2e;
+            margin-bottom: 10px;
+        }
+
+        .event-farm {
+            color: #4b5563;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .event-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #4b5563;
+        }
+
+        .info-item i {
+            color: #1a4d2e;
+            width: 16px;
+        }
+
+        .event-description {
+            color: #4b5563;
+            margin: 15px 0;
+            line-height: 1.6;
+        }
+
+        .event-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .participant-count {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #4b5563;
+        }
+
+        .register-btn {
+            background: #1a4d2e;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 6px;
+            text-decoration: none;
+            transition: background 0.3s ease;
+        }
+
+        .register-btn:hover {
+            background: #2d6a4f;
+        }
+
+        .registered-btn {
+            background: #e8f5e9;
+            color: #1a4d2e;
+            padding: 8px 20px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: not-allowed;
+        }
+
+        .no-events {
+            text-align: center;
+            padding: 40px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .no-events i {
+            font-size: 48px;
+            color: #d1d5db;
+            margin-bottom: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .event-item {
+                flex-direction: column;
+            }
+
+            .event-date {
+                align-self: flex-start;
+            }
+
+            .event-info {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body>
     <!-- Sidebar -->
     <div class="sidebar" id="sidebar">
         <ul class="sidebar-menu">
-     <l><a href="userindex.php" ><i class="fas fa-home"></i><span>Dashboard</span></a></l>
-    <li><a href="browse.php" ><i class="fas fa-store"></i><span>Browse Farms</span></a></li>
-    <li><a href="orders.php" ><i class="fas fa-shopping-cart"></i><span>My Orders</span></a></li>
-    <li><a href="favorite.php" ><i class="fas fa-heart"></i><span>Favorite Farms</span></a></li>
-    <li><a href="events.php" class="active"><i class="fas fa-calendar"></i><span>Farm Events</span></a></li>
-    <li><a href="profile.php" ><i class="fas fa-user"></i><span>Profile</span></a></li>
-    <li><a href="settings.php" ><i class="fas fa-cog"></i><span>Settings</span></a></li>
-</ul>
+            <li><a href="userindex.php" ><i class="fas fa-home"></i><span>Dashboard</span></a></li>
+            <li><a href="browse.php" ><i class="fas fa-store"></i><span>Browse Farms</span></a></li>
+            <li><a href="cart.php" ><i class="fas fa-shopping-cart"></i><span>My Cart</span></a></li>
+            <li><a href="orders.php" ><i class="fas fa-truck"></i><span>My Orders</span></a></li>
+            <li><a href="favorite.php" ><i class="fas fa-heart"></i><span>Favorite Farms</span></a></li>
+            <li><a href="events.php" class="active" ><i class="fas fa-calendar"></i><span>Farm Events</span></a></li>
+            <li><a href="profile.php" ><i class="fas fa-user"></i><span>Profile</span></a></li>
+            <!-- <li><a href="settings.php" ><i class="fas fa-cog"></i><span>Settings</span></a></li> -->
+        </ul>
+
     </div>
 
-    <!-- Main Content -->
+
+     <!-- Main Content -->
     <div class="main-content" id="main-content">
         <div class="container">
             <div class="user-section">
@@ -431,78 +864,18 @@ if(!isset($_SESSION['username'])){
                     </div>
                     <div class="profile-popup" id="profilePopup">
                         <div class="profile-info">
-                        <p class="profile-name"><?php echo $_SESSION['username'];?></p>
-                        <p class="profile-email"><?php echo $_SESSION['email'];?></p>
+                            <p class="profile-name"><?php echo $_SESSION['username'];?></p>
+                            <p class="profile-email"><?php echo $_SESSION['email'];?></p>
                         </div>
-                        <button class="popup-logout-btn"  onclick="window.location.href='http://localhost/mini%20project/logout/logout.php'">
-                            <i class="fas fa-sign-out-alt"></i> Logout
+                       <button class="popup-logout-btn"  onclick="window.location.href='http://localhost/mini%20project/logout/logout.php'">
+                       <i class="fas fa-sign-out-alt"></i> Logout
                         </button>
                     </div>
                 </div>
             </div>
 
-            <!-- Stats Grid -->
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <h3>Total Orders</h3>
-                    <div class="value">24</div>
-                </div>
-                <div class="stat-card">
-                    <h3>Favorite Farms</h3>
-                    <div class="value">12</div>
-                </div>
-                <div class="stat-card">
-                    <h3>Upcoming Events</h3>
-                    <div class="value">3</div>
-                </div>
-                <div class="stat-card">
-                    <h3>Active Orders</h3>
-                    <div class="value">2</div>
-                </div>
-            </div>
-
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <h3>Total Orders</h3>
-                    <div class="value">24</div>
-                </div>
-                <div class="stat-card">
-                    <h3>Favorite Farms</h3>
-                    <div class="value">12</div>
-                </div>
-                <div class="stat-card">
-                    <h3>Upcoming Events</h3>
-                    <div class="value">3</div>
-                </div>
-                <div class="stat-card">
-                    <h3>Active Orders</h3>
-                    <div class="value">2</div>
-                </div>
-            </div>
-
-
-            <!-- Favorite Farms -->
-            <h2>Your Favorite Farms</h2>
-            <div class="stats-grid">
-                <?php
-                // Fetch favorite farms (mock data)
-                $favorite_farms = [
-                    ['name' => 'Green Valley Farm', 'rating' => '4.5', 'products' => '15'],
-                    ['name' => 'Sunrise Organics', 'rating' => '4.8', 'products' => '23'],
-                    ['name' => 'Fresh Fields', 'rating' => '4.2', 'products' => '18']
-                ];
-
-                foreach($favorite_farms as $farm) {
-                    echo "<div class='farm-card'>
-                        <h3>{$farm['name']}</h3>
-                        <p>Rating: {$farm['rating']} ⭐</p>
-                        <p>Available Products: {$farm['products']}</p>
-                        <a href='#' class='view-farm'>View Farm</a>
-                    </div>";
-                }
-                ?>
-            </div>
-        </div>
+             <!-- Stats Grid  -->
+           
 
         <!-- Footer -->
         <div class="footer">
@@ -511,7 +884,8 @@ if(!isset($_SESSION['username'])){
     </div>
 
     <script>
-         document.addEventListener('DOMContentLoaded', function() {
+
+        document.addEventListener('DOMContentLoaded', function() {
             const profileIcon = document.getElementById('profileIcon');
             const profilePopup = document.getElementById('profilePopup');
             let timeoutId;
@@ -561,4 +935,136 @@ if(!isset($_SESSION['username'])){
         })
 
            </script>
+
+    <script>
+    async function addToFavorites(button, farmId) {
+        try {
+            // Add loading state
+            button.classList.add('loading');
+            
+            console.log('Managing favorites for farm:', farmId);
+            
+            const response = await fetch('add_favorite.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `farm_id=${farmId}`
+            });
+
+            console.log('Response status:', response.status);
+            
+            const data = await response.json();
+            console.log('Response data:', data);
+            
+            // Remove loading state
+            button.classList.remove('loading');
+            
+            if (data.success) {
+                // Toggle the active class based on the action
+                if (data.action === 'added') {
+                    button.classList.add('active');
+                } else if (data.action === 'removed') {
+                    button.classList.remove('active');
+                }
+                
+                // Update favorite count if it exists
+                const favoriteCount = document.querySelector('.value');
+                if (favoriteCount) {
+                    let count = parseInt(favoriteCount.textContent);
+                    count = data.action === 'added' ? count + 1 : count - 1;
+                    favoriteCount.textContent = count;
+                }
+            } else {
+                throw new Error(data.message || 'Error managing favorites');
+            }
+        } catch (error) {
+            // Remove loading state
+            button.classList.remove('loading');
+            
+            console.error('Error:', error);
+            alert(error.message || 'An error occurred while managing favorites');
+        }
+    }
+    </script>
+
+    <div class="events-container">
+        <div class="events-header">
+            <h1>Upcoming Farm Events</h1>
+            <p>Join exciting farm events and activities in your area</p>
+        </div>
+
+        <div class="events-list">
+            <?php 
+            if(mysqli_num_rows($events_result) > 0):
+                while($event = mysqli_fetch_assoc($events_result)):
+                    // Check if user is already registered
+                    $check_registration = "SELECT * FROM tbl_participants 
+                                        WHERE event_id = ? AND user_id = ?";
+                    $stmt = $conn->prepare($check_registration);
+                    $stmt->bind_param("ii", $event['event_id'], $_SESSION['userid']);
+                    $stmt->execute();
+                    $is_registered = $stmt->get_result()->num_rows > 0;
+            ?>
+                <div class="event-item">
+                    <div class="event-date">
+                        <span class="date-day"><?php echo date('d', strtotime($event['event_date'])); ?></span>
+                        <span class="date-month"><?php echo date('M', strtotime($event['event_date'])); ?></span>
+                        <span class="date-year"><?php echo date('Y', strtotime($event['event_date'])); ?></span>
+                    </div>
+                    <div class="event-details">
+                        <h3 class="event-title"><?php echo htmlspecialchars($event['event_name']); ?></h3>
+                        <div class="event-farm">
+                            <i class="fas fa-store"></i>
+                            <span><?php echo htmlspecialchars($event['farm_name']); ?></span>
+                        </div>
+                        <div class="event-info">
+                            <div class="info-item">
+                                <i class="fas fa-clock"></i>
+                                <span></span>
+                            </div>
+                            <div class="info-item">
+                                <i class="fas fa-map-marker-alt"></i>
+                                <span><?php echo htmlspecialchars($event['location']); ?></span>
+                            </div>
+                            <div class="info-item">
+                                <i class="fas fa-users"></i>
+                                <span><?php echo $event['participant_count']; ?> participants</span>
+                            </div>
+                        </div>
+                        <p class="event-description">
+                            <?php echo htmlspecialchars($event['event_description']); ?>
+                        </p>
+                        <div class="event-actions">
+                            <div class="participant-count">
+                                <i class="fas fa-calendar-check"></i>
+                                <span><?php echo date('l, F d, Y', strtotime($event['event_date'])); ?></span>
+                            </div>
+                            <?php if($is_registered): ?>
+                                <button class="registered-btn">
+                                    <i class="fas fa-check"></i>
+                                    Already Registered
+                                </button>
+                            <?php else: ?>
+                                <a href="farm_details.php?id=<?php echo $event['farm_id']; ?>#events" 
+                                   class="register-btn">
+                                    Register Now
+                                </a>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+            <?php 
+                endwhile;
+            else:
+            ?>
+                <div class="no-events">
+                    <i class="fas fa-calendar-times"></i>
+                    <h3>No Upcoming Events</h3>
+                    <p>There are no upcoming farm events at the moment. Please check back later!</p>
+                </div>
+            <?php endif; ?>
+        </div>
+    </div>
 </body>
+</html>

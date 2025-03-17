@@ -273,16 +273,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             // Redirect based on user type
             switch ($type) {
                 case 0 :
-                    header('Location: http://localhost/Mini%20project/user/html5up-massively/elements.html');
+                    header('Location: http://localhost/Mini%20project/user/userindex.php');
                     break;
                 case 2:
                     header('Location: http://localhost/Mini%20project/delivery%20boy/delivery.php');
                     break;
                 case 1 :
-                    header('Location: http://localhost/Mini%20project/farm/farm.html');
+                    header('Location: http://localhost/Mini%20project/farm/farm.php');
                     break;
                 case 4 :
-                    header('Location: http://localhost/Mini%20project/admin/admin.html');
+                    header('Location: http://localhost/Mini%20project/admin/admin.php');
                     break;
                 default:
                     echo "Invalid user type.";

@@ -16,6 +16,25 @@ if(isset($_SESSION['userid'])){
     if($row && $row['status'] == 'active') {
         $is_farm_active = true;
         $farm_id = $row['farm_id'];
+
+        // Get reviews for this farm
+        $reviews_query = "SELECT r.*, u.username, u.email 
+                         FROM tbl_reviews r 
+                         JOIN tbl_signup u ON r.user_id = u.userid 
+                         WHERE r.farm_id = ? 
+                         ORDER BY r.created_at DESC";
+        $stmt = $conn->prepare($reviews_query);
+        $stmt->bind_param("i", $farm_id);
+        $stmt->execute();
+        $reviews_result = $stmt->get_result();
+
+        // Get average rating
+        $avg_query = "SELECT AVG(rating) as avg_rating, COUNT(*) as total_reviews 
+                     FROM tbl_reviews WHERE farm_id = ?";
+        $stmt = $conn->prepare($avg_query);
+        $stmt->bind_param("i", $farm_id);
+        $stmt->execute();
+        $avg_result = $stmt->get_result()->fetch_assoc();
     }
 }
 
@@ -39,195 +58,120 @@ if($is_farm_active) {
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Farm Products</title>
+    <title>Farm Reviews</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="stylesheet" href="farm.css">
     <style>
-        .product-container {
+        .reviews-container {
             padding: 20px;
             max-width: 1200px;
+            margin: 0 auto;
         }
 
-        .product-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-        }
-
-        .add-product-btn {
-            padding: 10px 20px;
-            background: #1a4d2e;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .add-product-btn:hover {
-            background: #2d6a4f;
-        }
-
-        .product-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
-        }
-
-        .product-card {
+        .reviews-header {
             background: white;
+            padding: 20px;
             border-radius: 8px;
+            margin-bottom: 20px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            overflow: hidden;
+            text-align: center;
         }
 
-        .product-image {
-            width: 100%;
-            height: 200px;
-            background: #f5f5f5;
+        .rating-summary {
             display: flex;
             align-items: center;
             justify-content: center;
+            gap: 20px;
+            margin: 20px 0;
         }
 
-        .product-details {
-            padding: 15px;
-        }
-
-        .product-title {
-            font-size: 1.1em;
+        .average-rating {
+            font-size: 48px;
             font-weight: bold;
-            margin-bottom: 8px;
+            color: #1a4d2e;
         }
 
-        .product-price {
-            color: #2563eb;
+        .rating-stars {
+            color: #ffd700;
+            font-size: 24px;
+        }
+
+        .total-reviews {
+            color: #666;
+            font-size: 18px;
+        }
+
+        .reviews-grid {
+            display: grid;
+            gap: 20px;
+        }
+
+        .review-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .review-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .reviewer-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .reviewer-name {
             font-weight: bold;
-            margin-bottom: 8px;
+            color: #1a4d2e;
         }
 
-        .product-stock {
+        .reviewer-email {
             color: #666;
             font-size: 0.9em;
         }
 
-        .product-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 10px;
+        .review-date {
+            color: #666;
+            font-size: 0.9em;
         }
 
-        .edit-btn, .delete-btn {
-            padding: 5px 10px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
+        .review-rating {
+            color: #ffd700;
+            margin: 10px 0;
         }
 
-        .edit-btn {
-            background: #1a4d2e;
-            color: white;
+        .review-comment {
+            color: #444;
+            line-height: 1.5;
         }
 
-        .delete-btn {
-            background: #dc2626;
-            color: white;
-        }
-
-        /* Modal Styles */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            align-items: center;
-            justify-content: center;
-        }
-
-        .modal.show {
-            display: flex;
-        }
-
-        .modal-content {
+        .no-reviews {
+            text-align: center;
+            padding: 40px;
             background: white;
-            padding: 20px;
             border-radius: 8px;
-            width: 90%;
-            max-width: 500px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-
-        .form-group input, .form-group textarea, .form-group select {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-
-        .modal-actions {
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-            margin-top: 20px;
-        }
-
-        .modal-actions button {
-            padding: 8px 16px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        .save-btn {
-            background: #1a4d2e;
-            color: white;
-        }
-
-        .cancel-btn {
-            background: #666;
-            color: white;
+        .no-reviews i {
+            font-size: 48px;
+            color: #ddd;
+            margin-bottom: 20px;
         }
 
         .inactive-message {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 70vh;
             text-align: center;
+            padding: 40px;
             color: #666;
         }
 
-        .inactive-message h2 {
-            font-size: 24px;
-            margin-bottom: 16px;
-            color: #1a4d2e;
-        }
-
-        .inactive-message p {
-            font-size: 16px;
-            max-width: 600px;
-            line-height: 1.6;
-        }
-
-        .inactive-icon {
+        .inactive-message i {
             font-size: 48px;
             color: #1a4d2e;
             margin-bottom: 20px;
@@ -241,40 +185,94 @@ if($is_farm_active) {
         </div>
         <ul class="sidebar-menu">
             <li><a href="farm.php"><i class="fas fa-home"></i><span>Dashboard</span></a></li>
-            <li><a href="product.php" ><i class="fas fa-box"></i><span>Products</span></a></li>
+            <li><a href="product.php"><i class="fas fa-box"></i><span>Products</span></a></li>
             <li><a href="image.php"><i class="fas fa-image"></i><span>Farm Images</span></a></li>
             <li><a href="event.php"><i class="fas fa-calendar"></i><span>Events</span></a></li>
             <li><a href="review.php" class="active"><i class="fas fa-star"></i><span>Reviews</span></a></li>
             <li><a href="orders.php"><i class="fas fa-truck"></i><span>Orders</span></a></li>
-            <li><a href="settings.php"><i class="fas fa-cog"></i><span>Settings</span></a></li>
-            <li><a href="about.php"><i class="fas fa-info-circle"></i><span>About</span></a></li>
+            <!-- <li><a href="settings.php"><i class="fas fa-cog"></i><span>Settings</span></a></li>
+            <li><a href="about.php"><i class="fas fa-info-circle"></i><span>About</span></a></li> -->
         </ul>
     </nav>
 
     <div class="main-content">
-    <div class="dashboard-header">
-                <?php if(isset($row['farm_name'])&&isset($_SESSION['username'])){?>
-                <h1><?php echo $row['farm_name'];?>Farm</h1>
+        <div class="dashboard-header">
+            <?php if(isset($row['farm_name'])&&isset($_SESSION['username'])){?>
+                <h1><?php echo $row['farm_name'];?> Farm</h1>
                 <div class="user-section">
                     <span>Welcome, <?php echo $_SESSION['username'];?></span>
-                    <a href="http://localhost/mini%20project/logout/logout.php"><button class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</button></a>
+                    <a href="http://localhost/mini%20project/logout/logout.php">
+                        <button class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</button>
+                    </a>
                 </div>
-                <?php }else{?>
-                    <h1>Farm Dashboard</h1>
+            <?php }else{?>
+                <h1>Farm Dashboard</h1>
                 <div class="user-section">
                     <span>Welcome,</span>
-                    <a href="http://localhost/mini%20project/logout/logout.php"><button class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</button></a>
-                </div><?php }?>
-            </div>
-        <?php if($is_farm_active): ?>
-            
-                
+                    <a href="http://localhost/mini%20project/logout/logout.php">
+                        <button class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</button>
+                    </a>
+                </div>
+            <?php }?>
+        </div>
 
+        <?php if($is_farm_active): ?>
+            <div class="reviews-container">
+                <div class="reviews-header">
+                    <h2>Farm Reviews</h2>
+                    <div class="rating-summary">
+                        <span class="average-rating">
+                            <?php echo number_format($avg_result['avg_rating'] ?? 0, 1); ?>
+                        </span>
+                        <div class="rating-stars">
+                            <?php 
+                            $avg_rating = $avg_result['avg_rating'] ?? 0;
+                            for($i = 1; $i <= 5; $i++): 
+                            ?>
+                                <i class="fas fa-star" style="color: <?php echo $i <= $avg_rating ? '#ffd700' : '#ddd'; ?>"></i>
+                            <?php endfor; ?>
+                        </div>
+                        <span class="total-reviews">
+                            (<?php echo $avg_result['total_reviews'] ?? 0; ?> reviews)
+                        </span>
+                    </div>
+                </div>
+
+                <?php if($reviews_result->num_rows > 0): ?>
+                    <div class="reviews-grid">
+                        <?php while($review = $reviews_result->fetch_assoc()): ?>
+                            <div class="review-card">
+                                <div class="review-header">
+                                    <div class="reviewer-info">
+                                        <span class="reviewer-name"><?php echo htmlspecialchars($review['username']); ?></span>
+                                        <span class="reviewer-email"><?php echo htmlspecialchars($review['email']); ?></span>
+                                    </div>
+                                    <span class="review-date">
+                                        <?php echo date('F d, Y', strtotime($review['created_at'])); ?>
+                                    </span>
+                                </div>
+                                <div class="review-rating">
+                                    <?php for($i = 1; $i <= 5; $i++): ?>
+                                        <i class="fas fa-star" style="color: <?php echo $i <= $review['rating'] ? '#ffd700' : '#ddd'; ?>"></i>
+                                    <?php endfor; ?>
+                                </div>
+                                <p class="review-comment"><?php echo htmlspecialchars($review['comment']); ?></p>
+                            </div>
+                        <?php endwhile; ?>
+                    </div>
+                <?php else: ?>
+                    <div class="no-reviews">
+                        <i class="fas fa-star"></i>
+                        <h3>No Reviews Yet</h3>
+                        <p>Your farm hasn't received any reviews yet.</p>
+                    </div>
+                <?php endif; ?>
+            </div>
         <?php else: ?>
             <div class="inactive-message">
-                <i class="fas fa-store-slash inactive-icon"></i>
+                <i class="fas fa-store-slash"></i>
                 <h2>Farm Not Active</h2>
-                <p>Your farm is currently inactive. Please contact the administrator to activate your farm account before managing products.</p>
+                <p>Your farm is currently inactive. Please contact the administrator to activate your farm account.</p>
             </div>
         <?php endif; ?>
     </div>

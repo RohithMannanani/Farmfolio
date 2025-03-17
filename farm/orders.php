@@ -32,8 +32,36 @@ if($is_farm_active) {
                       WHERE p.farm_id = $farm_id 
                       ORDER BY p.created_at DESC";
     $products_result = mysqli_query($conn, $products_query);
+
+    // Fetch orders for the current farm
+    $orders_query = "SELECT o.*, u.username 
+                    FROM tbl_orders o
+                    JOIN tbl_login u ON o.user_id = u.userid
+                    JOIN tbl_order_items oi ON o.order_id = oi.order_id
+                    JOIN tbl_products p ON oi.product_id = p.product_id
+                    WHERE p.farm_id = $farm_id
+                    GROUP BY o.order_id
+                    ORDER BY o.order_date DESC";
+    $orders_result = mysqli_query($conn, $orders_query);
 }
 
+// Add this PHP code at the top of the file after database connection
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['order_id'], $_POST['status'])) {
+    $orderId = intval($_POST['order_id']);
+    $status = $_POST['status'];
+    
+    // Update order status
+    $updateQuery = "UPDATE tbl_orders SET order_status = ? WHERE order_id = ?";
+    $stmt = $conn->prepare($updateQuery);
+    $stmt->bind_param("si", $status, $orderId);
+    
+    if ($stmt->execute()) {
+        echo json_encode(['success' => true]);
+    } else {
+        echo json_encode(['success' => false, 'error' => $conn->error]);
+    }
+    exit;
+}
 
 ?>
 <!DOCTYPE html>
@@ -232,6 +260,115 @@ if($is_farm_active) {
             color: #1a4d2e;
             margin-bottom: 20px;
         }
+
+        .orders-container {
+            padding: 20px;
+        }
+
+        .orders-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .orders-table th, .orders-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .orders-table th {
+            background: #1a4d2e;
+            color: white;
+        }
+
+        .status-update {
+            padding: 5px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 4px;
+            color: white;
+            z-index: 1000;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .notification.success {
+            background-color: #22c55e;
+        }
+
+        .notification.error {
+            background-color: #ef4444;
+        }
+
+        /* Status styles */
+        .status-pending {
+            color: #856404;
+            background-color: #fff3cd;
+        }
+
+        .status-processing {
+            color: #004085;
+            background-color: #cce5ff;
+        }
+
+        .status-shipped {
+            color: #155724;
+            background-color: #d4edda;
+        }
+
+        .status-delivered {
+            color: #155724;
+            background-color: #c3e6cb;
+        }
+
+        /* Style for the status select dropdown */
+        .status-update {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .status-update:hover {
+            border-color: #1a4d2e;
+        }
+
+        .status-update:focus {
+            outline: none;
+            border-color: #1a4d2e;
+            box-shadow: 0 0 0 2px rgba(26, 77, 46, 0.2);
+        }
+
+        /* Add hover effect to table rows */
+        .orders-table tbody tr {
+            transition: background-color 0.3s ease;
+        }
+
+        .orders-table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
     </style>
 </head>
 <body>
@@ -241,13 +378,11 @@ if($is_farm_active) {
         </div>
         <ul class="sidebar-menu">
             <li><a href="farm.php"><i class="fas fa-home"></i><span>Dashboard</span></a></li>
-            <li><a href="product.php" class="active"><i class="fas fa-box"></i><span>Products</span></a></li>
+            <li><a href="product.php" ><i class="fas fa-box"></i><span>Products</span></a></li>
             <li><a href="image.php"><i class="fas fa-image"></i><span>Farm Images</span></a></li>
             <li><a href="event.php"><i class="fas fa-calendar"></i><span>Events</span></a></li>
             <li><a href="review.php"><i class="fas fa-star"></i><span>Reviews</span></a></li>
-            <li><a href="orders.php"><i class="fas fa-truck"></i><span>Orders</span></a></li>
-            <li><a href="settings.php"><i class="fas fa-cog"></i><span>Settings</span></a></li>
-            <li><a href="about.php"><i class="fas fa-info-circle"></i><span>About</span></a></li>
+            <li><a href="orders.php" class="active"><i class="fas fa-truck"></i><span>Orders</span></a></li>
         </ul>
     </nav>
 
@@ -268,7 +403,48 @@ if($is_farm_active) {
             </div>
         <?php if($is_farm_active): ?>
             
-                
+            <div class="orders-container">
+                <h2>Orders</h2>
+                <table class="orders-table">
+                    <thead>
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Customer</th>
+                            <th>Total Amount</th>
+                            <th>Status</th>
+                            <th>Order Date</th>
+                            <th>Address</th>
+                            <th>Phone</th>
+                            <th>Payment Method</th>
+                            <th>Payment Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php while($order = mysqli_fetch_assoc($orders_result)): ?>
+                        <tr>
+                            <td>#<?php echo $order['order_id']; ?></td>
+                            <td><?php echo $order['username']; ?></td>
+                            <td>₹<?php echo $order['total_amount']; ?></td>
+                            <td><?php echo ucfirst($order['order_status']); ?></td>
+                            <td><?php echo date('Y-m-d H:i', strtotime($order['order_date'])); ?></td>
+                            <td><?php echo $order['delivery_address']; ?></td>
+                            <td><?php echo $order['phone_number']; ?></td>
+                            <td><?php echo strtoupper($order['payment_method']); ?></td>
+                            <td><?php echo ucfirst($order['payment_status']); ?></td>
+                            <td>
+                                <select class="status-update" data-order-id="<?php echo $order['order_id']; ?>">
+                                    <option value="pending" <?php echo $order['order_status'] == 'pending' ? 'selected' : ''; ?>>Pending</option>
+                                    <option value="processing" <?php echo $order['order_status'] == 'processing' ? 'selected' : ''; ?>>Processing</option>
+                                    <option value="shipped" <?php echo $order['order_status'] == 'shipped' ? 'selected' : ''; ?>>Shipped</option>
+                                    <option value="delivered" <?php echo $order['order_status'] == 'delivered' ? 'selected' : ''; ?>>Delivered</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <?php endwhile; ?>
+                    </tbody>
+                </table>
+            </div>
 
         <?php else: ?>
             <div class="inactive-message">
@@ -278,5 +454,64 @@ if($is_farm_active) {
             </div>
         <?php endif; ?>
     </div>
+
+    <!-- Add this before closing body tag -->
+    <script>
+    document.querySelectorAll('.status-update').forEach(select => {
+        select.addEventListener('change', function() {
+            const orderId = this.dataset.orderId;
+            const status = this.value;
+            const row = this.closest('tr');
+
+            // Send AJAX request
+            fetch('orders.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `order_id=${orderId}&status=${status}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Show success notification
+                    showNotification('Order status updated successfully', 'success');
+                    
+                    // Update status cell color
+                    const statusCell = row.querySelector('td:nth-child(4)');
+                    statusCell.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+                    updateStatusStyle(statusCell, status);
+                } else {
+                    showNotification('Failed to update order status', 'error');
+                }
+            })
+            .catch(error => {
+                showNotification('An error occurred', 'error');
+                console.error('Error:', error);
+            });
+        });
+    });
+
+    function updateStatusStyle(element, status) {
+        // Remove existing status classes
+        element.className = '';
+        
+        // Add new status class
+        element.classList.add('status-' + status);
+    }
+
+    function showNotification(message, type) {
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        notification.textContent = message;
+        
+        document.body.appendChild(notification);
+        
+        // Remove notification after 3 seconds
+        setTimeout(() => {
+            notification.remove();
+        }, 3000);
+    }
+    </script>
 </body>
 </html>

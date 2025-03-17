@@ -17,11 +17,11 @@ INNER JOIN tbl_login ON tbl_signup.userid=tbl_login.userid
 INNER JOIN tbl_farms ON tbl_signup.userid=tbl_farms.user_id
 LEFT JOIN tbl_products ON tbl_farms.farm_id=tbl_products.farm_id
 GROUP BY tbl_farms.farm_id";
-$result = mysqli_query($conn, $stmt);
+$result = $conn->query($stmt);
 if($result){
-    echo"success";
+    echo "success";
 }else{
-   echo mysqli_error($conn);
+    echo $conn->error;
 }
 ?>
 <!DOCTYPE html>
@@ -231,6 +231,7 @@ if($result){
             <li><a href="admin.php" ><i class="fas fa-home"></i><span>Home</span></a></li>
             <li><a href="user.php"><i class="fas fa-users"></i><span>Users</span></a></li>
             <li><a href="farm.php" class="active"><i class="fas fa-store"></i><span>Farms</span></a></li>
+            <li><a href="category.php"><i class="fas fa-th-large"></i><span>category</span></a></li>
             <li><a href="#"><i class="fas fa-box"></i><span>Products</span></a></li>
             <li><a href="#"><i class="fas fa-truck"></i><span>Deliveries</span></a></li>
             <li><a href="#"><i class="fas fa-star"></i><span>Reviews</span></a></li>
@@ -260,11 +261,11 @@ if($result){
     <?php
     while ($row = mysqli_fetch_assoc($result)) {
         echo "<tr>";
-        echo "<td>" . htmlspecialchars($row['farm_name']) . "</td>";
-        echo "<td>" . htmlspecialchars($row['location']) . "</td>";
-        echo "<td>" . htmlspecialchars($row['username']) . "</td>";
-        echo "<td>" . htmlspecialchars($row['email']) . "</td>";
-        echo "<td>" . htmlspecialchars($row['mobile']) . "</td>";
+        echo "<td>" . htmlentities($row['farm_name']) . "</td>";
+        echo "<td>" . htmlentities($row['location']) . "</td>";
+        echo "<td>" . htmlentities($row['username']) . "</td>";
+        echo "<td>" . htmlentities($row['email']) . "</td>";
+        echo "<td>" . htmlentities($row['mobile']) . "</td>";
         echo "<td>" . htmlspecialchars($row['state']) . "</td>";
         echo "<td>" . htmlspecialchars($row['district']) . "</td>";
         echo "<td><span class='product-count'>" . $row['product_count'] . "</span></td>";

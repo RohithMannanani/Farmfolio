@@ -6,21 +6,37 @@ if(!isset($_SESSION['username'])){
 }
 
 if(isset($_SESSION['userid'])){
-    $userid=$_SESSION['userid'];
-    $farm="SELECT * FROM tbl_farms WHERE user_id=$userid";//farm data
-    $result=mysqli_query($conn,$farm);
-    $row=$result->fetch_assoc();
-    $farm_id=$row['farm_id'];
-}
-//count products 
-$pcount = "SELECT COUNT(product_id) AS product_count FROM tbl_products WHERE farm_id=$farm_id"; // Use product_id instead of product_name for counting
-$count = $conn->query($pcount);
-
-if ($count) {
-    $count_result = $count->fetch_assoc();
-    $product_count = $count_result['product_count']; // Access the count value
-} else {
-    $product_count = 0; // Default value in case of an error
+    $userid = $_SESSION['userid'];
+   
+    $farm = "SELECT * FROM tbl_farms WHERE user_id=?";
+    $stmt = $conn->prepare($farm);
+    $stmt->bind_param("i", $userid);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    if($result && $row = $result->fetch_assoc()) {
+        $farm_id = $row['farm_id'];
+        $_SESSION['farm_id'] = $farm_id; // Store farm_id in session
+        
+        // Count products only if farm_id exists
+        $pcount = "SELECT COUNT(product_id) AS product_count FROM tbl_products WHERE farm_id=?";
+        $stmt_count = $conn->prepare($pcount);
+        $stmt_count->bind_param("i", $farm_id);
+        $stmt_count->execute();
+        $count_result = $stmt_count->get_result();
+        
+        if($count_result) {
+            $count_data = $count_result->fetch_assoc();
+            $product_count = $count_data['product_count'];
+        } else {
+            $product_count = 0;
+        }
+    } else {
+        // No farm found for this user
+        $farm_id = 0;
+        $product_count = 0;
+        $row = null;
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -45,8 +61,8 @@ if ($count) {
             <li><a href="event.php"><i class="fas fa-calendar"></i><span>Events</span></a></li>
             <li><a href="review.php"><i class="fas fa-star"></i><span>Reviews</span></a></li>
             <li><a href="orders.php"><i class="fas fa-truck"></i><span>Orders</span></a></li>
-            <li><a href="settings.php"><i class="fas fa-cog"></i><span>Settings</span></a></li>
-            <li><a href="about.php"><i class="fas fa-info-circle"></i><span>About</span></a></li>
+            <!-- <li><a href="settings.php"><i class="fas fa-cog"></i><span>Settings</span></a></li>
+            <li><a href="about.php"><i class="fas fa-info-circle"></i><span>About</span></a></li> -->
         </ul>
     </nav>
 
@@ -72,11 +88,11 @@ if ($count) {
                 <div class="stat-card">
                     <h3>Active Products</h3>
                     <div class="value"><?php echo $product_count ;?></div>
-                   
+                   <?php echo $_SESSION['userid'];?>
                 </div>
                 <div class="stat-card">
                     <h3>Total Customers</h3>
-                    <div class="value">1</div>
+                    <div class="value">0</div>
                     <small>+12% this month</small>
                 </div>
                 <div class="stat-card">
@@ -86,7 +102,7 @@ if ($count) {
                 </div>
                 <div class="stat-card">
                     <h3>Upcoming Events</h3>
-                    <div class="value">3</div>
+                    <div class="value">0</div>
                     <small>Next event in 2 days</small>
                 </div>
             </div>
