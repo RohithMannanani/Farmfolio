@@ -378,7 +378,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['order_id'], $_POST['s
         </div>
         <ul class="sidebar-menu">
             <li><a href="farm.php"><i class="fas fa-home"></i><span>Dashboard</span></a></li>
-            <li><a href="product.php" ><i class="fas fa-box"></i><span>Products</span></a></li>
+            <li><a href="p.php" ><i class="fas fa-box"></i><span>Products</span></a></li>
             <li><a href="image.php"><i class="fas fa-image"></i><span>Farm Images</span></a></li>
             <li><a href="event.php"><i class="fas fa-calendar"></i><span>Events</span></a></li>
             <li><a href="review.php"><i class="fas fa-star"></i><span>Reviews</span></a></li>
@@ -389,7 +389,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['order_id'], $_POST['s
     <div class="main-content">
     <div class="dashboard-header">
                 <?php if(isset($row['farm_name'])&&isset($_SESSION['username'])){?>
-                <h1><?php echo $row['farm_name'];?>Farm</h1>
+                <h1><?php echo $row['farm_name'];?></h1>
                 <div class="user-section">
                     <span>Welcome, <?php echo $_SESSION['username'];?></span>
                     <a href="http://localhost/mini%20project/logout/logout.php"><button class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</button></a>

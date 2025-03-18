@@ -860,7 +860,6 @@ async function checkProductExists(productName, categoryId, productId = null) {
         return false;
     }
 }
-
 </script>
 
 

@@ -116,7 +116,7 @@ if (isset($_POST['selected_categories']) && is_array($_POST['selected_categories
     <div class="main-content">
     <div class="dashboard-header">
                 <?php if(isset($row['farm_name'])&&isset($_SESSION['username'])){?>
-                <h1><?php echo $row['farm_name'];?>Farm</h1>
+                <h1><?php echo $row['farm_name'];?></h1>
                 <div class="user-section">
                     <span>Welcome, <?php echo $_SESSION['username'];?></span>
                     <a href="http://localhost/mini%20project/logout/logout.php"><button class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</button></a>

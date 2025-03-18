@@ -295,7 +295,7 @@ $images_result = mysqli_query($conn, $images_query);
 
     <div class="main-content">
         <div class="dashboard-header">
-            <h1><?php echo $farm['farm_name']; ?> - Farm Images</h1>
+            <h1><?php echo $farm['farm_name']; ?> - Images</h1>
             <div class="user-section">
                 <span>Welcome, <?php echo $_SESSION['username']; ?></span>
                 <a href="../logout/logout.php"><button class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</button></a>
