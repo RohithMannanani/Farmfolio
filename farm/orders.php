@@ -383,6 +383,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['order_id'], $_POST['s
             <li><a href="event.php"><i class="fas fa-calendar"></i><span>Events</span></a></li>
             <li><a href="review.php"><i class="fas fa-star"></i><span>Reviews</span></a></li>
             <li><a href="orders.php" class="active"><i class="fas fa-truck"></i><span>Orders</span></a></li>
+            <li><a href="about.php"><i class="fas fa-info-circle"></i><span>Farm Details </span></a></li>
         </ul>
     </nav>
 

@@ -418,11 +418,11 @@ $categories_result = mysqli_query($conn, $categories_query);
             <li><a href="user.php" ><i class="fas fa-users"></i><span>Users</span></a></li>
             <li><a href="farm.php"><i class="fas fa-store"></i><span>Farms</span></a></li>
             <li><a href="category.php"class="active"><i class="fas fa-th-large"></i><span>category</span></a></li>
-            <li><a href="#"><i class="fas fa-box"></i><span>Products</span></a></li>
-            <li><a href="#"><i class="fas fa-truck"></i><span>Deliveries</span></a></li>
-            <li><a href="#"><i class="fas fa-star"></i><span>Reviews</span></a></li>
+            <!-- <li><a href="#"><i class="fas fa-box"></i><span>Products</span></a></li> -->
+            <!-- <li><a href="delivery.php"><i class="fas fa-truck"></i><span>Deliveries</span></a></li>     -->
+            <!-- <li><a href="#"><i class="fas fa-star"></i><span>Reviews</span></a></li>
             <li><a href="#"><i class="fas fa-chart-line"></i><span>Analytics</span></a></li>
-            <li><a href="#"><i class="fas fa-cog"></i><span>Settings</span></a></li>
+            <li><a href="#"><i class="fas fa-cog"></i><span>Settings</span></a></li> -->
         </ul>
     </nav>
 

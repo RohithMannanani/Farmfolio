@@ -1,5 +1,7 @@
 <?php
 session_start();
+include '../databse/connect.php';
+
 if(!isset($_SESSION['username'])){
     header('location: http://localhost/mini%20project/login/login.php');
 }
@@ -400,6 +402,172 @@ if(!isset($_SESSION['username'])){
                 gap: 15px;
             }
         }
+
+        .search-section {
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+        }
+
+        .search-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .search-box input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+
+        .search-box select {
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            background: white;
+        }
+
+        .search-box button {
+            padding: 12px 24px;
+            background: #1a4d2e;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .search-box button:hover {
+            background: #2d6a4f;
+        }
+
+        .filter-options {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .filter-options select {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: white;
+        }
+
+        .search-results {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .result-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+
+        .result-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .result-details {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .result-name {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #1a4d2e;
+        }
+
+        .result-location, 
+        .result-farm, 
+        .result-category {
+            color: #666;
+            font-size: 0.9em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .result-price {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #2d6a4f;
+            margin: 8px 0;
+        }
+
+        .result-description {
+            color: #666;
+            font-size: 0.9em;
+            margin: 8px 0;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .result-date {
+            color: #666;
+            font-size: 0.8em;
+            margin-top: 8px;
+        }
+
+        .farm-location {
+            font-size: 0.9em;
+            color: #666;
+            margin-left: 8px;
+        }
+
+        .add-to-cart-btn {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            background: #1a4d2e;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .add-to-cart-btn:hover {
+            background: #2d6a4f;
+            transform: translateY(-2px);
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            grid-column: 1 / -1;
+        }
+
+        @media (max-width: 768px) {
+            .search-box {
+                flex-direction: column;
+            }
+            
+            .filter-options {
+                flex-direction: column;
+            }
+        }
     </style>
 </head>
 <body>
@@ -441,75 +609,55 @@ if(!isset($_SESSION['username'])){
                     </div>
                 </div>
             </div>
-
-            <!-- Stats Grid -->
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <h3>Total Orders</h3>
-                    <div class="value">24</div>
+        <!-- Add this after the user-section div and before the footer -->
+        <div class="search-section">
+            <div class="search-container">
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="Search farms or products...">
+                    <select id="searchType">
+                        <option value="all">All</option>
+                        <option value="farms">Farms Only</option>
+                        <option value="products">Products Only</option>
+                    </select>
+                    <button onclick="performSearch()">
+                        <i class="fas fa-search"></i> Search
+                    </button>
                 </div>
-                <div class="stat-card">
-                    <h3>Favorite Farms</h3>
-                    <div class="value">12</div>
-                </div>
-                <div class="stat-card">
-                    <h3>Upcoming Events</h3>
-                    <div class="value">3</div>
-                </div>
-                <div class="stat-card">
-                    <h3>Active Orders</h3>
-                    <div class="value">2</div>
+                <div class="filter-options">
+                    <select id="locationFilter">
+                        <option value="">All Locations</option>
+                        <?php
+                        $location_query = "SELECT DISTINCT location FROM tbl_farms WHERE status='active'";
+                        $location_result = mysqli_query($conn, $location_query);
+                        while($location = mysqli_fetch_assoc($location_result)) {
+                            echo "<option value='" . htmlspecialchars($location['location']) . "'>" 
+                                 . htmlspecialchars($location['location']) . "</option>";
+                        }
+                        ?>
+                    </select>
+                    <select id="categoryFilter">
+                        <option value="">All Categories</option>
+                        <?php
+                        $category_query = "SELECT DISTINCT category FROM tbl_category WHERE status='1'";
+                        $category_result = mysqli_query($conn, $category_query);
+                        while($category = mysqli_fetch_assoc($category_result)) {
+                            echo "<option value='" . htmlspecialchars($category['category']) . "'>" 
+                                 . htmlspecialchars($category['category']) . "</option>";
+                        }
+                        ?>
+                    </select>
                 </div>
             </div>
-
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <h3>Total Orders</h3>
-                    <div class="value">24</div>
-                </div>
-                <div class="stat-card">
-                    <h3>Favorite Farms</h3>
-                    <div class="value">12</div>
-                </div>
-                <div class="stat-card">
-                    <h3>Upcoming Events</h3>
-                    <div class="value">3</div>
-                </div>
-                <div class="stat-card">
-                    <h3>Active Orders</h3>
-                    <div class="value">2</div>
-                </div>
-            </div>
-
-
-            <!-- Favorite Farms -->
-            <h2>Your Favorite Farms</h2>
-            <div class="stats-grid">
-                <?php
-                // Fetch favorite farms (mock data)
-                $favorite_farms = [
-                    ['name' => 'Green Valley Farm', 'rating' => '4.5', 'products' => '15'],
-                    ['name' => 'Sunrise Organics', 'rating' => '4.8', 'products' => '23'],
-                    ['name' => 'Fresh Fields', 'rating' => '4.2', 'products' => '18']
-                ];
-
-                foreach($favorite_farms as $farm) {
-                    echo "<div class='farm-card'>
-                        <h3>{$farm['name']}</h3>
-                        <p>Rating: {$farm['rating']} ⭐</p>
-                        <p>Available Products: {$farm['products']}</p>
-                        <a href='#' class='view-farm'>View Farm</a>
-                    </div>";
-                }
-                ?>
+            <div id="searchResults" class="search-results">
+                <!-- Results will be loaded here -->
             </div>
         </div>
-
-        <!-- Footer -->
-        <div class="footer">
+          <!-- Footer -->
+         
+    </div>
+    <div class="footer">
             <p>&copy; 2024 Farmfolio. All rights reserved.</p>
         </div>
-    </div>
 
     <script>
          document.addEventListener('DOMContentLoaded', function() {
@@ -562,4 +710,128 @@ if(!isset($_SESSION['username'])){
         })
 
            </script>
+
+    <!-- Add this JavaScript before the closing body tag -->
+    <script>
+    let debounceTimer;
+
+    function debounce(func, delay) {
+        return function() {
+            const context = this;
+            const args = arguments;
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => func.apply(context, args), delay);
+        }
+    }
+
+    const searchInput = document.getElementById('searchInput');
+    searchInput.addEventListener('input', debounce(performSearch, 300));
+
+    document.getElementById('searchType').addEventListener('change', performSearch);
+    document.getElementById('locationFilter').addEventListener('change', performSearch);
+    document.getElementById('categoryFilter').addEventListener('change', performSearch);
+
+    function performSearch() {
+        const searchTerm = document.getElementById('searchInput').value;
+        const searchType = document.getElementById('searchType').value;
+        const location = document.getElementById('locationFilter').value;
+        const category = document.getElementById('categoryFilter').value;
+
+        fetch('search_handler.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `search=${encodeURIComponent(searchTerm)}&type=${searchType}&location=${location}&category=${category}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            displayResults(data);
+        })
+        .catch(error => console.error('Error:', error));
+    }
+
+    function displayResults(data) {
+        const resultsContainer = document.getElementById('searchResults');
+        resultsContainer.innerHTML = '';
+
+        if (!data.success || !data.results || data.results.length === 0) {
+            resultsContainer.innerHTML = '<div class="no-results">No results found</div>';
+            return;
+        }
+
+        data.results.forEach(result => {
+            const card = document.createElement('div');
+            card.className = 'result-card';
+            
+            if (result.type === 'farm') {
+                card.innerHTML = `
+                    <div class="result-details">
+                        <div class="result-name">${result.name}</div>
+                        <div class="result-location">
+                            <i class="fas fa-map-marker-alt"></i> ${result.location}
+                        </div>
+                        <div class="result-description">${result.description || 'No description available'}</div>
+                        <div class="result-products">
+                            <i class="fas fa-box"></i> ${result.product_count} Products
+                        </div>
+                        <div class="result-date">
+                            <i class="fas fa-calendar"></i> Joined ${new Date(result.created_at).toLocaleDateString()}
+                        </div>
+                        <a href="farm_details.php?id=${result.id}" class="view-farm">
+                            View Farm <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                `;
+            } else {
+                card.innerHTML = `
+                    <div class="result-details">
+                        <div class="result-name">${result.name}</div>
+                        <div class="result-category">
+                            <i class="fas fa-tag"></i> ${result.category} - ${result.subcategory}
+                        </div>
+                        <div class="result-farm">
+                            <i class="fas fa-store"></i> ${result.farm_name}
+                            <span class="farm-location">
+                                <i class="fas fa-map-marker-alt"></i> ${result.farm_location}
+                            </span>
+                        </div>
+                        <div class="result-description">${result.description || 'No description available'}</div>
+                        <div class="result-stock">
+                            <i class="fas fa-cube"></i> ${result.stock} ${result.unit} available
+                        </div>
+                        <div class="result-price">₹${result.price}</div>
+                        <button onclick="addToCart(${result.id})" class="add-to-cart-btn">
+                            <i class="fas fa-cart-plus"></i> Add to Cart
+                        </button>
+                    </div>
+                `;
+            }
+            
+            resultsContainer.appendChild(card);
+        });
+    }
+
+    function addToCart(productId) {
+        fetch('add_to_cart.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `product_id=${productId}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Product added to cart!');
+            } else {
+                alert('Error adding product to cart');
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+
+    // Initial search on page load
+    performSearch();
+    </script>
 </body>

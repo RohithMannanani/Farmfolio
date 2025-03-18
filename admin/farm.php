@@ -232,11 +232,11 @@ if($result){
             <li><a href="user.php"><i class="fas fa-users"></i><span>Users</span></a></li>
             <li><a href="farm.php" class="active"><i class="fas fa-store"></i><span>Farms</span></a></li>
             <li><a href="category.php"><i class="fas fa-th-large"></i><span>category</span></a></li>
-            <li><a href="#"><i class="fas fa-box"></i><span>Products</span></a></li>
-            <li><a href="#"><i class="fas fa-truck"></i><span>Deliveries</span></a></li>
-            <li><a href="#"><i class="fas fa-star"></i><span>Reviews</span></a></li>
+            <!-- <li><a href="#"><i class="fas fa-box"></i><span>Products</span></a></li> -->
+            <!-- <li><a href="delivery.php"><i class="fas fa-truck"></i><span>Deliveries</span></a></li> -->
+            <!-- <li><a href="#"><i class="fas fa-star"></i><span>Reviews</span></a></li>
             <li><a href="#"><i class="fas fa-chart-line"></i><span>Analytics</span></a></li>
-            <li><a href="#"><i class="fas fa-cog"></i><span>Settings</span></a></li>
+            <li><a href="#"><i class="fas fa-cog"></i><span>Settings</span></a></li> -->
         </ul>
     </nav>
 
@@ -324,5 +324,56 @@ function updateDropdownColor(select) {
         'rejected': '#e74c3c'
     }[select.value] || '#ddd';
 }
+document.querySelectorAll('.status-dropdown').forEach(select => {
+    // Initial color set
+    updateDropdownColor(select);
+
+    select.addEventListener('change', function() {
+        let farmId = this.getAttribute('data-farm-id');
+        let newStatus = this.value;
+        let previousStatus = this.getAttribute('data-status');
+        
+        // Confirm before rejecting
+        if (newStatus === 'rejected') {
+            if (!confirm('Are you sure you want to reject this farm? An email notification will be sent to the farm owner.')) {
+                this.value = previousStatus;
+                updateDropdownColor(this);
+                return;
+            }
+        }
+
+        // Show loading state
+        select.disabled = true;
+        select.style.opacity = '0.7';
+
+        fetch('update_status.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `farm_id=${farmId}&status=${newStatus}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                this.setAttribute('data-status', newStatus);
+                updateDropdownColor(this);
+            } else {
+                alert('Error: ' + data.message);
+                this.value = previousStatus;
+                updateDropdownColor(this);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while updating the status');
+            this.value = previousStatus;
+            updateDropdownColor(this);
+        })
+        .finally(() => {
+            select.disabled = false;
+            select.style.opacity = '1';
+        });
+    });
+});
 </script>
 </html>

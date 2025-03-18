@@ -175,8 +175,8 @@ $participants_result = $stmt->get_result();
             <li><a href="event.php"><i class="fas fa-calendar"></i><span>Events</span></a></li>
             <li><a href="review.php" class="active"><i class="fas fa-star"></i><span>Reviews</span></a></li>
             <li><a href="orders.php"><i class="fas fa-truck"></i><span>Orders</span></a></li>
-            <li><a href="settings.php"><i class="fas fa-cog"></i><span>Settings</span></a></li>
-            <li><a href="about.php"><i class="fas fa-info-circle"></i><span>About</span></a></li>
+            <li><a href="about.php"><i class="fas fa-info-circle"></i><span>Farm Details </span></a></li>
+            <!-- <li><a href="about.php"><i class="fas fa-info-circle"></i><span>About</span></a></li> -->
         </ul>
     </nav>
 
