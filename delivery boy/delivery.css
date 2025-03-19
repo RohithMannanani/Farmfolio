@@ -201,20 +201,26 @@ body {
     padding: 5px 10px;
     border-radius: 15px;
     font-size: 0.8em;
+    font-weight: 500;
 }
 
 .status-pending {
-    background: #fef3c7;
+    background-color: #fee2e2;
+    color: #991b1b;
+}
+
+.status-processing {
+    background-color: #fef3c7;
     color: #92400e;
 }
 
-.status-in-progress {
-    background: #dbeafe;
+.status-shipped {
+    background-color: #dbeafe;
     color: #1e40af;
 }
 
-.status-completed {
-    background: #dcfce7;
+.status-delivered {
+    background-color: #dcfce7;
     color: #166534;
 }
 

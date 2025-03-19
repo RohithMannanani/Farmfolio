@@ -518,7 +518,7 @@ if(!isset($_SESSION['username'])){
             font-size: 0.9em;
             margin: 8px 0;
             display: -webkit-box;
-            -webkit-line-clamp: 2;
+         
             -webkit-box-orient: vertical;
             overflow: hidden;
         }
@@ -812,24 +812,29 @@ if(!isset($_SESSION['username'])){
         });
     }
 
-    function addToCart(productId) {
-        fetch('add_to_cart.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: `product_id=${productId}`
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert('Product added to cart!');
-            } else {
-                alert('Error adding product to cart');
-            }
-        })
-        .catch(error => console.error('Error:', error));
-    }
+   // Updated addToCart function for the JavaScript
+function addToCart(productId) {
+    fetch('add_to_cart.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ productId: productId })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            alert(data.message);
+            // Optionally update cart count in UI if you have a cart counter
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while adding the product to cart');
+    });
+}
 
     // Initial search on page load
     performSearch();

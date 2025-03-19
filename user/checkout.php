@@ -9,11 +9,75 @@ include '../databse/connect.php';
 
 $totalAmount = isset($_POST['total_amount']) ? floatval($_POST['total_amount']) : 0;
 
+// Add these new functions at the top of the file
+function validateStock($conn, $cart_items) {
+    $errors = array();
+    foreach ($cart_items as $productId => $quantity) {
+        $query = "SELECT stock, product_name FROM tbl_products WHERE product_id = ?";
+        $stmt = mysqli_prepare($conn, $query);
+        mysqli_stmt_bind_param($stmt, "i", $productId);
+        mysqli_stmt_execute($stmt);
+        $result = mysqli_stmt_get_result($stmt);
+        $product = mysqli_fetch_assoc($result);
+        
+        if ($product['stock'] < $quantity) {
+            $errors[] = "Insufficient stock for {$product['product_name']}. Available: {$product['stock']}, Requested: {$quantity}";
+        }
+    }
+    return $errors;
+}
+
+function updateProductStock($conn, $orderId) {
+    try {
+        $get_items_query = "SELECT oi.product_id, oi.quantity, p.stock 
+                           FROM tbl_order_items oi
+                           JOIN tbl_products p ON oi.product_id = p.product_id
+                           WHERE oi.order_id = ?";
+        
+        $stmt = mysqli_prepare($conn, $get_items_query);
+        mysqli_stmt_bind_param($stmt, "i", $orderId);
+        mysqli_stmt_execute($stmt);
+        $items_result = mysqli_stmt_get_result($stmt);
+        
+        while ($item = mysqli_fetch_assoc($items_result)) {
+            $new_stock = $item['stock'] - $item['quantity'];
+            
+            if ($new_stock < 0) {
+                throw new Exception("Insufficient stock for product ID: " . $item['product_id']);
+            }
+            
+            $update_stock_query = "UPDATE tbl_products 
+                                 SET stock = ? 
+                                 WHERE product_id = ? AND stock >= ?";
+            
+            $update_stmt = mysqli_prepare($conn, $update_stock_query);
+            mysqli_stmt_bind_param($update_stmt, "iii", $new_stock, $item['product_id'], $item['quantity']);
+            $update_result = mysqli_stmt_execute($update_stmt);
+            
+            if (!$update_result) {
+                throw new Exception("Failed to update stock for product ID: " . $item['product_id']);
+            }
+        }
+        return true;
+    } catch (Exception $e) {
+        error_log("Stock update failed: " . $e->getMessage());
+        return false;
+    }
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
-    // This is when the form is submitted with address and phone
-    $userId = $_SESSION['userid']; // Fixed variable name
+    $userId = $_SESSION['userid'];
     $address = $_POST['address'];
     $phone = $_POST['phone'];
+    
+    // Validate stock before processing
+    $stock_errors = validateStock($conn, $_SESSION['cart']);
+    
+    if (!empty($stock_errors)) {
+        $_SESSION['error'] = "Stock validation failed:\n" . implode("\n", $stock_errors);
+        header('Location: cart.php');
+        exit;
+    }
     
     // Start transaction
     mysqli_begin_transaction($conn);
@@ -48,6 +112,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
             $stmt->execute();
         }
         
+        // Update product stock
+        $stock_update_success = updateProductStock($conn, $orderId);
+        if (!$stock_update_success) {
+            throw new Exception("Failed to update product stock");
+        }
+        
         // Clear cart
         $clearCartQuery = "DELETE FROM tbl_cart WHERE user_id = ?";
         $stmt = $conn->prepare($clearCartQuery);
@@ -73,6 +143,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
     }
 }
 ?>
+
+<!-- Add this at the top of your HTML, after the <body> tag -->
+<?php if(isset($_SESSION['error'])): ?>
+    <div class="error-message" style="background: #fee2e2; color: #991b1b; padding: 15px; margin: 20px auto; max-width: 800px; border-radius: 8px; text-align: center;">
+        <?php 
+        echo $_SESSION['error'];
+        unset($_SESSION['error']);
+        ?>
+    </div>
+<?php endif; ?>
 
 <!DOCTYPE html>
 <html lang="en">
