@@ -485,9 +485,9 @@ $categories_result = mysqli_query($conn, $categories_query);
         </div>
     </main>
 
-    <footer class="footer">
+    <!-- <footer class="footer">
         <p>© 2025 Farmfolio Admin Panel. All rights reserved.</p>
-    </footer>
+    </footer> -->
 
     <!-- Edit Category Modal -->
     <div class="modal" id="editModal">

@@ -156,6 +156,7 @@ if($result){
             margin-left: 250px;
             flex: 1;
             padding: 90px 24px 24px;
+            min-height: 100vh;
         }
 
         .footer {
@@ -288,9 +289,9 @@ if($result){
 
         </table>
        
-        <footer class="footer">
+        <!-- <footer class="footer">
             <p>© 2025 Farmfolio Admin Panel. All rights reserved.</p>
-        </footer>
+        </footer> -->
     </main>
 </body>
 <script>

@@ -849,7 +849,7 @@ body {
                 </div>
             </div>
         </div>
-        <footer class="footer">
+        <!-- <footer class="footer">
         <p>© 2024 Farmfolio Delivery. All rights reserved.</p>
         <div class="footer-items">
             <a href="#">Terms of Service</a>
@@ -857,7 +857,7 @@ body {
             <a href="#">Contact Us</a>
             <a href="#">FAQ</a>
         </div>
-    </footer>
+    </footer> -->
     </main>
 
   

@@ -20,6 +20,13 @@ if ($count_result1) {
     $row1 = mysqli_fetch_assoc($count_result1);
     $farm_count = $row1['total'];
 }
+// Product count
+$stmt2 = "SELECT COUNT(*) AS total FROM tbl_products";
+$count_result2 = mysqli_query($conn, $stmt2);
+if ($count_result2) {
+    $row2 = mysqli_fetch_assoc($count_result2);
+    $product_count = $row2['total'];
+}
 ?>
 <!DOCTYPE html>
 <html>
@@ -250,8 +257,8 @@ if ($count_result1) {
             </div>
             <div class="stat-card">
                 <h3>Total Products</h3>
-                <div class="value">5</div>
-                <button id="product">View</button>
+                <div class="value"><?php echo $product_count; ?></div>
+                <a href="product.php"><button id="product">View</button></a>
             </div>
             <div class="stat-card">
                 <h3>Category</h3>
@@ -259,9 +266,9 @@ if ($count_result1) {
                 <a href="user.php"><button id="user">View</button></a>
             </div>
         </div>
-        <footer class="footer">
+        <!-- <footer class="footer">
             <p>© 2025 Farmfolio Admin Panel. All rights reserved.</p>
-        </footer>
+        </footer> -->
     </main>
 </body>
 </html>

@@ -454,6 +454,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['order_id'], $_POST['s
                 <p>Your farm is currently inactive. Please contact the administrator to activate your farm account before managing products.</p>
             </div>
         <?php endif; ?>
+        <!-- <footer class="footer">
+            <p>© 2025 Farmfolio. All rights reserved.</p>
+            <p style="margin-top: 5px; font-size: 0.9em;">Connecting Farms to Communities</p>
+        </footer> -->
     </div>
 
     <!-- Add this before closing body tag -->

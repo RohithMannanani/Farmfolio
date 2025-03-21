@@ -119,10 +119,10 @@ if(isset($_SESSION['userid'])){
             </div> -->
         </div>
 
-        <footer class="footer">
+        <!-- <footer class="footer">
             <p>© 2025 Farmfolio. All rights reserved.</p>
             <p style="margin-top: 5px; font-size: 0.9em;">Connecting Farms to Communities</p>
-        </footer>
+        </footer> -->
     </div>
 
     <script src="farm.js"></script>

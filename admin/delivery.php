@@ -244,9 +244,9 @@ if($result){
     
    
        
-        <footer class="footer">
+        <!-- <footer class="footer">
             <p>© 2025 Farmfolio Admin Panel. All rights reserved.</p>
-        </footer>
+        </footer> -->
     </main>
 </body>
 <script>

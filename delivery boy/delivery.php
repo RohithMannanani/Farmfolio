@@ -501,7 +501,7 @@ body {
                 ?>
                     <div class="delivery-item">
                         <div class="delivery-info">
-                            <h3>Order #<?php echo $delivery['order_id']; ?></h3>
+                            <!-- <h3>Order #<?php echo $delivery['order_id']; ?></h3> -->
                             <div class="delivery-meta">
                                 <p><i class="fas fa-user"></i> <?php echo $delivery['customer_name']; ?></p>
                                 <p><i class="fas fa-phone"></i> <?php echo $delivery['phone_number']; ?></p>
@@ -542,7 +542,7 @@ body {
             </div>
         </div>
 
-        <footer class="footer">
+        <!-- <footer class="footer">
             <p>© 2024 Farmfolio Delivery. All rights reserved.</p>
             <div class="footer-items">
                 <a href="#">Terms of Service</a>
@@ -550,7 +550,7 @@ body {
                 <a href="#">Contact Us</a>
                 <a href="#">FAQ</a>
             </div>
-        </footer>
+        </footer> -->
     </main>
 
     <script>

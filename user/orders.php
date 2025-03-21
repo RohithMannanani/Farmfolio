@@ -10,7 +10,8 @@ include '../databse/connect.php';
 // Fetch all orders for the current user
 $userId = $_SESSION['userid'];
 $query = "SELECT o.*, 
-          COUNT(oi.item_id) as total_items 
+          COUNT(oi.item_id) as total_items,
+          o.updated_at
           FROM tbl_orders o 
           LEFT JOIN tbl_order_items oi ON o.order_id = oi.order_id 
           WHERE o.user_id = ? 
@@ -26,28 +27,64 @@ $orders = $result->fetch_all(MYSQLI_ASSOC);
 // Handle order cancellation
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cancel_order'])) {
     $orderId = intval($_POST['order_id']);
-    $userId = $_SESSION['userid']; // Make sure this matches your session variable name
+    $userId = $_SESSION['userid'];
     
-    // Verify the order belongs to the user
-    $verifyQuery = "SELECT order_id FROM tbl_orders WHERE order_id = ? AND user_id = ? AND order_status = 'pending'";
-    $stmt = $conn->prepare($verifyQuery);
-    $stmt->bind_param("ii", $orderId, $userId);
-    $stmt->execute();
-    $result = $stmt->get_result();
+    // Start transaction
+    mysqli_begin_transaction($conn);
     
-    if ($result->num_rows > 0) {
+    try {
+        // First verify the order belongs to the user and is pending
+        $verifyQuery = "SELECT order_id FROM tbl_orders 
+                       WHERE order_id = ? AND user_id = ? AND order_status = 'pending'";
+        $stmt = $conn->prepare($verifyQuery);
+        $stmt->bind_param("ii", $orderId, $userId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        if ($result->num_rows === 0) {
+            throw new Exception('Invalid order or order cannot be cancelled');
+        }
+
+        // Get the order items to restore quantities
+        $itemsQuery = "SELECT product_id, quantity FROM tbl_order_items WHERE order_id = ?";
+        $stmt = $conn->prepare($itemsQuery);
+        $stmt->bind_param("i", $orderId);
+        $stmt->execute();
+        $items_result = $stmt->get_result();
+        
+        // Update product quantities
+        while ($item = $items_result->fetch_assoc()) {
+            $updateStockQuery = "UPDATE tbl_products 
+                               SET stock = stock + ? 
+                               WHERE product_id = ?";
+            $stmt = $conn->prepare($updateStockQuery);
+            $stmt->bind_param("ii", $item['quantity'], $item['product_id']);
+            
+            if (!$stmt->execute()) {
+                throw new Exception('Failed to update product stock');
+            }
+        }
+        
         // Update order status to cancelled
-        $updateQuery = "UPDATE tbl_orders SET order_status = 'cancelled' WHERE order_id = ?";
-        $stmt = $conn->prepare($updateQuery);
+        $updateOrderQuery = "UPDATE tbl_orders 
+                           SET order_status = 'cancelled', 
+                               updated_at = CURRENT_TIMESTAMP 
+                           WHERE order_id = ?";
+        $stmt = $conn->prepare($updateOrderQuery);
         $stmt->bind_param("i", $orderId);
         
-        if ($stmt->execute()) {
-            echo json_encode(['success' => true]);
-        } else {
-            echo json_encode(['success' => false, 'error' => 'Failed to cancel order']);
+        if (!$stmt->execute()) {
+            throw new Exception('Failed to update order status');
         }
-    } else {
-        echo json_encode(['success' => false, 'error' => 'Invalid order']);
+        
+        // Commit transaction
+        mysqli_commit($conn);
+        echo json_encode(['success' => true]);
+        
+    } catch (Exception $e) {
+        // Rollback on error
+        mysqli_rollback($conn);
+        echo json_encode(['success' => false, 'error' => $e->getMessage()]);
     }
     exit;
 }
@@ -653,6 +690,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cancel_order'])) {
         .notification.error {
             background-color: #ef4444;
         }
+
+        .cancel-order-btn i.fa-spinner {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
@@ -768,7 +814,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cancel_order'])) {
         }
 
         const button = event.target;
+        const originalText = button.textContent;
         button.disabled = true;
+        button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Cancelling...';
 
         fetch('orders.php', {
             method: 'POST',
@@ -780,7 +828,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cancel_order'])) {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                // Update the UI
                 const orderCard = button.closest('.order-card');
                 const statusDiv = orderCard.querySelector('.order-status');
                 
@@ -792,16 +839,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cancel_order'])) {
                 button.remove();
                 
                 // Show success message
-                showNotification('Order cancelled successfully', 'success');
+                showNotification('Order cancelled . ', 'success');
             } else {
                 showNotification(data.error || 'Failed to cancel order', 'error');
                 button.disabled = false;
+                button.textContent = originalText;
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            showNotification('An error occurred', 'error');
+            showNotification('An error occurred while cancelling the order', 'error');
             button.disabled = false;
+            button.textContent = originalText;
         });
     }
 
