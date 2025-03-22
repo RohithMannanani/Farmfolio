@@ -31,6 +31,86 @@ if(isset($_SESSION['userid'])){
         } else {
             $product_count = 0;
         }
+
+        // Calculate average rating
+        $rating_query = "SELECT 
+            COUNT(*) as review_count,
+            ROUND(AVG(rating), 1) as avg_rating 
+        FROM tbl_reviews 
+        WHERE farm_id = ?";
+        
+        $stmt_rating = $conn->prepare($rating_query);
+        $stmt_rating->bind_param("i", $farm_id);
+        $stmt_rating->execute();
+        $rating_result = $stmt_rating->get_result();
+        
+        if($rating_result) {
+            $rating_data = $rating_result->fetch_assoc();
+            $avg_rating = $rating_data['avg_rating'] ?: 0;
+            $review_count = $rating_data['review_count'];
+        } else {
+            $avg_rating = 0;
+            $review_count = 0;
+        }
+
+        // Add after the rating query
+        if($farm_id) {
+            // Get distinct customer count
+            $customer_query = "SELECT COUNT(DISTINCT o.user_id) as customer_count,
+                              COUNT(DISTINCT CASE 
+                                  WHEN o.order_date >= DATE_SUB(NOW(), INTERVAL 1 MONTH) 
+                                  THEN o.user_id 
+                                  END) as new_customers
+                              FROM tbl_orders o
+                              JOIN tbl_order_items oi ON o.order_id = oi.order_id
+                              JOIN tbl_products p ON oi.product_id = p.product_id
+                              WHERE p.farm_id = ?";
+            
+            $stmt_customers = $conn->prepare($customer_query);
+            $stmt_customers->bind_param("i", $farm_id);
+            $stmt_customers->execute();
+            $customer_result = $stmt_customers->get_result();
+            
+            if($customer_result) {
+                $customer_data = $customer_result->fetch_assoc();
+                $total_customers = $customer_data['customer_count'];
+                $new_customers = $customer_data['new_customers'];
+                $customer_growth = $total_customers > 0 ? 
+                    round(($new_customers / $total_customers) * 100) : 0;
+            } else {
+                $total_customers = 0;
+                $customer_growth = 0;
+            }
+
+            // Add after the customer query in the if($farm_id) block
+            // Get upcoming events count and next event
+            $events_query = "SELECT 
+                COUNT(*) as event_count,
+                MIN(DATEDIFF(event_date, CURRENT_DATE)) as days_until_next,
+                MIN(event_date) as next_event_date,
+                MIN(event_name) as next_event_name
+            FROM tbl_events 
+            WHERE farm_id = ? 
+                AND event_date >= CURRENT_DATE 
+                AND status = '1'";
+
+            $stmt_events = $conn->prepare($events_query);
+            $stmt_events->bind_param("i", $farm_id);
+            $stmt_events->execute();
+            $events_result = $stmt_events->get_result();
+
+            if($events_result) {
+                $events_data = $events_result->fetch_assoc();
+                $event_count = $events_data['event_count'];
+                $days_until_next = $events_data['days_until_next'];
+                $next_event_date = $events_data['next_event_date'];
+                $next_event_name = $events_data['next_event_name'];
+            } else {
+                $event_count = 0;
+                $days_until_next = null;
+                $next_event_name = null;
+            }
+        }
     } else {
         // No farm found for this user
         $farm_id = 0;
@@ -88,22 +168,30 @@ if(isset($_SESSION['userid'])){
                 <div class="stat-card">
                     <h3>Active Products</h3>
                     <div class="value"><?php echo $product_count ;?></div>
-                   <?php echo $_SESSION['userid'];?>
+                 
                 </div>
                 <div class="stat-card">
                     <h3>Total Customers</h3>
-                    <div class="value">0</div>
-                    <small>+12% this month</small>
+                    <div class="value"><?php echo $total_customers; ?></div>
+                    <small><?php echo $customer_growth; ?>% this month</small>
                 </div>
                 <div class="stat-card">
                     <h3>Average Rating</h3>
-                    <div class="value">4.8</div>
-                    <small>From 45 reviews</small>
+                    <div class="value"><?php echo number_format($avg_rating, 1); ?></div>
+                    <small>From <?php echo $review_count; ?> reviews</small>
                 </div>
                 <div class="stat-card">
                     <h3>Upcoming Events</h3>
-                    <div class="value">0</div>
-                    <small>Next event in 2 days</small>
+                    <div class="value"><?php echo $event_count; ?></div>
+                    <?php if($days_until_next !== null && $next_event_name !== null): ?>
+                        <small>
+                            <i class="fas fa-calendar-alt"></i>
+                            Next: <?php echo htmlspecialchars($next_event_name); ?> 
+                            (in <?php echo $days_until_next; ?> days)
+                        </small>
+                    <?php else: ?>
+                        <small><i class="fas fa-calendar-alt"></i> No upcoming events</small>
+                    <?php endif; ?>
                 </div>
             </div>
 
@@ -119,10 +207,7 @@ if(isset($_SESSION['userid'])){
             </div> -->
         </div>
 
-        <!-- <footer class="footer">
-            <p>© 2025 Farmfolio. All rights reserved.</p>
-            <p style="margin-top: 5px; font-size: 0.9em;">Connecting Farms to Communities</p>
-        </footer> -->
+      
     </div>
 
     <script src="farm.js"></script>

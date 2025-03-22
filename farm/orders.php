@@ -369,6 +369,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['order_id'], $_POST['s
         .orders-table tbody tr:hover {
             background-color: #f8f9fa;
         }
+
+        .status-cancelled {
+            color: #dc2626;
+            background-color: #fee2e2;
+            padding: 6px 12px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+
+        .orders-table select:disabled {
+            background-color: #f3f4f6;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .status-delivered {
+            color: #166534;
+            background-color: #dcfce7;
+            padding: 6px 12px;
+            border-radius: 4px;
+            display: inline-block;
+        }
     </style>
 </head>
 <body>
@@ -409,10 +431,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['order_id'], $_POST['s
                 <table class="orders-table">
                     <thead>
                         <tr>
-                            <th>Order ID</th>
+                           
                             <th>Customer</th>
                             <th>Total Amount</th>
-                            <th>Status</th>
+                            <th>Delivery Status</th>
                             <th>Order Date</th>
                             <th>Address</th>
                             <th>Phone</th>
@@ -424,7 +446,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['order_id'], $_POST['s
                     <tbody>
                         <?php while($order = mysqli_fetch_assoc($orders_result)): ?>
                         <tr>
-                            <td>#<?php echo $order['order_id']; ?></td>
+                            
                             <td><?php echo $order['username']; ?></td>
                             <td>₹<?php echo $order['total_amount']; ?></td>
                             <td><?php echo ucfirst($order['order_status']); ?></td>
@@ -434,12 +456,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['order_id'], $_POST['s
                             <td><?php echo strtoupper($order['payment_method']); ?></td>
                             <td><?php echo ucfirst($order['payment_status']); ?></td>
                             <td>
-                                <select class="status-update" data-order-id="<?php echo $order['order_id']; ?>">
-                                    <option value="pending" <?php echo $order['order_status'] == 'pending' ? 'selected' : ''; ?>>Pending</option>
-                                    <option value="processing" <?php echo $order['order_status'] == 'processing' ? 'selected' : ''; ?>>Processing</option>
-                                    <option value="shipped" <?php echo $order['order_status'] == 'shipped' ? 'selected' : ''; ?>>Shipped</option>
-                                    <option value="delivered" <?php echo $order['order_status'] == 'delivered' ? 'selected' : ''; ?>>Delivered</option>
-                                </select>
+                                <?php if($order['order_status'] == 'cancelled' || $order['order_status'] == 'delivered'): ?>
+                                    <span class="status-<?php echo $order['order_status']; ?>"><?php echo ucfirst($order['order_status']); ?></span>
+                                <?php else: ?>
+                                    <select class="status-update" data-order-id="<?php echo $order['order_id']; ?>">
+                                        <option value="pending" <?php echo $order['order_status'] == 'pending' ? 'selected' : ''; ?>>Pending</option>
+                                        <option value="processing" <?php echo $order['order_status'] == 'processing' ? 'selected' : ''; ?>>Processing</option>
+                                        <option value="shipped" <?php echo $order['order_status'] == 'shipped' ? 'selected' : ''; ?>>Shipped</option>
+                                        <option value="delivered" <?php echo $order['order_status'] == 'delivered' ? 'selected' : ''; ?>>Delivered</option>
+                                    </select>
+                                <?php endif; ?>
                             </td>
                         </tr>
                         <?php endwhile; ?>
@@ -497,12 +523,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['order_id'], $_POST['s
         });
     });
 
+    // Replace the existing updateStatusStyle function
     function updateStatusStyle(element, status) {
         // Remove existing status classes
         element.className = '';
         
-        // Add new status class
-        element.classList.add('status-' + status);
+        if (status === 'cancelled' || status === 'delivered') {
+            // Replace select element with span for final statuses
+            const span = document.createElement('span');
+            span.className = `status-${status}`;
+            span.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+            element.parentNode.replaceChild(span, element);
+        } else {
+            // Add new status class
+            element.classList.add('status-' + status);
+        }
     }
 
     function showNotification(message, type) {

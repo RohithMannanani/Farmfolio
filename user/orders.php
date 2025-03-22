@@ -10,10 +10,16 @@ include '../databse/connect.php';
 // Fetch all orders for the current user
 $userId = $_SESSION['userid'];
 $query = "SELECT o.*, 
-          COUNT(oi.item_id) as total_items,
-          o.updated_at
+          COUNT(DISTINCT oi.item_id) as total_items,
+          o.updated_at,
+          GROUP_CONCAT(
+              CONCAT(p.product_name, ' (', f.farm_name, ') - ', oi.quantity, ' ', p.unit) 
+              SEPARATOR ', '
+          ) as product_details
           FROM tbl_orders o 
           LEFT JOIN tbl_order_items oi ON o.order_id = oi.order_id 
+          LEFT JOIN tbl_products p ON oi.product_id = p.product_id
+          LEFT JOIN tbl_farms f ON p.farm_id = f.farm_id
           WHERE o.user_id = ? 
           GROUP BY o.order_id 
           ORDER BY o.order_date DESC";
@@ -607,11 +613,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cancel_order'])) {
         }
 
         .detail-row span:first-child {
+            min-width: 120px;
             color: #666;
+        }
+
+        .detail-row {
+            align-items: flex-start;
+            padding: 8px 0;
         }
 
         .detail-row span:last-child {
             color: #333;
+            font-weight: 500;
+        }
+
+        .product-list {
+            font-size: 0.9em;
+            line-height: 1.6;
+            color: #4b5563;
+            max-width: 400px;
+            word-wrap: break-word;
+        }
+
+        .product-list-item {
+            display: block;
+            margin-bottom: 5px;
+            padding: 5px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .product-list-item:last-child {
+            border-bottom: none;
+        }
+
+        .product-quantity {
+            color: #1a4d2e;
             font-weight: 500;
         }
 
@@ -699,6 +735,143 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cancel_order'])) {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            position: relative;
+            background-color: #fff;
+            margin: 10% auto;
+            padding: 20px;
+            width: 90%;
+            max-width: 600px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .close-modal {
+            position: absolute;
+            right: 20px;
+            top: 15px;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+            transition: color 0.3s ease;
+            padding: 5px;
+            line-height: 1;
+        }
+
+        .close-modal:hover {
+            color: #dc2626;
+        }
+
+        .tracking-timeline {
+            margin-top: 30px;
+            position: relative;
+            padding: 20px 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .tracking-step {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 30px;
+            position: relative;
+            opacity: 0.5;
+        }
+
+        .tracking-step::before {
+            content: '';
+            position: absolute;
+            left: 20px;
+            top: 40px;
+            bottom: -30px;
+            width: 2px;
+            background-color: #e5e7eb;
+        }
+
+        .tracking-step:last-child::before {
+            display: none;
+        }
+
+        .tracking-step.active {
+            opacity: 1;
+        }
+
+        .tracking-step.completed {
+            opacity: 1;
+        }
+
+        .step-icon {
+            width: 40px;
+            height: 40px;
+            background-color: #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+        }
+
+        .tracking-step.completed .step-icon {
+            background-color: #1a4d2e;
+            color: white;
+            transform: scale(1.1);
+            transition: all 0.3s ease;
+        }
+
+        .step-info {
+            flex: 1;
+        }
+
+        .step-info h4 {
+            margin: 0;
+            color:rgb(36, 85, 153);
+        }
+
+        .step-date {
+            font-size: 0.9em;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+
+        .track-order-btn {
+            padding: 6px 12px;
+            background-color: #1a4d2e;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-left: 10px;
+        }
+
+        .track-order-btn:hover {
+            background-color: #2d6a4f;
+        }
+
+        .step-icon i {
+            font-size: 1.2em;
+        }
+
+        .tracking-step.active .step-icon {
+            box-shadow: 0 0 0 3px rgba(26, 77, 46, 0.2);
+        }
+        
+        .tracking-step.active h4 {
+            color: #fff;
+        }
+        .tracking-step.active .step-date {
+            color: #fff;
+        }
     </style>
 </head>
 <body>
@@ -756,7 +929,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cancel_order'])) {
                             <div class="order-card">
                                 <div class="order-header">
                                     <div class="order-info">
-                                        <h3>Order #<?php $i=$i+1;echo $i; ?></h3>
+                                        <h3>Order Date </h3>
                                         <span class="order-date">
                                             <?php echo date('d M Y, h:i A', strtotime($order['order_date'])); ?>
                                         </span>
@@ -772,10 +945,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cancel_order'])) {
                                                 Cancel Order
                                             </button>
                                         <?php endif; ?>
+                                        <button class="track-order-btn" 
+                                                onclick="trackOrder(<?php echo $order['order_id']; ?>)">
+                                            <i class="fas fa-map-marker-alt"></i> Track Order
+                                        </button>
                                     </div>
                                 </div>
                                 
                                 <div class="order-details">
+                                    <div class="detail-row">
+                                        <span>Products:</span>
+                                        <span class="product-list"><?php echo htmlspecialchars($order['product_details']); ?></span>
+                                    </div>
                                     <div class="detail-row">
                                         <span>Total Items:</span>
                                         <span><?php echo $order['total_items']; ?></span>
@@ -866,6 +1047,129 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cancel_order'])) {
             notification.remove();
         }, 3000);
     }
+
+    function trackOrder(orderId) {
+        const modal = document.getElementById('trackingModal');
+        modal.style.display = 'block';
+        
+        // Reset timeline state
+        document.querySelectorAll('.tracking-step').forEach(step => {
+            step.classList.remove('completed', 'active');
+            step.querySelector('.step-date').textContent = '';
+        });
+        
+        // Show loading state
+        document.querySelector('.tracking-timeline').style.opacity = '0.5';
+        
+        // Fetch order tracking details
+        fetch(`get_tracking.php?order_id=${orderId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                document.querySelector('.tracking-timeline').style.opacity = '1';
+                updateTrackingTimeline(data);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Failed to load tracking information', 'error');
+                modal.style.display = 'none';
+            });
+    }
+
+    function updateTrackingTimeline(data) {
+        const steps = document.querySelectorAll('.tracking-step');
+        const statusOrder = {
+            'pending': 0,
+            'processing': 1,
+            'shipped': 2,
+            'delivered': 3,
+            'cancelled': -1
+        };
+        
+        const currentStatusIndex = statusOrder[data.status];
+        
+        steps.forEach(step => {
+            const stepStatus = step.dataset.status;
+            const stepIndex = statusOrder[stepStatus];
+            const dateElement = step.querySelector('.step-date');
+            
+            if (currentStatusIndex === -1 && stepStatus === 'pending') {
+                // Show only pending for cancelled orders
+                step.classList.add('completed');
+                dateElement.textContent = data.pending_date;
+                return;
+            }
+            
+            if (stepIndex <= currentStatusIndex) {
+                step.classList.add('completed');
+                const dateKey = `${stepStatus}_date`;
+                if (data[dateKey]) {
+                    dateElement.textContent = data[dateKey];
+                }
+            }
+            
+            if (stepIndex === currentStatusIndex) {
+                step.classList.add('active');
+            }
+        });
+    }
+
+    // Replace the existing modal close handlers with this code
+    document.addEventListener('DOMContentLoaded', function() {
+        // Get modal elements
+        const modal = document.getElementById('trackingModal');
+        const closeBtn = modal.querySelector('.close-modal');
+        
+        // Close modal when clicking the X button
+        closeBtn.addEventListener('click', function() {
+            modal.style.display = 'none';
+        });
+        
+        // Close modal when clicking outside
+        window.addEventListener('click', function(event) {
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+    });
     </script>
+    <div id="trackingModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" data-dismiss="modal">&times;</span>
+            <h2>Order Tracking</h2>
+            <div class="tracking-timeline">
+                <div class="tracking-step" data-status="pending">
+                    <div class="step-icon"><i class="fas fa-clipboard-check"></i></div>
+                    <div class="step-info">
+                        <h4>Order Pending</h4>
+                        <p class="step-date"></p>
+                    </div>
+                </div>
+                <div class="tracking-step" data-status="processing">
+                    <div class="step-icon"><i class="fas fa-cog"></i></div>
+                    <div class="step-info">
+                        <h4>Picked Up the Order</h4>
+                        <p class="step-date"></p>
+                    </div>
+                </div>
+                <div class="tracking-step" data-status="shipped">
+                    <div class="step-icon"><i class="fas fa-truck"></i></div>
+                    <div class="step-info">
+                        <h4>The Order is Ready to Deliver</h4>
+                        <p class="step-date"></p>
+                    </div>
+                </div>
+                <div class="tracking-step" data-status="delivered">
+                    <div class="step-icon"><i class="fas fa-box-open"></i></div>
+                    <div class="step-info">
+                        <h4>Delivered</h4>
+                        <p class="step-date"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

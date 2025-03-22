@@ -1,5 +1,9 @@
 <?php
+session_start();
 include '../databse/connect.php';
+if(!isset($_SESSION['type'])){
+    header('location: http://localhost/mini%20project/login/login.php');
+}
 // listed users
 $stmt = "SELECT tbl_signup.username,tbl_signup.email,tbl_signup.mobile,tbl_signup.state,tbl_signup.district,tbl_login.type  FROM tbl_signup INNER JOIN tbl_login  ON tbl_signup.userid=tbl_login.userid AND tbl_login.type IN (0, 1, 2)";
 $result = mysqli_query($conn, $stmt);
@@ -187,6 +191,7 @@ $result = mysqli_query($conn, $stmt);
             <li><a href="admin.php"><i class="fas fa-home"></i><span>Home</span></a></li>
             <li><a href="user.php" class="active"><i class="fas fa-users"></i><span>Users</span></a></li>
             <li><a href="farm.php"><i class="fas fa-store"></i><span>Farms</span></a></li>
+            <li><a href="product.php"><i class="fas fa-box"></i><span>Products</span></a></li>
             <li><a href="category.php"><i class="fas fa-th-large"></i><span>category</span></a></li>
             <!-- <li><a href="#"><i class="fas fa-box"></i><span>Products</span></a></li> -->
             <!-- <li><a href="delivery.php"><i class="fas fa-truck"></i><span>Deliveries</span></a></li> -->

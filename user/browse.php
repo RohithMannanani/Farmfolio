@@ -655,9 +655,9 @@ if(!isset($_SESSION['username'])){
           <!-- Footer -->
          
     </div>
-    <div class="footer">
+    <!-- <div class="footer">
             <p>&copy; 2024 Farmfolio. All rights reserved.</p>
-        </div>
+        </div> -->
 
     <script>
          document.addEventListener('DOMContentLoaded', function() {

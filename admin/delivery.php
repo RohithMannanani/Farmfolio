@@ -1,5 +1,9 @@
 <?php
+session_start();
 include '../databse/connect.php';
+if(!isset($_SESSION['type'])){
+    header('location: http://localhost/mini%20project/login/login.php');
+}
 // listed farms
 $stmt = "SELECT 
     tbl_farms.farm_id,

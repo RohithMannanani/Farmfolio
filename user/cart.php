@@ -15,7 +15,9 @@ if (isset($_SESSION['cart']) && count($_SESSION['cart']) > 0) {
     $productIds = implode(',', array_map('intval', array_keys($_SESSION['cart'])));
     
     // Fetch product details from the database
-    $query = "SELECT * FROM tbl_products WHERE product_id IN ($productIds)";
+    $query = "SELECT p.*, COALESCE(p.stock, 0) as available_stock 
+              FROM tbl_products p 
+              WHERE p.product_id IN ($productIds)";
     $result = mysqli_query($conn, $query);
     
     while ($row = mysqli_fetch_assoc($result)) {
@@ -36,12 +38,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['product_id'], $_POST[
 
     // Update quantity based on action
     if ($action === 'increase') {
-        $_SESSION['cart'][$productId]++;
-        // Update database
-        $query = "UPDATE tbl_cart SET quantity = quantity + 1 WHERE product_id = ? AND user_id = ?";
+        // Get current stock level
+        $stockQuery = "SELECT stock FROM tbl_products WHERE product_id = ?";
+        $stmt = $conn->prepare($stockQuery);
+        $stmt->bind_param("i", $productId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $stock = $result->fetch_assoc()['stock'];
+
+        // Check if increasing quantity would exceed stock
+        if ($_SESSION['cart'][$productId] < $stock) {
+            $_SESSION['cart'][$productId]++;
+            $query = "UPDATE tbl_cart SET quantity = quantity + 1 WHERE product_id = ? AND user_id = ?";
+        } else {
+            $_SESSION['stock_error'] = "Cannot add more items. Stock limit reached.";
+            header('Location: cart.php');
+            exit;
+        }
     } elseif ($action === 'decrease' && $_SESSION['cart'][$productId] > 1) {
         $_SESSION['cart'][$productId]--;
-        // Update database
         $query = "UPDATE tbl_cart SET quantity = quantity - 1 WHERE product_id = ? AND user_id = ?";
     } elseif ($action === 'decrease' && $_SESSION['cart'][$productId] <= 1) {
         unset($_SESSION['cart'][$productId]);
@@ -485,6 +500,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['product_id'], $_POST[
             margin: 0 5px;
             padding: 5px 10px;
         }
+        .quantity-controls button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .quantity-controls small {
+            color: #666;
+            font-size: 0.8em;
+            display: block;
+            margin-top: 5px;
+        }
         .total-row {
             font-weight: bold;
             background-color: #f8f9fa;
@@ -545,6 +571,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['product_id'], $_POST[
 
             <div class="container">
                 <h1>My Cart</h1>
+                <?php if (isset($_SESSION['stock_error'])): ?>
+                    <div style="color: red; margin: 10px 0;">
+                        <?php 
+                        echo $_SESSION['stock_error'];
+                        unset($_SESSION['stock_error']);
+                        ?>
+                    </div>
+                <?php endif; ?>
                 <?php if (count($productDetails) > 0): ?>
                     <table>
                         <thead>
@@ -569,7 +603,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['product_id'], $_POST[
                                             <input type="hidden" name="product_id" value="<?php echo htmlspecialchars($product['product_id']); ?>">
                                             <button type="submit" name="action" value="decrease">-</button>
                                             <span><?php echo $quantity; ?></span>
-                                            <button type="submit" name="action" value="increase">+</button>
+                                            <button type="submit" name="action" value="increase" <?php echo ($quantity >= $product['available_stock']) ? 'disabled' : ''; ?>>+</button>
+                                            <br>
+                                            <small>(Available: <?php echo $product['available_stock']; ?>)</small>
                                         </form>
                                     </td>
                                     <td>₹<?php echo number_format($productTotal, 2); ?></td>
@@ -592,9 +628,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['product_id'], $_POST[
         </div>
 
         <!-- Footer -->
-        <div class="footer">
+        <!-- <div class="footer">
             <p>&copy; 2024 Farmfolio. All rights reserved.</p>
-        </div>
+        </div> -->
     </div>
 
     <script src="profile.js"></script>

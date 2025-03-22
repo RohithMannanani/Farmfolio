@@ -878,9 +878,9 @@ $events_result = mysqli_query($conn, $events_query);
            
 
         <!-- Footer -->
-        <div class="footer">
+        <!-- <div class="footer">
             <p>&copy; 2024 Farmfolio. All rights reserved.</p>
-        </div>
+        </div> -->
     </div>
 
     <script>
@@ -988,7 +988,7 @@ $events_result = mysqli_query($conn, $events_query);
     }
     </script>
 
-    <div class="events-container">
+    <div class="events-container" style="margin-top: 60px;">
         <div class="events-header">
             <h1>Upcoming Farm Events</h1>
             <p>Join exciting farm events and activities in your area</p>

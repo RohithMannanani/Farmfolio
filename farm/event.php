@@ -21,8 +21,6 @@ if(isset($_SESSION['userid'])){
 
 // Only proceed with other queries if farm is active
 if($is_farm_active) {
-   
-
     // First, get current date
     $current_date = date('Y-m-d');
     
@@ -36,22 +34,16 @@ if($is_farm_active) {
     $stmt->bind_param("is", $farm_id, $current_date);
     $stmt->execute();
 
-    // Then fetch events (your existing query)
-    $events_query = "SELECT *, DATE_FORMAT(event_date, '%Y-%m-%d') as formatted_date 
-                    FROM tbl_events WHERE farm_id = ? 
+    // Get all events regardless of status
+    $events_query = "SELECT *, 
+                    DATE_FORMAT(event_date, '%Y-%m-%d') as formatted_date 
+                    FROM tbl_events 
+                    WHERE farm_id = ? 
                     ORDER BY event_date DESC";
     $stmt = $conn->prepare($events_query);
     $stmt->bind_param("i", $farm_id);
     $stmt->execute();
     $events_result = $stmt->get_result();
-
-    // Add this query after your existing queries
-    $events_query = "SELECT * FROM tbl_events 
-                    WHERE farm_id = $farm_id 
-                    AND status = '1' 
-                    AND event_date >= CURDATE() 
-                    ORDER BY event_date ASC";
-    $events_result = mysqli_query($conn, $events_query);
 
     // Add function to check if user is already registered
     function isUserRegistered($conn, $event_id, $user_id) {
@@ -78,9 +70,11 @@ if(isset($_POST['add_event'])) {
     if($stmt) {
         $stmt->bind_param("isss", $farm_id, $event_name, $event_date, $event_description);
         if($stmt->execute()) {
-            echo "<script>alert('Event added successfully!');</script>";
+            header("Location: event.php?success=1");
+            exit();
         } else {
-            echo "<script>alert('Error adding event: " . $stmt->error . "');</script>";
+            header("Location: event.php?error=" . urlencode($stmt->error));
+            exit();
         }
     }
 }
@@ -433,6 +427,85 @@ if(isset($_GET['toggle_status']) && isset($_GET['id'])) {
         .action-btn i {
             font-size: 0.9em;
         }
+
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border: 1px solid transparent;
+            border-radius: 4px;
+            position: relative;
+        }
+
+        .alert-success {
+            color: #155724;
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+        }
+
+        .alert-error {
+            color: #721c24;
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+        }
+
+        .close-alert {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .events-filters {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            border: 1px solid #1a4d2e;
+            background: white;
+            color: #1a4d2e;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .filter-btn.active {
+            background: #1a4d2e;
+            color: white;
+        }
+
+        .inactive-event {
+            opacity: 0.7;
+            background-color: #f8f8f8;
+            border: 1px solid #ddd;
+        }
+
+        .inactive-event .event-date {
+            background: #666;
+        }
+
+        .event-status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            margin-bottom: 10px;
+        }
+
+        .status-active {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-inactive {
+            background: #fee2e2;
+            color: #991b1b;
+        }
     </style>
 </head>
 <body>
@@ -467,6 +540,18 @@ if(isset($_GET['toggle_status']) && isset($_GET['id'])) {
                     <a href="http://localhost/mini%20project/logout/logout.php"><button class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</button></a>
                 </div><?php }?>
             </div>
+<?php if(isset($_GET['success'])): ?>
+    <div class="alert alert-success">
+        Event added successfully!
+        <button type="button" class="close-alert">&times;</button>
+    </div>
+<?php endif; ?>
+<?php if(isset($_GET['error'])): ?>
+    <div class="alert alert-error">
+        Error: <?php echo htmlspecialchars($_GET['error']); ?>
+        <button type="button" class="close-alert">&times;</button>
+    </div>
+<?php endif; ?>
         <?php if($is_farm_active): ?>
             <div class="events-container">
                 <div class="events-header">
@@ -476,6 +561,12 @@ if(isset($_GET['toggle_status']) && isset($_GET['id'])) {
                     </button>
                 </div>
 
+                <div class="events-filters">
+                    <button class="filter-btn active" data-filter="all">All Events</button>
+                    <button class="filter-btn" data-filter="active">Active Events</button>
+                    <button class="filter-btn" data-filter="inactive">Deactivated Events</button>
+                </div>
+
                 <div class="events-grid">
                     <?php while($event = mysqli_fetch_assoc($events_result)): ?>
                         <div class="event-card <?php echo $event['status'] == '0' ? 'inactive-event' : ''; ?>">
@@ -483,6 +574,9 @@ if(isset($_GET['toggle_status']) && isset($_GET['id'])) {
                                 <?php echo date('M d, Y', strtotime($event['event_date'])); ?>
                             </div>
                             <div class="event-details">
+                                <span class="event-status <?php echo $event['status'] == '1' ? 'status-active' : 'status-inactive'; ?>">
+                                    <?php echo $event['status'] == '1' ? 'Active' : 'Deactivated'; ?>
+                                </span>
                                 <h3><?php echo htmlspecialchars($event['event_name']); ?></h3>
                                 <p><?php echo htmlspecialchars($event['event_description']); ?></p>
                                 <div class="event-actions">
@@ -590,6 +684,56 @@ if(isset($_GET['toggle_status']) && isset($_GET['id'])) {
             }
         }
     }
-    </script>
+
+    // Handle alert dismissal
+    const closeButtons = document.querySelectorAll('.close-alert');
+    closeButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const alert = this.parentElement;
+            alert.style.opacity = '0';
+            setTimeout(() => alert.remove(), 300);
+        });
+    });
+
+    // Auto-dismiss alerts after 5 seconds
+    setTimeout(() => {
+        const alerts = document.querySelectorAll('.alert');
+        alerts.forEach(alert => {
+            alert.style.opacity = '0';
+            setTimeout(() => alert.remove(), 300);
+        });
+    }, 5000);
+    document.addEventListener('DOMContentLoaded', function() {
+        const filterButtons = document.querySelectorAll('.filter-btn');
+        const eventCards = document.querySelectorAll('.event-card');
+
+        filterButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                // Remove active class from all buttons
+                filterButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+
+                const filter = button.dataset.filter;
+
+                eventCards.forEach(card => {
+                    const isInactive = card.classList.contains('inactive-event');
+                    
+                    switch(filter) {
+                        case 'all':
+                            card.style.display = 'block';
+                            break;
+                        case 'active':
+                            card.style.display = !isInactive ? 'block' : 'none';
+                            break;
+                        case 'inactive':
+                            card.style.display = isInactive ? 'block' : 'none';
+                            break;
+                    }
+                });
+            });
+        });
+    });
+</script>
+    
 </body>
 </html>

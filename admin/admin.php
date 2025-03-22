@@ -27,6 +27,14 @@ if ($count_result2) {
     $row2 = mysqli_fetch_assoc($count_result2);
     $product_count = $row2['total'];
 }
+
+// Category count
+$stmt3 = "SELECT COUNT(*) AS total FROM tbl_category";
+$count_result3 = mysqli_query($conn, $stmt3);
+if ($count_result3) {
+    $row3 = mysqli_fetch_assoc($count_result3);
+    $category_count = $row3['total'];
+}
 ?>
 <!DOCTYPE html>
 <html>
@@ -234,6 +242,7 @@ if ($count_result2) {
             <li><a href="admin.php" class="active"><i class="fas fa-home"></i><span>Home</span></a></li>
             <li><a href="user.php"><i class="fas fa-users"></i><span>Users</span></a></li>
             <li><a href="farm.php"><i class="fas fa-store"></i><span>Farms</span></a></li>
+            <li><a href="product.php"><i class="fas fa-box"></i><span>Products</span></a></li>
             <li><a href="category.php"><i class="fas fa-th-large"></i><span>category</span></a></li>
             <!-- <li><a href="#"><i class="fas fa-box"></i><span>Products</span></a></li> -->
             <!-- <li><a href="delivery.php"><i class="fas fa-truck"></i><span>Deliveries</span></a></li> -->
@@ -262,8 +271,8 @@ if ($count_result2) {
             </div>
             <div class="stat-card">
                 <h3>Category</h3>
-                <div class="value"></div>
-                <a href="user.php"><button id="user">View</button></a>
+                <div class="value"><?php echo $category_count; ?></div>
+                <a href="category.php"><button id="category">View</button></a>
             </div>
         </div>
         <!-- <footer class="footer">

@@ -10,8 +10,15 @@ echo $orderId;
 // Include database connection
 include '../databse/connect.php';
 
-// Fetch order details
-$orderQuery = "SELECT * FROM tbl_orders WHERE order_id = ?";
+// Replace the existing query with this enhanced version
+$orderQuery = "SELECT o.*, 
+    GROUP_CONCAT(CONCAT(p.product_name, ' (', f.farm_name, '): ', oi.quantity, ' ', p.unit) SEPARATOR '<br>') as product_details
+    FROM tbl_orders o
+    LEFT JOIN tbl_order_items oi ON o.order_id = oi.order_id
+    LEFT JOIN tbl_products p ON oi.product_id = p.product_id
+    LEFT JOIN tbl_farms f ON p.farm_id = f.farm_id
+    WHERE o.order_id = ?
+    GROUP BY o.order_id";
 $stmt = $conn->prepare($orderQuery);
 $stmt->bind_param("i", $orderId);
 $stmt->execute();
@@ -80,7 +87,18 @@ $order = $orderResult->fetch_assoc();
 
         .order-info {
             color: #666;
-            margin-bottom: 5px;
+            margin-bottom: 10px;
+            font-size: 1em;
+        }
+
+        .product-list {
+            margin: 10px 0;
+            padding: 10px;
+            background: white;
+            border-radius: 6px;
+            font-size: 0.95em;
+            line-height: 1.6;
+            color: #4b5563;
         }
 
         .action-buttons {
@@ -123,9 +141,13 @@ $order = $orderResult->fetch_assoc();
         <h1 class="success-title">Order Placed Successfully!</h1>
         
         <div class="order-details">
-            <p class="order-number">Order #<?php echo $orderId; ?></p>
+            <p class="order-number">Order Details</p>
+            <p class="order-info">Products:</p>
+            <div class="product-list">
+                <?php echo $order['product_details']; ?>
+            </div>
             <p class="order-info">Total Amount: ₹<?php echo number_format($order['total_amount'], 2); ?></p>
-            <p class="order-info">Payment Method: Cash on Delivery</p>
+            <p class="order-info">Payment Method: <?php echo ucfirst($order['payment_method']); ?></p>
             <p class="order-info">Delivery Address: <?php echo htmlspecialchars($order['delivery_address']); ?></p>
         </div>
 
@@ -137,4 +159,4 @@ $order = $orderResult->fetch_assoc();
         </div>
     </div>
 </body>
-</html> 
+</html>

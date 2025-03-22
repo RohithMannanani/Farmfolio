@@ -38,6 +38,17 @@ if ($fev_result) {
     echo "Error: " . $conn->error;
 }
 
+// Add after the existing favorite count query
+$order_count_query = "SELECT COUNT(order_id) AS order_count 
+                     FROM tbl_orders 
+                     WHERE user_id = ?";
+
+$stmt = $conn->prepare($order_count_query);
+$stmt->bind_param("i", $user_id);
+$stmt->execute();
+$order_result = $stmt->get_result();
+$order_data = $order_result->fetch_assoc();
+$total_orders = $order_data['order_count'] ?? 0;
 
 // Check if farm is favorited by current user
 function isFarmFavorited($conn, $farm_id, $user_id) {
@@ -745,7 +756,7 @@ function isFarmFavorited($conn, $farm_id, $user_id) {
             <div class="stats-grid">
                 <div class="stat-card">
                     <h3>Total Orders</h3>
-                    <div class="order">0</div>
+                    <div class="order"><?php echo $total_orders; ?></div>
                 </div>
                 <div class="stat-card">
                     <h3>Favorite Farms</h3>
@@ -955,3 +966,4 @@ function isFarmFavorited($conn, $farm_id, $user_id) {
     </script>
 
 </body>
+</html>

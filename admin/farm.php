@@ -1,5 +1,9 @@
 <?php
+session_start();
 include '../databse/connect.php';
+if(!isset($_SESSION['type'])){
+    header('location: http://localhost/mini%20project/login/login.php');
+}
 // listed farms
 $stmt = "SELECT 
     tbl_farms.farm_id,
@@ -232,6 +236,7 @@ if($result){
             <li><a href="admin.php" ><i class="fas fa-home"></i><span>Home</span></a></li>
             <li><a href="user.php"><i class="fas fa-users"></i><span>Users</span></a></li>
             <li><a href="farm.php" class="active"><i class="fas fa-store"></i><span>Farms</span></a></li>
+            <li><a href="product.php"><i class="fas fa-box"></i><span>Products</span></a></li>
             <li><a href="category.php"><i class="fas fa-th-large"></i><span>category</span></a></li>
             <!-- <li><a href="#"><i class="fas fa-box"></i><span>Products</span></a></li> -->
             <!-- <li><a href="delivery.php"><i class="fas fa-truck"></i><span>Deliveries</span></a></li> -->
