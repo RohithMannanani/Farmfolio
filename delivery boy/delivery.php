@@ -28,8 +28,6 @@ AND order_date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)";
 $earnings_result = mysqli_query($conn, $earnings_query);
 $earnings = mysqli_fetch_assoc($earnings_result);
 
-
-
 // Get active orders
 $active_orders_query = "SELECT COUNT(*) as active_count
 FROM tbl_orders 
@@ -37,6 +35,13 @@ WHERE delivery_boy_id = '$delivery_boy_id'
 AND order_status IN ('processing', 'shipped')";
 $active_result = mysqli_query($conn, $active_orders_query);
 $active_orders = mysqli_fetch_assoc($active_result);
+
+// Add after the active_orders_query
+$pending_orders_query = "SELECT COUNT(*) as pending_count
+FROM tbl_orders 
+WHERE  order_status = 'pending'";
+$pending_result = mysqli_query($conn, $pending_orders_query);
+$pending_orders = mysqli_fetch_assoc($pending_result);
 
 // Get current deliveries
 $current_deliveries_query = "SELECT 
@@ -48,6 +53,7 @@ $current_deliveries_query = "SELECT
     o.order_date,
     o.payment_method,
     o.payment_status,
+    ROUND(o.total_amount * 0.10, 2) as delivery_earnings,
     u.username as customer_name,
     f.farm_name,
     f.location as farm_location
@@ -183,6 +189,7 @@ body {
     padding: 12px;
     border-radius: 5px;
     transition: background 0.3s;
+    position: relative;
 }
 
 .sidebar-menu a:hover {
@@ -205,6 +212,26 @@ body {
 
 .active {
     background: #2d6a4f;
+}
+
+.badge {
+    position: absolute;
+    right: 1px;
+    background: #dc2626;
+    color: white;
+    font-size: 0.8em;
+    padding: 3px 6px;
+    border-radius: 10px;
+    min-width: 20px;
+    text-align: center;
+    
+}
+
+.sidebar.shrink .badge {
+    right: 5px;
+    top: 5px;
+    font-size: 0.7em;
+    padding: 1px 4px;
 }
 
 /* Main Content Styles */
@@ -448,12 +475,19 @@ body {
     <nav class="sidebar">
         
         <ul class="sidebar-menu">
-            <li><a href="delivery.php" class="active"><i class="fas fa-home"></i><span>Dashboard</span></a></li>
-            <li><a href="assign.php"><i class="fas fa-truck"></i><span>Assigned Deliveries</span></a></li>
-            <li><a href="history.php"><i class="fas fa-history"></i><span>Delivery History</span></a></li>
-            <li><a href="earning.php"><i class="fas fa-wallet"></i><span>Earnings</span></a></li>
-            <!-- <li><a href="#"><i class="fas fa-user"></i><span>Profile</span></a></li> -->
-        </ul>
+    <li><a href="delivery.php" class="active"><i class="fas fa-home"></i><span>Dashboard</span></a></li>
+    <li>
+        <a href="assign.php">
+            <i class="fas fa-truck"></i>
+            <span>Assigned Deliveries</span>
+            <?php if($pending_orders['pending_count'] > 0): ?>
+                <span class="badge"><?php echo $pending_orders['pending_count']; ?></span>
+            <?php endif; ?>
+        </a>
+    </li>
+    <li><a href="history.php"><i class="fas fa-history"></i><span>Delivery History</span></a></li>
+    <li><a href="earning.php"><i class="fas fa-wallet"></i><span>Earnings</span></a></li>
+</ul>
     </nav>
 
     <header class="header">
@@ -510,7 +544,8 @@ body {
                                        (<?php echo $delivery['farm_location']; ?>)</p>
                                 <?php endif; ?>
                                 <p><i class="fas fa-map-marker-alt"></i> <?php echo $delivery['delivery_address']; ?></p>
-                                <p><i class="fas fa-money-bill"></i> ₹<?php echo number_format($delivery['total_amount'], 2); ?></p>
+                                <p><i class="fas fa-money-bill"></i> Order Amount: ₹<?php echo number_format($delivery['total_amount'], 2); ?></p>
+                                <p><i class="fas fa-hand-holding-usd"></i> Delivery Earnings: ₹<?php echo number_format($delivery['delivery_earnings'], 2); ?></p>
                                 <p><i class="fas fa-clock"></i> <?php echo date('d M Y, h:i A', strtotime($delivery['order_date'])); ?></p>
                             </div>
                         </div>

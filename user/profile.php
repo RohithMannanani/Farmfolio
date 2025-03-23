@@ -405,6 +405,48 @@ if(!isset($_SESSION['username'])){
             padding: 20px;
             box-sizing: border-box;
         }
+        .form-group {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .error-message {
+            color: #dc2626;
+            font-size: 0.8rem;
+            margin-top: 5px;
+            min-height: 20px;
+        }
+
+        input.valid {
+            border-color: #22c55e;
+            background-color: #f0fdf4;
+        }
+
+        input.invalid {
+            border-color: #dc2626;
+            background-color: #fef2f2;
+        }
+
+        .validation-icon {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1rem;
+        }
+
+        .validation-icon.valid {
+            color: #22c55e;
+        }
+
+        .validation-icon.invalid {
+            color: #dc2626;
+        }
+
+        #submit-btn:disabled {
+            background-color: #9ca3af;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 <body>
@@ -491,35 +533,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     validate("house", $_POST["house"], "/^[a-zA-Z0-9 .,-]+$/", "Invalid house name.");
     validate("pin", $_POST["pin"], "/^\d{6}$/", "Invalid PIN code.");
 
-    if (empty($_POST["state"])) {
-        $errors["state"] = "State is required.";
-    } else {
-        $data["state"] = htmlspecialchars($_POST["state"]);
-    }
-
-    if (empty($_POST["district"])) {
-        $errors["district"] = "District is required.";
-    } else {
-        $data["district"] = htmlspecialchars($_POST["district"]);
-    }
-
-    // Validate password if provided
-    if (!empty($_POST["password"])) {
-        $password = $_POST["password"];
-        $confirmPassword = $_POST["confirm-password"];
-        if (!preg_match("/^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/", $password)) {
-            $errors["password"] = "Password must be at least 8 characters long and include a mix of uppercase, lowercase, numbers, and special characters.";
-        } elseif ($password !== $confirmPassword) {
-            $errors["confirm-password"] = "Passwords do not match.";
-        } else {
-            $data["password"] = $password;
-        }
-    }
 
     if (empty($errors)) {
         // Update user data in database
         $stmt1 = "UPDATE tbl_signup 
-        SET username = ?, mobile = ?, house = ?, state = ?, district = ?, pin = ?
+        SET username = ?, mobile = ?, house = ?, pin = ?
         WHERE userid = ?";
 
 $query1 = $conn->prepare($stmt1);
@@ -529,12 +547,10 @@ if (!$query1) {
 }
 
 // Bind parameters (s = string, i = integer)
-$query1->bind_param("ssssssi", 
+$query1->bind_param("ssssi", 
    $data['username'], 
    $data['mobile'], 
    $data['house'], 
-   $data['state'], 
-   $data['district'], 
    $data['pin'],
    $userid
 );
@@ -584,40 +600,37 @@ echo "Error updating profile: " . $query->error;
         <form method="POST" action="" id="edit-profile-form">
             <div class="form-group">
                 <label for="username"><i class="fas fa-user"></i> Username</label>
-                <input type="text" id="username" name="username" value="<?= htmlspecialchars($_POST['username'] ?? $user['username'] ?? '') ?>" required>
-                <div class="error"><?= $errors['username'] ?? '' ?></div>
+                <input type="text" id="username" name="username" 
+                    data-pattern="^[A-Za-z][A-Za-z\s.'-]{1,49}$"
+                    data-error="Username must start with a letter and can include letters, spaces, dots, hyphens and apostrophes"
+                    value="<?= htmlspecialchars($_POST['username'] ?? $user['username'] ?? '') ?>" required>
+                <div class="error-message"></div>
             </div>
             <div class="form-group">
                 <label for="mobile"><i class="fas fa-phone"></i> Mobile Number</label>
-                <input type="tel" id="mobile" name="mobile" value="<?= htmlspecialchars($_POST['mobile'] ?? $user['mobile'] ?? '') ?>" required>
-                <div class="error"><?= $errors['mobile'] ?? '' ?></div>
-            </div>
-            <div class="form-group">
-                <label for="email"><i class="fas fa-envelope"></i> Email</label>
-                <input type="email" id="email" value="<?= htmlspecialchars($user['email'] ?? '') ?>" disabled>
-                <small>Email cannot be changed</small>
+                <input type="tel" id="mobile" name="mobile" 
+                    data-pattern="^[6-9]\d{9}$"
+                    data-error="Please enter a valid 10-digit mobile number starting with 6-9"
+                    value="<?= htmlspecialchars($_POST['mobile'] ?? $user['mobile'] ?? '') ?>" required>
+                <div class="error-message"></div>
             </div>
             <div class="form-group">
                 <label for="house"><i class="fas fa-home"></i> House Name</label>
-                <input type="text" id="house" name="house" value="<?= htmlspecialchars($_POST['house'] ?? $user['house'] ?? '') ?>" required>
-                <div class="error"><?= $errors['house'] ?? '' ?></div>
-            </div>
-            <div class="form-group">
-                <label for="state"><i class="fas fa-map-marker-alt"></i> State</label>
-                <input type="text" id="state" name="state" value="<?= htmlspecialchars($_POST['state'] ?? $user['state'] ?? '') ?>" required>
-                <div class="error"><?= $errors['state'] ?? '' ?></div>
-            </div>
-            <div class="form-group">
-                <label for="district"><i class="fas fa-map"></i> District</label>
-                <input type="text" id="district" name="district" value="<?= htmlspecialchars($_POST['district'] ?? $user['district'] ?? '') ?>" required>
-                <div class="error"><?= $errors['district'] ?? '' ?></div>
+                <input type="text" id="house" name="house" 
+                    data-pattern="^[a-zA-Z0-9 .,-]+$"
+                    data-error="House name can only contain letters, numbers, spaces, dots, commas and hyphens"
+                    value="<?= htmlspecialchars($_POST['house'] ?? $user['house'] ?? '') ?>" required>
+                <div class="error-message"></div>
             </div>
             <div class="form-group">
                 <label for="pin"><i class="fas fa-map-pin"></i> PIN Code</label>
-                <input type="text" id="pin" name="pin" value="<?= htmlspecialchars($_POST['pin'] ?? $user['pin'] ?? '') ?>" required>
-                <div class="error"><?= $errors['pin'] ?? '' ?></div>
+                <input type="text" id="pin" name="pin" 
+                    data-pattern="^\d{6}$"
+                    data-error="Please enter a valid 6-digit PIN code"
+                    value="<?= htmlspecialchars($_POST['pin'] ?? $user['pin'] ?? '') ?>" required>
+                <div class="error-message"></div>
             </div>
-            <button type="submit">Update Profile</button>
+            <button type="submit" id="submit-btn">Update Profile</button>
         </form>
     </div>
 </body>
@@ -682,5 +695,81 @@ document.addEventListener('DOMContentLoaded', function() {
         })
 
            </script>
-
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('edit-profile-form');
+    const inputs = form.querySelectorAll('input[data-pattern]');
+    const submitBtn = document.getElementById('submit-btn');
+    
+    // Function to validate a single input
+    function validateInput(input) {
+        const pattern = new RegExp(input.dataset.pattern);
+        const value = input.value.trim();
+        const errorDiv = input.nextElementSibling;
+        const isValid = pattern.test(value);
+        
+        // Remove existing validation icon if any
+        const existingIcon = input.parentElement.querySelector('.validation-icon');
+        if (existingIcon) existingIcon.remove();
+        
+        // Create and add new validation icon
+        const icon = document.createElement('i');
+        icon.classList.add('fas', 'validation-icon');
+        
+        if (isValid) {
+            input.classList.remove('invalid');
+            input.classList.add('valid');
+            errorDiv.textContent = '';
+            icon.classList.add('fa-check-circle', 'valid');
+        } else {
+            input.classList.remove('valid');
+            input.classList.add('invalid');
+            errorDiv.textContent = input.dataset.error;
+            icon.classList.add('fa-exclamation-circle', 'invalid');
+        }
+        
+        input.parentElement.appendChild(icon);
+        return isValid;
+    }
+    
+    // Add validation listeners to all inputs
+    inputs.forEach(input => {
+        ['input', 'blur'].forEach(eventType => {
+            input.addEventListener(eventType, () => {
+                validateInput(input);
+                
+                // Check if all inputs are valid
+                const allValid = Array.from(inputs).every(input => {
+                    const pattern = new RegExp(input.dataset.pattern);
+                    return pattern.test(input.value.trim());
+                });
+                
+                // Enable/disable submit button
+                submitBtn.disabled = !allValid;
+            });
+        });
+    });
+    
+    // Form submission handler
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const allValid = Array.from(inputs).every(input => validateInput(input));
+        
+        if (allValid) {
+            this.submit();
+        } else {
+            // Show error message at the top of the form
+            const errorMessage = document.createElement('div');
+            errorMessage.classList.add('error-message');
+            errorMessage.textContent = 'Please fix the errors before submitting.';
+            form.insertBefore(errorMessage, form.firstChild);
+            
+            // Remove error message after 3 seconds
+            setTimeout(() => errorMessage.remove(), 3000);
+        }
+    });
+});
+</script>
 </body>
+</html>

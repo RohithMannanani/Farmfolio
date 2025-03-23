@@ -65,10 +65,17 @@ function updateProductStock($conn, $orderId) {
     }
 }
 
+// Replace the existing order processing code
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
     $userId = $_SESSION['userid'];
-    $address = $_POST['address'];
-    $phone = $_POST['phone'];
+    $house_name = mysqli_real_escape_string($conn, trim($_POST['house_name']));
+    $post_office = mysqli_real_escape_string($conn, trim($_POST['post_office']));
+    $place = mysqli_real_escape_string($conn, trim($_POST['place']));
+    $pin = mysqli_real_escape_string($conn, trim($_POST['pin']));
+    $phone = mysqli_real_escape_string($conn, trim($_POST['phone']));
+    
+    // Combine address fields
+    $full_address = "$house_name, $post_office, $place - $pin";
     
     // Validate stock before processing
     $stock_errors = validateStock($conn, $_SESSION['cart']);
@@ -87,7 +94,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
         $orderQuery = "INSERT INTO tbl_orders (user_id, total_amount, order_status, order_date, delivery_address, phone_number, payment_method) 
                       VALUES (?, ?, 'pending', NOW(), ?, ?, 'cod')";
         $stmt = $conn->prepare($orderQuery);
-        $stmt->bind_param("idss", $userId, $totalAmount, $address, $phone);
+        $stmt->bind_param("idss", $userId, $totalAmount, $full_address, $phone);
         $stmt->execute();
         $orderId = $conn->insert_id;
         
@@ -290,9 +297,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
             <input type="hidden" name="total_amount" value="<?php echo $totalAmount; ?>">
             
             <div class="form-group">
-                <label for="address">Delivery Address *</label>
-                <textarea id="address" name="address" required 
-                    placeholder="Enter your complete delivery address"></textarea>
+                <label for="house_name">House Name *</label>
+                <input type="text" id="house_name" name="house_name" required 
+                    placeholder="Enter your house name">
+            </div>
+
+            <div class="form-group">
+                <label for="post_office">Post Office *</label>
+                <input type="text" id="post_office" name="post_office" required 
+                    placeholder="Enter your post office">
+            </div>
+
+            <div class="form-group">
+                <label for="place">Place *</label>
+                <input type="text" id="place" name="place" required 
+                    placeholder="Enter your place">
+            </div>
+
+            <div class="form-group">
+                <label for="pin">PIN Code *</label>
+                <input type="text" id="pin" name="pin" required 
+                    placeholder="Enter your PIN code"
+                    pattern="[0-9]{6}" 
+                    title="Please enter a valid 6-digit PIN code">
             </div>
 
             <div class="form-group">
@@ -308,5 +335,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
             </button>
         </form>
     </div>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.querySelector('form');
+        const pinInput = document.getElementById('pin');
+        const phoneInput = document.getElementById('phone');
+
+        function validateInput(input, pattern, errorMessage) {
+            const regex = new RegExp(pattern);
+            if (!regex.test(input.value)) {
+                input.setCustomValidity(errorMessage);
+                return false;
+            }
+            input.setCustomValidity('');
+            return true;
+        }
+
+        pinInput.addEventListener('input', function() {
+            validateInput(this, '^[0-9]{6}$', 'Please enter a valid 6-digit PIN code');
+        });
+
+        phoneInput.addEventListener('input', function() {
+            validateInput(this, '^[0-9]{10}$', 'Please enter a valid 10-digit phone number');
+        });
+
+        form.addEventListener('submit', function(e) {
+            const fields = ['house_name', 'post_office', 'place', 'pin'];
+            let isValid = true;
+
+            fields.forEach(field => {
+                const input = document.getElementById(field);
+                if (!input.value.trim()) {
+                    input.setCustomValidity('This field is required');
+                    isValid = false;
+                } else {
+                    input.setCustomValidity('');
+                }
+            });
+
+            if (!isValid) {
+                e.preventDefault();
+            }
+        });
+    });
+    </script>
 </body>
-</html> 
+</html>

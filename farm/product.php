@@ -1,7 +1,7 @@
 <?php
 session_start();
 include '../databse/connect.php';
-if(!isset($_SESSION['username'])){
+if(!isset($_SESSION['userid'])){
     header('location: http://localhost/mini%20project/login/login.php');
 }
 

@@ -69,28 +69,56 @@ if(isset($_POST['delete'])) {
     exit();
 }}
 
-// Handle category addition
+// Replace the existing category addition handler
 if(isset($_POST['add_category'])) {
-    $category = mysqli_real_escape_string($conn, $_POST['category']);
-    $sub_category = mysqli_real_escape_string($conn, $_POST['sub_category']);
+    $category = mysqli_real_escape_string($conn, trim($_POST['category']));
+    $sub_category = mysqli_real_escape_string($conn, trim($_POST['sub_category']));
     
-    // First insert into tbl_category
-    $insert_category = "INSERT INTO tbl_category (category, sub, status) 
-                       VALUES ('$category', '$sub_category', '1')";
+    // Check if category exists in database (case insensitive)
+    $check_existing = "SELECT c.* FROM tbl_category c 
+                      WHERE LOWER(c.category) = LOWER('$category') 
+                      AND LOWER(c.sub) = LOWER('$sub_category')";
+    $existing_result = mysqli_query($conn, $check_existing);
     
-    if(mysqli_query($conn, $insert_category)) {
-        $new_category_id = mysqli_insert_id($conn);
+    if(mysqli_num_rows($existing_result) > 0) {
+        // Category exists, check if it's already linked to this farm
+        $existing_category = mysqli_fetch_assoc($existing_result);
+        $category_id = $existing_category['category_id'];
         
-        // Then link it to the farm in tbl_fc
-        $insert_fc = "INSERT INTO tbl_fc (farm_id, category_id) 
-                     VALUES ($farm_id, $new_category_id)";
+        $check_farm_category = "SELECT * FROM tbl_fc 
+                              WHERE farm_id = $farm_id 
+                              AND category_id = $category_id";
+        $farm_category_result = mysqli_query($conn, $check_farm_category);
         
-        if(mysqli_query($conn, $insert_fc)) {
-            echo "<script>alert('Category added successfully!');</script>";
+        if(mysqli_num_rows($farm_category_result) > 0) {
+            echo "<script>alert('This category is already added to your farm!');</script>";
             echo "<script>window.location.href='about.php';</script>";
+            exit();
+        } else {
+            // Category exists but not linked to farm, link it
+            $insert_fc = "INSERT INTO tbl_fc (farm_id, category_id) 
+                         VALUES ($farm_id, $category_id)";
+            if(mysqli_query($conn, $insert_fc)) {
+                echo "<script>alert('Category added to farm successfully!');</script>";
+                echo "<script>window.location.href='about.php';</script>";
+            }
         }
     } else {
-        echo "<script>alert('Error adding category: " . mysqli_error($conn) . "');</script>";
+        // Category doesn't exist, create new and link
+        $insert_category = "INSERT INTO tbl_category (category, sub, status) 
+                           VALUES ('$category', '$sub_category', '1')";
+        
+        if(mysqli_query($conn, $insert_category)) {
+            $new_category_id = mysqli_insert_id($conn);
+            
+            $insert_fc = "INSERT INTO tbl_fc (farm_id, category_id) 
+                         VALUES ($farm_id, $new_category_id)";
+            
+            if(mysqli_query($conn, $insert_fc)) {
+                echo "<script>alert('New category created and added successfully!');</script>";
+                echo "<script>window.location.href='about.php';</script>";
+            }
+        }
     }
 }
 
@@ -515,6 +543,56 @@ if(isset($_POST['delete_category'])) {
                     alert('Category and sub-category names should only contain letters and spaces.');
                     return false;
                 }
+            });
+        }
+        if(categoryForm) {
+            const categoryInput = document.getElementById('category');
+            const subCategoryInput = document.getElementById('sub_category');
+            
+            async function checkCategoryExists() {
+                const category = categoryInput.value.trim();
+                const subCategory = subCategoryInput.value.trim();
+                
+                try {
+                    const response = await fetch('check_category.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: `category=${encodeURIComponent(category)}&sub_category=${encodeURIComponent(subCategory)}&farm_id=<?php echo $farm_id; ?>`
+                    });
+                    
+                    const data = await response.json();
+                    return data.exists;
+                } catch (error) {
+                    console.error('Error checking category:', error);
+                    return false;
+                }
+            }
+            
+            categoryForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const category = categoryInput.value.trim();
+                const subCategory = subCategoryInput.value.trim();
+                
+                if(category.length < 3 || subCategory.length < 3) {
+                    alert('Category and sub-category names must be at least 3 characters long.');
+                    return;
+                }
+                
+                if(!/^[a-zA-Z\s]+$/.test(category) || !/^[a-zA-Z\s]+$/.test(subCategory)) {
+                    alert('Category and sub-category names should only contain letters and spaces.');
+                    return;
+                }
+                
+                const exists = await checkCategoryExists();
+                if(exists) {
+                    alert('This category is already added to your farm!');
+                    return;
+                }
+                
+                this.submit();
             });
         }
     });

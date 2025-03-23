@@ -151,7 +151,7 @@ $order = $orderResult->fetch_assoc();
             <p class="order-info">Delivery Address: <?php echo htmlspecialchars($order['delivery_address']); ?></p>
         </div>
 
-        <p>Thank you for your purchase! We'll send you an email with your order details.</p>
+        
         
         <div class="action-buttons">
             <a href="orders.php" class="btn btn-primary">View Orders</a>

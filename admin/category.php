@@ -408,9 +408,9 @@ $categories_result = mysqli_query($conn, $categories_query);
         <div class="head"><h1>🌱 FarmFolio</h1></div>
         <div class="admin-controls">
             <h2>Welcome, Admin</h2>
-            <button class="icon-btn" data-tooltip="Notifications"><i class="fas fa-bell"></i></button>
+            <!-- <button class="icon-btn" data-tooltip="Notifications"><i class="fas fa-bell"></i></button>
             <button class="icon-btn" data-tooltip="Messages"><i class="fas fa-envelope"></i></button>
-            <button class="icon-btn" data-tooltip="Profile"><i class="fas fa-user-circle"></i></button>
+            <button class="icon-btn" data-tooltip="Profile"><i class="fas fa-user-circle"></i></button> -->
             <button class="logout-btn" onclick="window.location.href='http://localhost/mini%20project/logout/logout.php'">Logout</button>
         </div>
     </header>

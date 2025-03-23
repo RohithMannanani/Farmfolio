@@ -50,6 +50,18 @@ $order_result = $stmt->get_result();
 $order_data = $order_result->fetch_assoc();
 $total_orders = $order_data['order_count'] ?? 0;
 
+// Add after the order count query
+$events_query = "SELECT COUNT(*) as event_count 
+                FROM tbl_events e 
+                JOIN tbl_farms f ON e.farm_id = f.farm_id
+                WHERE e.event_date >= CURRENT_DATE 
+                AND e.status = '1'
+                AND f.status = 'active'";
+
+$events_result = $conn->query($events_query);
+$events_data = $events_result->fetch_assoc();
+$upcoming_events = $events_data['event_count'] ?? 0;
+
 // Check if farm is favorited by current user
 function isFarmFavorited($conn, $farm_id, $user_id) {
     $query = "SELECT * FROM tbl_favorites WHERE farm_id = ? AND user_id = ?";
@@ -764,7 +776,8 @@ function isFarmFavorited($conn, $farm_id, $user_id) {
                 </div>
                 <div class="stat-card">
                     <h3>Upcoming Events</h3>
-                    <div class="value">3</div>
+                    <div class="value"><?php echo $upcoming_events; ?></div>
+                    <small><i class="fas fa-calendar-alt"></i> Active events</small>
                 </div>
             </div>
 
