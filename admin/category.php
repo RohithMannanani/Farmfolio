@@ -48,12 +48,31 @@ if(isset($_POST['add_category'])) {
     }
 }
 
-// Handle category status toggle
+// Replace the existing toggle_status handler
 if(isset($_GET['toggle_status']) && isset($_GET['id'])) {
     $category_id = intval($_GET['id']);
     $current_status = $_GET['status'];
     
-    // Toggle the status ('1' to '0' or '0' to '1')
+    // Check if trying to deactivate
+    if($current_status == '1') {
+        // Check if category is used in any farms
+        $check_query = "SELECT COUNT(*) as count FROM tbl_fc WHERE category_id = ?";
+        $check_stmt = $conn->prepare($check_query);
+        $check_stmt->bind_param("i", $category_id);
+        $check_stmt->execute();
+        $result = $check_stmt->get_result();
+        $count = $result->fetch_assoc()['count'];
+        
+        if($count > 0) {
+            echo json_encode([
+                "success" => false,
+                "message" => "Cannot deactivate: This category is currently being used by one or more farms."
+            ]);
+            exit();
+        }
+    }
+    
+    // If not deactivating or category is not in use, proceed with status update
     $new_status = ($current_status == '1') ? '0' : '1';
     
     $update_query = "UPDATE tbl_category SET status = ? WHERE category_id = ?";
@@ -587,24 +606,63 @@ $categories_result = mysqli_query($conn, $categories_query);
             document.getElementById('editForm').reset();
         }
 
+        // Replace the existing toggleCategoryStatus function
         async function toggleCategoryStatus(categoryId, currentStatus) {
             const action = currentStatus == '1' ? 'deactivate' : 'activate';
-            if (confirm(`Are you sure you want to ${action} this category?`)) {
-                try {
-                    const response = await fetch(`category.php?toggle_status=1&id=${categoryId}&status=${currentStatus}`);
-                    const result = await response.json();
-                    
-                    if (result.success) {
-                        alert(result.message);
-                        window.location.reload();
-                    } else {
-                        alert("Error: " + result.message);
-                    }
-                } catch (error) {
-                    alert("Error: " + error.message);
+            
+            if (!confirm(`Are you sure you want to ${action} this category?`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`category.php?toggle_status=1&id=${categoryId}&status=${currentStatus}`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    showNotification(result.message, 'success');
+                    setTimeout(() => window.location.reload(), 1500);
+                } else {
+                    showNotification(result.message, 'error');
                 }
+            } catch (error) {
+                showNotification('An error occurred while updating the category status.', 'error');
             }
         }
+
+        // Add notification function
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.className = `message ${type}`;
+            notification.style.position = 'fixed';
+            notification.style.top = '20px';
+            notification.style.right = '20px';
+            notification.style.zIndex = '1000';
+            notification.style.padding = '15px 25px';
+            notification.style.borderRadius = '4px';
+            notification.style.animation = 'slideIn 0.5s ease-out';
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.5s ease-in';
+                setTimeout(() => notification.remove(), 500);
+            }, 3000);
+        }
+
+        // Add CSS animation for notifications
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            @keyframes slideOut {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(100%); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
     </script>
 </body>
 </html>

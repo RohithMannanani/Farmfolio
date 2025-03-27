@@ -748,10 +748,12 @@ function isFarmFavorited($conn, $farm_id, $user_id) {
                         <div class="head">
                             <h2>FarmFolio</h2>
                         </div>
+
                         <div class="profile-icon" id="profileIcon">
                             <i class="fas fa-user"></i>
                         </div>
                     </div>
+                  
                     <div class="profile-popup" id="profilePopup">
                         <div class="profile-info">
                             <p class="profile-name"><?php echo $_SESSION['username'];?></p>

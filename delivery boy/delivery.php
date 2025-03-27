@@ -487,6 +487,7 @@ body {
     </li>
     <li><a href="history.php"><i class="fas fa-history"></i><span>Delivery History</span></a></li>
     <li><a href="earning.php"><i class="fas fa-wallet"></i><span>Earnings</span></a></li>
+    <li><a href="profile.php"><i class="fas fa-user"></i><span>Profile</span></a></li> 
 </ul>
     </nav>
 

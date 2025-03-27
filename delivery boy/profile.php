@@ -8,53 +8,40 @@ if(!isset($_SESSION['username'])){
 
 // Get delivery boy ID from session
 $delivery_boy_id = $_SESSION['userid'];
+$query = "SELECT * FROM tbl_signup WHERE userid = ?";
+$stmt = $conn->prepare($query);
+$stmt->bind_param("i", $delivery_boy_id);
+$stmt->execute();
+$result = $stmt->get_result();
+$profile = $result->fetch_assoc();
 
-// Calculate total earnings (10% commission)
-$total_earnings_query = "SELECT 
-    COUNT(*) as total_deliveries,
-    COALESCE(SUM(total_amount * 0.1), 0) as total_earnings,
-    COALESCE(SUM(CASE 
-        WHEN payment_status = 'paid' THEN total_amount * 0.1 
-        ELSE 0 
-    END), 0) as paid_earnings,
-    COALESCE(SUM(CASE 
-        WHEN payment_status = 'pending' THEN total_amount * 0.1 
-        ELSE 0 
-    END), 0) as pending_earnings
-FROM tbl_orders 
-WHERE delivery_boy_id = '$delivery_boy_id' 
-AND order_status = 'delivered'";
+// Handle profile update
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $username = mysqli_real_escape_string($conn, trim($_POST['username']));
+    $mobile = mysqli_real_escape_string($conn, trim($_POST['mobile']));
+    $house = mysqli_real_escape_string($conn, trim($_POST['house']));
+    $state = mysqli_real_escape_string($conn, trim($_POST['state']));
+    $district = mysqli_real_escape_string($conn, trim($_POST['district']));
+    $pin = mysqli_real_escape_string($conn, trim($_POST['pin']));
 
-$total_result = mysqli_query($conn, $total_earnings_query);
-$earnings_data = mysqli_fetch_assoc($total_result);
-
-// Get monthly earnings
-$monthly_earnings_query = "SELECT 
-    DATE_FORMAT(order_date, '%Y-%m') as month,
-    COUNT(*) as deliveries,
-    COALESCE(SUM(total_amount * 0.1), 0) as earnings
-FROM tbl_orders 
-WHERE delivery_boy_id = '$delivery_boy_id' 
-AND order_status = 'delivered'
-GROUP BY DATE_FORMAT(order_date, '%Y-%m')
-ORDER BY month DESC
-LIMIT 12";
-
-$monthly_result = mysqli_query($conn, $monthly_earnings_query);
-
-// Get daily earnings for current week
-$daily_earnings_query = "SELECT 
-    DATE(order_date) as date,
-    COUNT(*) as deliveries,
-    COALESCE(SUM(total_amount * 0.1), 0) as earnings
-FROM tbl_orders 
-WHERE delivery_boy_id = '$delivery_boy_id' 
-AND order_status = 'delivered'
-AND order_date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
-GROUP BY DATE(order_date)
-ORDER BY date DESC";
-
-$daily_result = mysqli_query($conn, $daily_earnings_query);
+    $update_query = "UPDATE tbl_signup SET 
+                    username = ?, 
+                    mobile = ?, 
+                    house = ?, 
+                    state = ?, 
+                    district = ?, 
+                    pin = ? 
+                    WHERE userid = ?";
+    
+    $stmt = $conn->prepare($update_query);
+    $stmt->bind_param("ssssssi", $username, $mobile, $house, $state, $district, $pin, $delivery_boy_id);
+    
+    if ($stmt->execute()) {
+        $success_message = "Profile updated successfully!";
+    } else {
+        $error_message = "Failed to update profile. Please try again.";
+    }
+}
 
 // Get today's deliveries count
 $today_query = "SELECT 
@@ -130,37 +117,6 @@ GROUP BY o.order_id
 ORDER BY o.order_date DESC";
 
 $orders_result = mysqli_query($conn, $orders_query);
-
-// Add this query after your existing queries
-$delivery_stats_query = "SELECT 
-    COUNT(*) as total_orders,
-    SUM(CASE WHEN order_status = 'delivered' THEN 1 ELSE 0 END) as completed_orders,
-    SUM(CASE WHEN order_status = 'processing' THEN 1 ELSE 0 END) as processing_orders,
-    SUM(CASE WHEN order_status = 'shipped' THEN 1 ELSE 0 END) as shipped_orders
-FROM tbl_orders 
-WHERE delivery_boy_id = '$delivery_boy_id'";
-$stats_result = mysqli_query($conn, $delivery_stats_query);
-$delivery_stats = mysqli_fetch_assoc($stats_result);
-
-// Get recent deliveries by this delivery boy
-$my_deliveries_query = "SELECT 
-    o.order_id,
-    o.delivery_address,
-    o.order_status,
-    o.total_amount,
-    o.order_date,
-    o.payment_method,
-    o.payment_status,
-    u.username as customer_name,
-    GROUP_CONCAT(DISTINCT p.product_name) as products
-FROM tbl_orders o
-JOIN tbl_signup u ON o.user_id = u.userid
-JOIN tbl_order_items oi ON o.order_id = oi.order_id
-JOIN tbl_products p ON oi.product_id = p.product_id
-WHERE o.delivery_boy_id = '$delivery_boy_id'
-GROUP BY o.order_id
-ORDER BY o.order_date DESC";
-$my_deliveries_result = mysqli_query($conn, $my_deliveries_query);
 ?>
 
 <!DOCTYPE html>
@@ -307,7 +263,7 @@ body {
 
 
 
-.content-area {
+content-area {
     padding: 20px;
     min-height: 100vh;
 }
@@ -611,147 +567,149 @@ body {
             color: #666;
         }
 
-        .stats-section {
-            margin-bottom: 30px;
-        }
-
-        .stats-section h2 {
-            margin-bottom: 20px;
-            color: #1a4d2e;
-        }
-
-        .delivery-table-container {
+        .profile-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
             background: white;
             border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            overflow-x: auto;
-        }
-
-        .delivery-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-        }
-
-        .delivery-table th {
-            background-color: #f8f9fa;
-            padding: 12px;
-            text-align: left;
-            font-weight: 600;
-            color: #1a4d2e;
-            border-bottom: 2px solid #e5e7eb;
-        }
-
-        .delivery-table td {
-            padding: 12px;
-            border-bottom: 1px solid #e5e7eb;
-        }
-
-        .delivery-table tr:last-child td {
-            border-bottom: none;
-        }
-
-        .no-data {
-            text-align: center;
-            color: #666;
-            padding: 20px;
-        }
-
-        .my-deliveries-section {
-            margin-top: 30px;
-        }
-
-        .my-deliveries-section h2 {
-            margin-bottom: 20px;
-            color: #1a4d2e;
-        }
-
-        .status-badge {
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 0.8em;
-            font-weight: 500;
-        }
-
-        /* Add more status colors if needed */
-        .status-processing {
-            background-color: #fef3c7;
-            color: #92400e;
-        }
-
-        .status-shipped {
-            background-color: #dbeafe;
-            color: #1e40af;
-        }
-
-        .status-delivered {
-            background-color: #dcfce7;
-            color: #166534;
-        }
-
-        .earnings-section {
-            background: white;
-            border-radius: 8px;
-            padding: 20px;
-            margin-top: 30px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
-        .earnings-section h2 {
+        .profile-container h1 {
             color: #1a4d2e;
             margin-bottom: 20px;
-            font-size: 1.2em;
-        }
-
-        .table-container {
-            overflow-x: auto;
-        }
-
-        .earnings-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        .earnings-table th,
-        .earnings-table td {
-            padding: 12px;
-            text-align: left;
+            padding-bottom: 10px;
             border-bottom: 1px solid #eee;
         }
 
-        .earnings-table th {
-            background-color: #f8f9fa;
-            color: #1a4d2e;
-            font-weight: 600;
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
         }
 
-        .earnings-table tr:last-child td {
-            border-bottom: none;
+        .form-group {
+            margin-bottom: 15px;
+            position: relative;
         }
 
-        .earnings-table tr:hover {
-            background-color: #f8f9fa;
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #374151;
+            font-weight: 500;
         }
 
-        .stat-card {
-            transition: transform 0.3s ease;
+        .form-group input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+            padding-right: 35px;
         }
 
-        .stat-card:hover {
-            transform: translateY(-5px);
+        .form-group input:focus {
+            border-color: #1a4d2e;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(26, 77, 46, 0.1);
         }
 
-        .value {
-            color: #1a4d2e;
-            font-size: 1.8em;
-            font-weight: bold;
-            margin: 10px 0;
+        .form-group.valid input {
+            border-color: #22c55e;
+            background-color: #f0fdf4;
         }
 
-        small {
-            color: #666;
-            font-size: 0.9em;
+        .form-group.invalid input {
+            border-color: #dc2626;
+            background-color: #fef2f2;
+        }
+
+        .validation-message {
+            display: block;
+            font-size: 0.8rem;
+            margin-top: 5px;
+            min-height: 20px;
+            color: #dc2626;
+        }
+
+        .validation-icon {
+            position: absolute;
+            right: 10px;
+            top: 38px;
+            font-size: 1rem;
+        }
+
+        .form-group.valid .validation-icon {
+            color: #22c55e;
+        }
+
+        .form-group.invalid .validation-icon {
+            color: #dc2626;
+        }
+
+        .form-actions {
+            text-align: right;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+
+        .update-btn {
+            padding: 10px 20px;
+            background: #1a4d2e;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s ease;
+        }
+
+        .update-btn:hover {
+            background: #2d6a4f;
+        }
+
+        .update-btn:disabled {
+            background-color: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        .alert {
+            padding: 12px 16px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+
+        .alert.success {
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #6ee7b7;
+        }
+
+        .alert.error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+        }
+
+        input:invalid {
+            border-color: #dc2626;
+        }
+
+        .readonly-input {
+            background-color: #f3f4f6;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .hint {
+            display: block;
+            font-size: 0.8rem;
+            color: #6b7280;
+            margin-top: 4px;
         }
     </style>
 </head>
@@ -762,8 +720,8 @@ body {
             <li><a href="delivery.php" ><i class="fas fa-home"></i><span>Dashboard</span></a></li>
             <li><a href="assign.php"><i class="fas fa-truck"></i><span>Assigned Deliveries</span></a></li>
             <li><a href="history.php"><i class="fas fa-history"></i><span>Delivery History</span></a></li>
-            <li><a href="earning.php"class="active"><i class="fas fa-wallet"></i><span>Earnings</span></a></li>
-            <li><a href="profile.php"><i class="fas fa-user"></i><span>Profile</span></a></li> 
+            <li><a href="earning.php"><i class="fas fa-wallet"></i><span>Earnings</span></a></li>
+            <li><a href="profile.php"class="active"><i class="fas fa-user"></i><span>Profile</span></a></li> 
         </ul>
     </nav>
 
@@ -781,89 +739,175 @@ body {
     </header>
 
     <main class="main-content">
-        <div class="content-area">
-            <h1 style="margin-bottom: 20px">My Earnings</h1>
+    <div class="content-area">
+        <div class="profile-container">
+            <h1>Profile Settings</h1>
             
-            <!-- Earnings Overview -->
-            <div class="dashboard-grid">
-                <div class="stat-card">
-                    <h3>Total Earnings</h3>
-                    <div class="value">₹<?php echo number_format($earnings_data['total_earnings'], 2); ?></div>
-                    <small><?php echo $earnings_data['total_deliveries']; ?> deliveries completed</small>
-                </div>
-              
-                <!-- <div class="stat-card">
-                    <h3>Pending Earnings</h3>
-                    <div class="value">₹<?php echo number_format($earnings_data['pending_earnings'], 2); ?></div>
-                    <small>Awaiting payments</small>
-                </div> -->
-            </div>
+            <?php if (isset($success_message)): ?>
+                <div class="alert success"><?php echo $success_message; ?></div>
+            <?php endif; ?>
+            
+            <?php if (isset($error_message)): ?>
+                <div class="alert error"><?php echo $error_message; ?></div>
+            <?php endif; ?>
 
-            <!-- Monthly Earnings -->
-            <div class="earnings-section">
-                <h2>Monthly Earnings</h2>
-                <div class="table-container">
-                    <table class="earnings-table">
-                        <thead>
-                            <tr>
-                                <th>Month</th>
-                                <th>Deliveries</th>
-                                <th>Earnings</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php while($month = mysqli_fetch_assoc($monthly_result)): ?>
-                                <tr>
-                                    <td><?php echo date('F Y', strtotime($month['month'] . '-01')); ?></td>
-                                    <td><?php echo $month['deliveries']; ?></td>
-                                    <td>₹<?php echo number_format($month['earnings'], 2); ?></td>
-                                </tr>
-                            <?php endwhile; ?>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+            <form method="POST" class="profile-form">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="username">Username</label>
+                        <input type="text" id="username" name="username" 
+                            data-pattern="^[A-Za-z][A-Za-z\s]{1,49}$"
+                            data-error="Username must start with a letter and can contain only letters and spaces"
+                            value="<?php echo htmlspecialchars($profile['username']); ?>" required>
+                        <span class="validation-message"></span>
+                    </div>
 
-            <!-- Daily Earnings -->
-            <div class="earnings-section">
-                <h2>Recent Daily Earnings</h2>
-                <div class="table-container">
-                    <table class="earnings-table">
-                        <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>Deliveries</th>
-                                <th>Earnings</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php while($day = mysqli_fetch_assoc($daily_result)): ?>
-                                <tr>
-                                    <td><?php echo date('d M Y', strtotime($day['date'])); ?></td>
-                                    <td><?php echo $day['deliveries']; ?></td>
-                                    <td>₹<?php echo number_format($day['earnings'], 2); ?></td>
-                                </tr>
-                            <?php endwhile; ?>
-                        </tbody>
-                    </table>
+                    <div class="form-group">
+                        <label for="mobile">Mobile Number</label>
+                        <input type="tel" id="mobile" name="mobile" 
+                            data-pattern="^[6-9]\d{9}$"
+                            data-error="Please enter a valid 10-digit mobile number starting with 6-9"
+                            value="<?php echo htmlspecialchars($profile['mobile']); ?>" required>
+                        <span class="validation-message"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" name="email" 
+                            value="<?php echo htmlspecialchars($profile['email']); ?>" 
+                            readonly 
+                            class="readonly-input">
+                        <small class="hint">Email cannot be changed</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="house">House Name/Number</label>
+                        <input type="text" id="house" name="house" 
+                            data-pattern="^[a-zA-Z0-9\s,.-]{3,}$"
+                            data-error="House name must be at least 3 characters long and can contain letters, numbers, spaces, commas, dots and hyphens"
+                            value="<?php echo htmlspecialchars($profile['house']); ?>" required>
+                        <span class="validation-message"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="state">State</label>
+                        <input type="text" id="state" name="state" 
+                            data-pattern="^[A-Za-z\s]{3,}$"
+                            data-error="State name must contain only letters and spaces"
+                            value="<?php echo htmlspecialchars($profile['state']); ?>" required>
+                        <span class="validation-message"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="district">District</label>
+                        <input type="text" id="district" name="district" 
+                            data-pattern="^[A-Za-z\s]{3,}$"
+                            data-error="District name must contain only letters and spaces"
+                            value="<?php echo htmlspecialchars($profile['district']); ?>" required>
+                        <span class="validation-message"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="pin">PIN Code</label>
+                        <input type="text" id="pin" name="pin" 
+                            data-pattern="^[0-9]{6}$"
+                            data-error="Please enter a valid 6-digit PIN code"
+                            value="<?php echo htmlspecialchars($profile['pin']); ?>" required>
+                        <span class="validation-message"></span>
+                    </div>
                 </div>
-            </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="update-btn">Update Profile</button>
+                </div>
+            </form>
         </div>
-        <!-- <footer class="footer">
-        <p>© 2024 Farmfolio Delivery. All rights reserved.</p>
-        <div class="footer-items">
-            <a href="#">Terms of Service</a>
-            <a href="#">Privacy Policy</a>
-            <a href="#">Contact Us</a>
-            <a href="#">FAQ</a>
-        </div>
-    </footer> -->
+    </div>
+</main>
     </main>
 
   
 
     <script>
-    
-    </script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('.profile-form');
+    const submitBtn = document.querySelector('.update-btn');
+    const inputs = form.querySelectorAll('input[data-pattern]');
+
+    function validateInput(input) {
+        const pattern = new RegExp(input.dataset.pattern);
+        const value = input.value.trim();
+        const formGroup = input.closest('.form-group');
+        const messageEl = formGroup.querySelector('.validation-message');
+        
+        // Remove existing validation icon if any
+        const existingIcon = formGroup.querySelector('.validation-icon');
+        if (existingIcon) existingIcon.remove();
+        
+        // Create new icon
+        const icon = document.createElement('i');
+        icon.classList.add('fas', 'validation-icon');
+        
+        if (pattern.test(value)) {
+            formGroup.classList.remove('invalid');
+            formGroup.classList.add('valid');
+            messageEl.textContent = '';
+            icon.classList.add('fa-check-circle');
+            formGroup.appendChild(icon);
+            return true;
+        } else {
+            formGroup.classList.remove('valid');
+            formGroup.classList.add('invalid');
+            messageEl.textContent = input.dataset.error;
+            icon.classList.add('fa-exclamation-circle');
+            formGroup.appendChild(icon);
+            return false;
+        }
+    }
+
+    function checkFormValidity() {
+        const isValid = Array.from(inputs).every(input => validateInput(input));
+        submitBtn.disabled = !isValid;
+        return isValid;
+    }
+
+    // Add validation listeners to all inputs
+    inputs.forEach(input => {
+        ['input', 'blur'].forEach(eventType => {
+            input.addEventListener(eventType, () => {
+                validateInput(input);
+                checkFormValidity();
+            });
+        });
+    });
+
+    // Validate all fields on initial load
+    checkFormValidity();
+
+    // Form submission handler
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        if (checkFormValidity()) {
+            this.submit();
+        } else {
+            // Show error message at the top of the form
+            const errorDiv = document.createElement('div');
+            errorDiv.classList.add('alert', 'error');
+            errorDiv.textContent = 'Please fix all validation errors before submitting.';
+            form.insertBefore(errorDiv, form.firstChild);
+            
+            // Remove error message after 3 seconds
+            setTimeout(() => errorDiv.remove(), 3000);
+            
+            // Scroll to first invalid input
+            const firstInvalid = form.querySelector('.form-group.invalid');
+            if (firstInvalid) {
+                firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+    });
+});
+</script>
 </body>
 </html>
