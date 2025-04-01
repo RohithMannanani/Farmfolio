@@ -5,46 +5,25 @@ if(!isset($_SESSION['username'])){
 }
 
 $orderId = isset($_GET['order_id']) ? intval($_GET['order_id']) : 0;
+echo $orderId;
 
 // Include database connection
 include '../databse/connect.php';
 
-// First, check if order exists and belongs to current user
-$checkOrder = "SELECT * FROM tbl_orders WHERE order_id = ? AND user_id = ?";
-$stmt = $conn->prepare($checkOrder);
-$stmt->bind_param("ii", $orderId, $_SESSION['userid']);
-$stmt->execute();
-$result = $stmt->get_result();
-
-if ($result->num_rows === 0) {
-    // Order not found or doesn't belong to user
-    $_SESSION['error'] = "Invalid order";
-    header('location: orders.php');
-    exit;
-}
-
-// Get order details with product information
+// Replace the existing query with this enhanced version
 $orderQuery = "SELECT o.*, 
     GROUP_CONCAT(CONCAT(p.product_name, ' (', f.farm_name, '): ', oi.quantity, ' ', p.unit) SEPARATOR '<br>') as product_details
     FROM tbl_orders o
     LEFT JOIN tbl_order_items oi ON o.order_id = oi.order_id
     LEFT JOIN tbl_products p ON oi.product_id = p.product_id
     LEFT JOIN tbl_farms f ON p.farm_id = f.farm_id
-    WHERE o.order_id = ? AND o.user_id = ?
+    WHERE o.order_id = ?
     GROUP BY o.order_id";
-
 $stmt = $conn->prepare($orderQuery);
-$stmt->bind_param("ii", $orderId, $_SESSION['userid']);
+$stmt->bind_param("i", $orderId);
 $stmt->execute();
 $orderResult = $stmt->get_result();
 $order = $orderResult->fetch_assoc();
-
-// If no order found, redirect
-if (!$order) {
-    $_SESSION['error'] = "Order not found";
-    header('location: orders.php');
-    exit;
-}
 ?>
 
 <!DOCTYPE html>
@@ -162,16 +141,17 @@ if (!$order) {
         <h1 class="success-title">Order Placed Successfully!</h1>
         
         <div class="order-details">
-            <p class="order-number">Order #<?php echo htmlspecialchars($order['order_id']); ?></p>
+            <p class="order-number">Order Details</p>
             <p class="order-info">Products:</p>
             <div class="product-list">
                 <?php echo $order['product_details']; ?>
             </div>
             <p class="order-info">Total Amount: ₹<?php echo number_format($order['total_amount'], 2); ?></p>
-            <p class="order-info">Payment Method: <?php echo ucfirst(htmlspecialchars($order['payment_method'])); ?></p>
-            <p class="order-info">Payment Status: <?php echo ucfirst(htmlspecialchars($order['payment_status'] ?? 'pending')); ?></p>
+            <p class="order-info">Payment Method: <?php echo ucfirst($order['payment_method']); ?></p>
             <p class="order-info">Delivery Address: <?php echo htmlspecialchars($order['delivery_address']); ?></p>
         </div>
+
+        
         
         <div class="action-buttons">
             <a href="orders.php" class="btn btn-primary">View Orders</a>

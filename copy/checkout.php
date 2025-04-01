@@ -7,13 +7,6 @@ if(!isset($_SESSION['username'])){
 // Include database connection
 include '../databse/connect.php';
 
-// Add Razorpay configuration at the top with other includes
-require_once('../razorpay-php/Razorpay.php');
-use Razorpay\Api\Api;
-
-$razorpay_key_id = 'rzp_test_46SrjQdO6MetdE'; // Replace with your actual Razorpay key ID
-$razorpay_key_secret = '3fEscmmNDMEPbSvUX4rpYALy'; // Replace with your actual Razorpay key secret
-
 $totalAmount = isset($_POST['total_amount']) ? floatval($_POST['total_amount']) : 0;
 
 // Add these new functions at the top of the file
@@ -89,7 +82,7 @@ if (isset($_SESSION['cart']) && count($_SESSION['cart']) > 0) {
     }
 }
 
-// Modify the order processing code
+// Replace the existing order processing code
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
     $userId = $_SESSION['user_id'];
     $house_name = mysqli_real_escape_string($conn, trim($_POST['house_name']));
@@ -97,11 +90,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
     $place = mysqli_real_escape_string($conn, trim($_POST['place']));
     $pin = mysqli_real_escape_string($conn, trim($_POST['pin']));
     $phone = mysqli_real_escape_string($conn, trim($_POST['phone']));
-    $payment_method = mysqli_real_escape_string($conn, trim($_POST['payment_method']));
     
-    // Combine address fields
-    $full_address = "$house_name, $post_office, $place, PIN: $pin";
-
     // Add server-side PIN validation
     $pincode_json = file_get_contents('../signup/pincode.json');
     $pincodes = json_decode($pincode_json, true)['pincodes'];
@@ -126,201 +115,68 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
         exit;
     }
 
-    if ($payment_method === 'razorpay') {
-        // Initialize Razorpay
-        $api = new Api($razorpay_key_id, $razorpay_key_secret);
-
-        // Create Razorpay order
-        $razorpayOrder = $api->order->create([
-            'amount' => $totalAmount * 100, // Amount in paise
-            'currency' => 'INR',
-            'payment_capture' => 1
-        ]);
-
-        // Store order details in session for verification
-        $_SESSION['razorpay_order_id'] = $razorpayOrder['id'];
-        $_SESSION['checkout_details'] = [
-            'address' => $full_address,
-            'phone' => $phone,
-            'amount' => $totalAmount,
-            'user_id' => $userId
-        ];
-
-        // Return Razorpay details for the payment form
-        echo json_encode([
-            'order_id' => $razorpayOrder['id'],
-            'amount' => $totalAmount * 100,
-            'currency' => 'INR',
-            'key' => $razorpay_key_id,
-            'name' => 'Farmfolio',
-            'description' => 'Order Payment',
-            'prefill' => [
-                'name' => $_SESSION['username'],
-                'contact' => $phone,
-            ]
-        ]);
-        exit;
-    } else {
-        // Start transaction
-        mysqli_begin_transaction($conn);
-        
-        try {
-            // Create order in orders table with delivery details
-            $orderQuery = "INSERT INTO tbl_orders (user_id, total_amount, order_status, order_date, delivery_address, phone_number, payment_method) 
-                          VALUES (?, ?, 'pending', NOW(), ?, ?, 'cod')";
-            $stmt = $conn->prepare($orderQuery);
-            $stmt->bind_param("idss", $userId, $totalAmount, $full_address, $phone);
-            $stmt->execute();
-            $orderId = $conn->insert_id;
-            
-            // Insert order items
-            foreach ($_SESSION['cart'] as $productId => $quantity) {
-                // Get product price
-                $priceQuery = "SELECT price FROM tbl_products WHERE product_id = ?";
-                $stmt = $conn->prepare($priceQuery);
-                $stmt->bind_param("i", $productId);
-                $stmt->execute();
-                $result = $stmt->get_result();
-                $product = $result->fetch_assoc();
-                
-                $itemPrice = $product['price'];
-                $subtotal = $itemPrice * $quantity;
-                
-                // Insert order item
-                $itemQuery = "INSERT INTO tbl_order_items (order_id, product_id, quantity, price, subtotal) 
-                             VALUES (?, ?, ?, ?, ?)";
-                $stmt = $conn->prepare($itemQuery);
-                $stmt->bind_param("iiids", $orderId, $productId, $quantity, $itemPrice, $subtotal);
-                $stmt->execute();
-            }
-            
-            // Update product stock
-            $stock_update_success = updateProductStock($conn, $orderId);
-            if (!$stock_update_success) {
-                throw new Exception("Failed to update product stock");
-            }
-            
-            // Clear cart
-            $clearCartQuery = "DELETE FROM tbl_cart WHERE user_id = ?";
-            $stmt = $conn->prepare($clearCartQuery);
-            $stmt->bind_param("i", $userId);
-            $stmt->execute();
-            
-            // Clear session cart
-            unset($_SESSION['cart']);
-            
-            // Commit transaction
-            mysqli_commit($conn);
-            
-            // Redirect to success page
-            header('Location: order_success.php?order_id=' . $orderId);
-            exit;
-            
-        } catch (Exception $e) {
-            // Rollback transaction on error
-            mysqli_rollback($conn);
-            $_SESSION['error'] = "Error processing order: " . $e->getMessage();
-            header('Location: cart.php');
-            exit;
-        }
-    }
-}
-
-// Modify the Razorpay payment verification section
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['razorpay_payment_id'])) {
-    $payment_id = $_POST['razorpay_payment_id'];
-    $razorpay_order_id = $_POST['razorpay_order_id'];
-    $signature = $_POST['razorpay_signature'];
-
-    // Verify signature
-    $api = new Api($razorpay_key_id, $razorpay_key_secret);
+    // Start transaction
+    mysqli_begin_transaction($conn);
     
     try {
-        $attributes = [
-            'razorpay_payment_id' => $payment_id,
-            'razorpay_order_id' => $razorpay_order_id,
-            'razorpay_signature' => $signature
-        ];
+        // Create order in orders table with delivery details
+        $orderQuery = "INSERT INTO tbl_orders (user_id, total_amount, order_status, order_date, delivery_address, phone_number, payment_method) 
+                      VALUES (?, ?, 'pending', NOW(), ?, ?, 'cod')";
+        $stmt = $conn->prepare($orderQuery);
+        $stmt->bind_param("idss", $userId, $totalAmount, $full_address, $phone);
+        $stmt->execute();
+        $orderId = $conn->insert_id;
         
-        $api->utility->verifyPaymentSignature($attributes);
-        
-        // Process the order using the stored session details
-        if (isset($_SESSION['checkout_details'])) {
-            $details = $_SESSION['checkout_details'];
+        // Insert order items
+        foreach ($_SESSION['cart'] as $productId => $quantity) {
+            // Get product price
+            $priceQuery = "SELECT price FROM tbl_products WHERE product_id = ?";
+            $stmt = $conn->prepare($priceQuery);
+            $stmt->bind_param("i", $productId);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $product = $result->fetch_assoc();
             
-            // Start transaction
-            mysqli_begin_transaction($conn);
+            $itemPrice = $product['price'];
+            $subtotal = $itemPrice * $quantity;
             
-            try {
-                // Create order in orders table
-                $orderQuery = "INSERT INTO tbl_orders (user_id, total_amount, order_status, order_date, 
-                             delivery_address, phone_number, payment_method, payment_id, payment_status) 
-                             VALUES (?, ?, 'confirmed', NOW(), ?, ?, 'razorpay', ?, 'completed')";
-                $stmt = $conn->prepare($orderQuery);
-                $stmt->bind_param("idsss", 
-                    $details['user_id'], 
-                    $details['amount'], 
-                    $details['address'], 
-                    $details['phone'],
-                    $payment_id
-                );
-                $stmt->execute();
-                $orderId = $conn->insert_id;
-                
-                // Insert order items
-                foreach ($_SESSION['cart'] as $productId => $quantity) {
-                    // Get product price
-                    $priceQuery = "SELECT price FROM tbl_products WHERE product_id = ?";
-                    $stmt = $conn->prepare($priceQuery);
-                    $stmt->bind_param("i", $productId);
-                    $stmt->execute();
-                    $result = $stmt->get_result();
-                    $product = $result->fetch_assoc();
-                    
-                    $itemPrice = $product['price'];
-                    $subtotal = $itemPrice * $quantity;
-                    
-                    // Insert order item
-                    $itemQuery = "INSERT INTO tbl_order_items (order_id, product_id, quantity, price, subtotal) 
-                                VALUES (?, ?, ?, ?, ?)";
-                    $stmt = $conn->prepare($itemQuery);
-                    $stmt->bind_param("iiids", $orderId, $productId, $quantity, $itemPrice, $subtotal);
-                    $stmt->execute();
-                }
-                
-                // Update product stock
-                $stock_update_success = updateProductStock($conn, $orderId);
-                if (!$stock_update_success) {
-                    throw new Exception("Failed to update product stock");
-                }
-                
-                // Clear cart
-                unset($_SESSION['cart']);
-                
-                // Commit transaction
-                mysqli_commit($conn);
-                
-                // Clear checkout details
-                unset($_SESSION['checkout_details']);
-                unset($_SESSION['razorpay_order_id']);
-                
-                echo json_encode([
-                    'status' => 'success',
-                    'order_id' => $orderId,
-                    'redirect' => "order_success.php?order_id=" . $orderId
-                ]);
-                exit;
-                
-            } catch (Exception $e) {
-                mysqli_rollback($conn);
-                throw new Exception("Order processing failed: " . $e->getMessage());
-            }
+            // Insert order item
+            $itemQuery = "INSERT INTO tbl_order_items (order_id, product_id, quantity, price, subtotal) 
+                         VALUES (?, ?, ?, ?, ?)";
+            $stmt = $conn->prepare($itemQuery);
+            $stmt->bind_param("iiids", $orderId, $productId, $quantity, $itemPrice, $subtotal);
+            $stmt->execute();
         }
+        
+        // Update product stock
+        $stock_update_success = updateProductStock($conn, $orderId);
+        if (!$stock_update_success) {
+            throw new Exception("Failed to update product stock");
+        }
+        
+        // Clear cart
+        $clearCartQuery = "DELETE FROM tbl_cart WHERE user_id = ?";
+        $stmt = $conn->prepare($clearCartQuery);
+        $stmt->bind_param("i", $userId);
+        $stmt->execute();
+        
+        // Clear session cart
+        unset($_SESSION['cart']);
+        
+        // Commit transaction
+        mysqli_commit($conn);
+        
+        // Redirect to success page
+        header('Location: order_success.php?order_id=' . $orderId);
+        exit;
+        
     } catch (Exception $e) {
-        http_response_code(400);
-        echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+        // Rollback transaction on error
+        mysqli_rollback($conn);
+        $_SESSION['error'] = "Error processing order: " . $e->getMessage();
+        header('Location: cart.php');
+        exit;
     }
-    exit;
 }
 ?>
 
@@ -503,63 +359,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['razorpay_payment_id']
 
         .payment-info {
             background: #e8f5e9;
-            padding: 20px;
-            border-radius: 8px;
+            padding: 15px;
+            border-radius: 6px;
             margin-bottom: 20px;
         }
 
-        .payment-info h3 {
+        .payment-info p {
             color: #1a4d2e;
-            margin-bottom: 15px;
-            font-size: 1.1rem;
-        }
-
-        .payment-methods {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .payment-option {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px;
-            background: white;
-            border-radius: 6px;
-            transition: all 0.3s ease;
-        }
-
-        .payment-option:hover {
-            background: #f0f2f5;
-        }
-
-        .payment-option input[type="radio"] {
-            accent-color: #1a4d2e;
-        }
-
-        .payment-option label {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            color: #1a4d2e;
-            font-weight: 500;
-            cursor: pointer;
-        }
-
-        .payment-option i {
-            font-size: 1.1rem;
-            color: #1a4d2e;
-        }
-
-        @media (max-width: 768px) {
-            .payment-info {
-                padding: 15px;
-            }
-
-            .payment-option label {
-                font-size: 0.9rem;
-            }
+            margin: 0;
         }
 
         /* Additional styles - will complement existing ones */
@@ -778,26 +585,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['razorpay_payment_id']
         </div>
 
         <div class="payment-info">
-            <h3>Select Payment Method</h3>
-            <div class="payment-methods">
-                <div class="payment-option">
-                    <input type="radio" id="cod" name="payment_method" value="cod" checked>
-                    <label for="cod">
-                        <i class="fas fa-money-bill-wave"></i>
-                        Cash on Delivery
-                    </label>
-                </div>
-                <div class="payment-option">
-                    <input type="radio" id="online" name="payment_method" value="razorpay">
-                    <label for="online">
-                        <i class="fas fa-credit-card"></i>
-                        Pay Online (Cards, UPI, NetBanking)
-                    </label>
-                </div>
-            </div>
+            <p><i class="fas fa-info-circle"></i> Payment Method: Cash on Delivery</p>
         </div>
 
-        <form method="POST" id="checkout-form">
+        <form method="POST" action="checkout.php">
             <input type="hidden" name="total_amount" value="<?php echo $totalCartPrice; ?>">
             
             <div class="form-group">
@@ -834,84 +625,159 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['razorpay_payment_id']
                     title="Please enter a valid 10-digit phone number">
             </div>
 
-            <button type="submit" class="submit-btn" name="place_order">Place Order</button>
+            <button type="submit" name="place_order" class="submit-btn">
+                Place Order
+            </button>
         </form>
     </div>
-
-    <!-- Add Razorpay script -->
-    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <script>
-    document.getElementById('checkout-form').addEventListener('submit', async function(e) {
-        e.preventDefault();
-        
-        const paymentMethod = document.querySelector('input[name="payment_method"]:checked').value;
-        
-        if (paymentMethod === 'cod') {
-            this.submit(); // Process normally for COD
-            return;
-        }
-        
-        // For Razorpay payment
-        try {
-            const formData = new FormData(this);
-            
-            const response = await fetch('process_payment.php', {
-                method: 'POST',
-                body: formData
-            });
-            
-            const data = await response.json();
-            
-            if (data.status === 'error') {
-                throw new Error(data.message);
+    document.addEventListener('DOMContentLoaded', function() {
+        // Load PIN codes from JSON file
+        let validPincodes = [];
+        fetch('../sign up/pincode.json')
+            .then(response => response.json())
+            .then(data => {
+                validPincodes = data.pincodes.map(String); // Convert numbers to strings for comparison
+                console.log('Loaded pincodes:', validPincodes); // Debug log
+            })
+            .catch(error => console.error('Error loading PIN codes:', error));
+
+        // Form elements
+        const form = document.querySelector('form');
+        const inputs = {
+            house_name: document.querySelector('input[name="house_name"]'),
+            post_office: document.querySelector('input[name="post_office"]'),
+            place: document.querySelector('input[name="place"]'),
+            pin: document.querySelector('input[name="pin"]'),
+            phone: document.querySelector('input[name="phone"]')
+        };
+
+        // Validation rules
+        const validations = {
+            house_name: {
+                pattern: /^[a-zA-Z0-9\s,.-]{3,50}$/,
+                message: 'House name should be 3-50 characters long'
+            },
+            post_office: {
+                pattern: /^[a-zA-Z\s]{3,30}$/,
+                message: 'Enter a valid post office name'
+            },
+            place: {
+                pattern: /^[a-zA-Z\s]{3,30}$/,
+                message: 'Enter a valid place name'
+            },
+            pin: {
+                pattern: /^\d{6}$/,
+                message: 'Enter a valid 6-digit PIN code'
+            },
+            phone: {
+                pattern: /^[6-9]\d{9}$/,
+                message: 'Enter a valid 10-digit mobile number'
             }
-            
-            const options = {
-                key: data.key,
-                amount: data.amount,
-                currency: data.currency,
-                name: data.name,
-                description: data.description,
-                prefill: data.prefill,
-                handler: async function(response) {
-                    try {
-                        // Create form data for verification
-                        const verifyData = new FormData();
-                        verifyData.append('razorpay_payment_id', response.razorpay_payment_id);
-                        verifyData.append('razorpay_signature', response.razorpay_signature);
-                        
-                        const verifyResponse = await fetch('verify_payment.php', {
-                            method: 'POST',
-                            body: verifyData
-                        });
-                        
-                        const result = await verifyResponse.json();
-                        
-                        if (result.status === 'success') {
-                            window.location.href = result.redirect;
-                        } else {
-                            throw new Error(result.message || 'Payment verification failed');
-                        }
-                    } catch (error) {
-                        alert('Payment verification failed: ' + error.message);
-                    }
-                }
-            };
-            
-            const rzp = new Razorpay(options);
-            rzp.open();
-            
-        } catch (error) {
-            alert('Error: ' + error.message);
+        };
+
+        // Create error message element
+        function createErrorElement(message) {
+            const error = document.createElement('div');
+            error.className = 'validation-error';
+            error.textContent = message;
+            error.style.color = '#dc2626';
+            error.style.fontSize = '0.875rem';
+            error.style.marginTop = '4px';
+            return error;
         }
+
+        // Validate single field
+        function validateField(input, validation) {
+            const field = input.name;
+            const value = input.value.trim();
+            const errorElement = input.parentElement.querySelector('.validation-error');
+            
+            // Remove existing error message
+            if (errorElement) {
+                errorElement.remove();
+            }
+
+            // Remove existing status classes
+            input.classList.remove('field-success', 'field-error');
+
+            // Check if empty
+            if (!value) {
+                input.classList.add('field-error');
+                input.parentElement.appendChild(
+                    createErrorElement(`${field.replace('_', ' ')} is required`)
+                );
+                return false;
+            }
+
+            // Check pattern
+            if (!validation.pattern.test(value)) {
+                input.classList.add('field-error');
+                input.parentElement.appendChild(
+                    createErrorElement(validation.message)
+                );
+                return false;
+            }
+
+            // Update the PIN validation part inside validateField function
+            if (field === 'pin') {
+                console.log('Checking PIN:', value); // Debug log
+                console.log('Valid PINs:', validPincodes); // Debug log
+                const pinExists = validPincodes.includes(value);
+                if (!pinExists) {
+                    input.classList.add('field-error');
+                    input.parentElement.appendChild(
+                        createErrorElement('This PIN code is not serviceable')
+                    );
+                    return false;
+                }
+            }
+
+            // If all validations pass
+            input.classList.add('field-success');
+            return true;
+        }
+
+        // Live validation on input
+        Object.keys(inputs).forEach(field => {
+            const input = inputs[field];
+            input.addEventListener('input', () => {
+                validateField(input, validations[field]);
+            });
+
+            // Also validate on blur
+            input.addEventListener('blur', () => {
+                validateField(input, validations[field]);
+            });
+        });
+
+        // Form submission
+        form.addEventListener('submit', function(e) {
+            let isValid = true;
+
+            // Validate all fields
+            Object.keys(inputs).forEach(field => {
+                if (!validateField(inputs[field], validations[field])) {
+                    isValid = false;
+                }
+            });
+
+            if (!isValid) {
+                e.preventDefault();
+                // Show error message at the top of the form
+                const formError = document.createElement('div');
+                formError.className = 'error-message';
+                formError.textContent = 'Please correct the errors in the form';
+                form.insertBefore(formError, form.firstChild);
+
+                // Scroll to first error
+                const firstError = document.querySelector('.field-error');
+                if (firstError) {
+                    firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }
+        });
     });
     </script>
-
-    <!-- Hidden form for payment verification -->
-    <form id="payment-form" action="order_success.php" method="POST" style="display: none;">
-        <input type="hidden" id="razorpay_payment_id" name="razorpay_payment_id">
-        <input type="hidden" id="razorpay_order_id" name="razorpay_order_id">
-        <input type="hidden" id="razorpay_signature" name="razorpay_signature">
-    </form>
 </body>
 </html>
