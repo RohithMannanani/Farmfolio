@@ -169,16 +169,7 @@ function isFarmFavorited($conn, $farm_id, $user_id) {
         }
 
 
-        .sidebar.shrink .sidebar-menu span {
-            opacity: 0;
-            visibility: hidden;
-            width: 0;
-            transition: opacity 0.3s ease, width 0.3s ease;
-        }
-
-        .sidebar.shrink .sidebar-menu i {
-            margin-right: 0;
-        }
+        
 
         .pro {
             display: flex;
@@ -304,6 +295,66 @@ function isFarmFavorited($conn, $farm_id, $user_id) {
             }
         }
 
+        /* ... existing styles ... */
+
+.farm-card {
+    position: relative;
+    /* ... existing farm-card styles ... */
+}
+
+/* Add these new styles for the favorite button */
+.favorite-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 10;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.favorite-btn i {
+    font-size: 1.2rem;
+    color:white;
+    transition: all 0.3s ease;
+}
+
+.favorite-btn:hover {
+    transform: scale(1.1);
+    
+}
+
+.favorite-btn.active {
+    background: #dc2626;
+}
+
+.favorite-btn.active i {
+    color: white;
+}
+
+.favorite-btn.loading {
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+.favorite-btn.loading i {
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
+
+/* ... rest of existing styles ... */
         .dashboard-header {
             background: white;
             padding: 20px;
@@ -319,38 +370,40 @@ function isFarmFavorited($conn, $farm_id, $user_id) {
 
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(3, minmax(240px, 1fr));
-            gap: 25px;
-            margin-bottom: 30px;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
         }
 
         .stat-card {
             background: white;
             padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            transition: transform 0.3s ease;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
         }
 
         .stat-card:hover {
             transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
         }
 
         .stat-card h3 {
             color: #4b5563;
-            font-size: 1rem;
+            font-size: 1.1rem;
             margin-bottom: 15px;
         }
 
-        .stat-card .value {
-            font-size: 2rem;
-            font-weight: 600;
-            color: #1a4d2e;
-        }
+        .stat-card .value,
         .stat-card .order {
-            font-size: 2rem;
-            font-weight: 600;
+            font-size: 2.5rem;
+            font-weight: 700;
             color: #1a4d2e;
+            margin-bottom: 10px;
         }
 
         .chart-container {
@@ -405,11 +458,10 @@ function isFarmFavorited($conn, $farm_id, $user_id) {
 
         .farm-card {
             background: white;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            transition: transform 0.3s ease;
-            position: relative;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
         }
 
         .farm-card:hover {
@@ -417,23 +469,108 @@ function isFarmFavorited($conn, $farm_id, $user_id) {
         }
 
         .farm-card h3 {
+            font-size: 1.4rem;
+            margin-bottom: 12px;
             color: #1a4d2e;
+        }
+
+        .farm-image {
+            height: 220px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .farm-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .farm-card:hover .farm-image img {
+            transform: scale(1.05);
+        }
+
+        .farm-details {
+            padding: 20px;
+        }
+
+        .farm-details h3 {
+            font-size: 1.4rem;
+            margin-bottom: 12px;
+            color: #1a4d2e;
+        }
+
+        .farm-rating {
+            background: #f8f9fa;
+            padding: 8px 12px;
+            border-radius: 8px;
+            margin: 12px 0;
+        }
+
+        .stars {
+            display: flex;
+            gap: 2px;
+        }
+
+        .stars i {
+            font-size: 16px;
+            color: #ffd700;
+        }
+
+        .location {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #666;
+            margin: 12px 0;
+            font-size: 0.95rem;
+        }
+
+        .location i {
+            color: #1a4d2e;
+        }
+
+        .description {
+            color: #666;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+
+        .farm-stats {
+            display: flex;
+            align-items: center;
+            gap: 15px;
             margin-bottom: 15px;
         }
 
+        .product-count {
+            background: #e8f5e9;
+            color: #1a4d2e;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
         .view-farm {
-            display: inline-block;
-            padding: 8px 16px;
             background: #1a4d2e;
             color: white;
-            border-radius: 6px;
+            padding: 12px 20px;
+            border-radius: 8px;
+            text-align: center;
+            display: block;
             text-decoration: none;
+            font-weight: 500;
             margin-top: 15px;
-            transition: background 0.3s ease;
+            transition: all 0.3s ease;
         }
 
         .view-farm:hover {
             background: #2d6a4f;
+            transform: translateY(-2px);
         }
 
         .footer {
@@ -473,8 +610,25 @@ function isFarmFavorited($conn, $farm_id, $user_id) {
             }
 
             .stats-grid {
-                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-                gap: 15px;
+                padding: 10px;
+            }
+
+            .stat-card {
+                padding: 20px;
+            }
+
+            .stat-card .value,
+            .stat-card .order {
+                font-size: 2rem;
+            }
+
+            .farms-grid {
+                grid-template-columns: 1fr;
+                padding: 10px;
+            }
+
+            .farm-image {
+                height: 200px;
             }
         }
         #dynamic-content {
@@ -496,229 +650,222 @@ function isFarmFavorited($conn, $farm_id, $user_id) {
 
         .farms-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            padding: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin: 30px 0;
         }
 
-        .favorite-btn {
+        .stat-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
             position: absolute;
-            top: 15px;
-            right: 15px;
-            background: rgba(255, 255, 255, 0.9);
-            border: none;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            z-index: 1;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(26, 77, 46, 0.1), transparent);
+            opacity: 0;
+            transition: opacity 0.4s ease;
         }
 
-        .favorite-btn i {
-            color: #d1d5db;
+        .stat-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+        }
+
+        .stat-card:hover::before {
+            opacity: 1;
+        }
+
+        .stat-card h3 {
+            color: #1a4d2e;
             font-size: 1.2rem;
-            transition: all 0.3s ease;
+            margin-bottom: 20px;
+            position: relative;
         }
 
-        .favorite-btn:hover {
-            transform: scale(1.1);
+        .stat-card .value,
+        .stat-card .order {
+            font-size: 2.8rem;
+            font-weight: 700;
+            color: #2d6a4f;
+            margin-bottom: 15px;
+            position: relative;
         }
 
-        .favorite-btn.active i {
-            color: #e63946;
+        /* Enhanced Farm Cards */
+        .farms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 30px;
+            padding: 20px 0;
         }
 
-        .favorite-btn:hover i {
-            color: #e63946;
+        .farm-card {
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            transition: all 0.4s ease;
+            position: relative;
         }
 
-        .favorite-btn.active:hover i {
-            color: #d1d5db;
+        .farm-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.1);
         }
 
         .farm-image {
-            width: 100%;
-            height: 200px;
-            overflow: hidden;
-            background: #f3f4f6;
+            height: 250px;
             position: relative;
+            overflow: hidden;
         }
 
         .farm-image img {
             width: 100%;
             height: 100%;
             object-fit: cover;
+            transition: transform 0.6s ease;
+        }
+
+        .farm-card:hover .farm-image img {
+            transform: scale(1.1);
         }
 
         .farm-details {
-            padding: 20px;
-        }
-
-        .farm-details h3 {
-            color: #1a4d2e;
-            font-size: 1.3rem;
-            margin-bottom: 10px;
-        }
-
-        .location {
-            color: #666;
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .location i {
-            color: #1a4d2e;
-        }
-
-        .description {
-            color: #666;
-            margin-bottom: 15px;
-            line-height: 1.5;
-        }
-
-        .farm-stats {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            margin-bottom: 15px;
-        }
-
-        .product-count {
-            background: #e8f5e9;
-            color: #1a4d2e;
-            padding: 5px 10px;
-            border-radius: 15px;
-            font-size: 0.9rem;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .view-farm {
-            display: inline-block;
-            padding: 8px 16px;
-            background: #1a4d2e;
-            color: white;
-            text-decoration: none;
-            border-radius: 6px;
-            transition: background 0.3s ease;
-            width: 100%;
-            text-align: center;
-        }
-
-        .view-farm:hover {
-            background: #2d6a4f;
-        }
-
-        .no-farms {
-            text-align: center;
-            padding: 40px;
-            color: #666;
-            font-size: 1.1rem;
-            grid-column: 1 / -1;
-        }
-
-        @media (max-width: 768px) {
-            .farms-grid {
-                grid-template-columns: 1fr;
-                padding: 10px;
-            }
-        }
-
-        .no-image {
-            width: 100%;
-            height: 100%;
-            background: #f3f4f6;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            color: #6b7280;
-        }
-
-        .no-image i {
-            font-size: 3rem;
-            margin-bottom: 10px;
-        }
-
-        .no-image p {
-            font-size: 0.9rem;
-        }
-
-        /* Ensure header/navbar has higher z-index */
-        .header, 
-        .navbar,
-        .profile-section {
-            z-index: 100; /* Higher z-index for header elements */
+            padding: 25px;
             position: relative;
         }
 
+        .farm-details h3 {
+            font-size: 1.5rem;
+            color: #1a4d2e;
+            margin-bottom: 15px;
+            transition: color 0.3s ease;
+        }
+
         .farm-rating {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 12px;
+            margin: 15px 0;
             display: flex;
             align-items: center;
             gap: 10px;
-            margin: 10px 0;
         }
 
         .stars {
             display: flex;
-            gap: 2px;
+            gap: 4px;
         }
 
         .stars i {
-            font-size: 14px;
+            font-size: 18px;
+            color: #ffd700;
         }
 
-        .rating-count {
-            color: #666;
-            font-size: 0.9rem;
+        .view-farm {
+            background: linear-gradient(135deg, #1a4d2e, #2d6a4f);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 12px;
+            text-align: center;
+            display: block;
+            text-decoration: none;
+            font-weight: 500;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
         }
 
-        .farm-card {
-            position: relative;
-            background: white;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            transition: transform 0.3s ease;
+        .view-farm:hover {
+            background: linear-gradient(135deg, #2d6a4f, #1a4d2e);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(26, 77, 46, 0.2);
         }
 
-        .farm-card:hover {
-            transform: translateY(-5px);
+        /* Enhanced Responsive Design */
+        @media (max-width: 1200px) {
+            .farms-grid {
+                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            }
         }
 
-        .farm-details {
-            padding: 15px;
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+                padding: 15px;
+            }
+
+            .farm-card {
+                margin: 0 15px;
+            }
+
+            .farm-details {
+                padding: 20px;
+            }
+
+            .farm-image {
+                height: 200px;
+            }
+
+            .stat-card {
+                padding: 20px;
+            }
+
+            .stat-card .value,
+            .stat-card .order {
+                font-size: 2.2rem;
+            }
         }
 
-        .description {
-            color: #666;
-            margin: 10px 0;
-            line-height: 1.4;
+        /* Enhanced Profile Menu */
+        .profile-popup {
+            background: linear-gradient(135deg, #ffffff, #f8f9fa);
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
         }
 
-        .farm-stats {
+        .profile-info {
+            padding: 20px;
+        }
+
+        .popup-logout-btn {
+            background: linear-gradient(135deg, #dc2626, #ef4444);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 0 0 15px 15px;
+            transition: all 0.3s ease;
+        }
+
+        .popup-logout-btn:hover {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+        }
+
+        /* Enhanced No Image Placeholder */
+        .no-image {
+            background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
+            padding: 60px;
             display: flex;
-            gap: 10px;
-            margin: 10px 0;
-        }
-
-        .product-count {
-            background: #e8f5e9;
-            color: #1a4d2e;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 0.9rem;
-            display: flex;
+            flex-direction: column;
             align-items: center;
-            gap: 5px;
+            justify-content: center;
+        }
+
+        .no-image i {
+            font-size: 4rem;
+            color: #9ca3af;
+            margin-bottom: 20px;
         }
     </style>
 </head>

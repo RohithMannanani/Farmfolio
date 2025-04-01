@@ -474,7 +474,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cancel_order'])) {
             transform: translateY(-2px);
             box-shadow: 0 2px 10px rgba(220,38,38,0.2);
         }
+      
+        .popup-logout-btn {
+            background: linear-gradient(135deg, #dc2626, #ef4444);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 0 0 15px 15px;
+            transition: all 0.3s ease;
+        }
 
+        .popup-logout-btn:hover {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+        }
         @media (max-width: 1024px) {
             .chart-container {
                 grid-template-columns: 1fr;
@@ -493,7 +504,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cancel_order'])) {
         }
 
         .orders-section {
-            padding: 20px;
+            padding: 50px;
         }
 
         .orders-section h1 {
@@ -542,6 +553,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cancel_order'])) {
 
         .order-card {
             background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            margin-bottom: 25px;
+        }
+
+        .order-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+        }
+
+        .order-header {
+            padding: 25px;
+            background: linear-gradient(to right, #1a4d2e, #2d6a4f);
+            color: white;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .order-info h3 {
+            color: white;
+            font-size: 1.2em;
+            margin-bottom: 8px;
+        }
+
+        .order-date {
+            color: rgba(255,255,255,0.8);
+            font-size: 0.95em;
+        }
+
+        .order-status {
+            padding: 8px 16px;
+            border-radius: 25px;
+            font-size: 0.9em;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .order-card {
+            background: white;
             border-radius: 12px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.05);
             overflow: hidden;
@@ -556,12 +608,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cancel_order'])) {
         }
 
         .order-info h3 {
-            color: #1a4d2e;
+            color: white;
             margin-bottom: 5px;
         }
 
         .order-date {
-            color: #666;
+            color: #fff;
             font-size: 0.9em;
         }
 
@@ -747,15 +799,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cancel_order'])) {
             z-index: 1000;
         }
 
-        .modal-content {
+         .modal-content {
             position: relative;
             background-color: #fff;
-            margin: 10% auto;
-            padding: 20px;
+            margin: 5% auto;
+            padding: 30px;
             width: 90%;
-            max-width: 600px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            max-width: 700px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
         }
 
         .close-modal {
@@ -828,6 +880,60 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cancel_order'])) {
             transition: all 0.3s ease;
         }
 
+        .modal-content {
+            position: relative;
+            background-color: #fff;
+            margin: 5% auto;
+            padding: 30px;
+            width: 90%;
+            max-width: 700px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+
+        .tracking-timeline {
+            margin-top: 40px;
+            position: relative;
+            padding: 30px 0;
+        }
+
+        .tracking-step {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 40px;
+            position: relative;
+            opacity: 0.7;
+            transition: all 0.3s ease;
+        }
+
+        .step-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #1a4d2e, #2d6a4f);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 20px;
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        .tracking-step.completed .step-icon {
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            transform: scale(1.1);
+        }
+
+        .tracking-step.active .step-icon {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(26, 77, 46, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(26, 77, 46, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(26, 77, 46, 0); }
+        }
+
         .step-info {
             flex: 1;
         }
@@ -871,6 +977,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cancel_order'])) {
         }
         .tracking-step.active .step-date {
             color: #fff;
+        }
+          
+
+        .cancel-order-btn {
+            padding: 10px 20px;
+            background: linear-gradient(to right, #dc2626, #ef4444);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .cancel-order-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(220,38,38,0.3);
+        }
+
+        .track-order-btn {
+            padding: 10px 20px;
+            background: linear-gradient(to right, #1a4d2e, #2d6a4f);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-left: 15px;
+        }
+
+        .track-order-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(26,77,46,0.3);
         }
     </style>
 </head>

@@ -268,6 +268,18 @@ $favorites_result = mysqli_stmt_get_result($stmt);
             background-color: #f0f2f5;
         }
 
+        .popup-logout-btn {
+            background: linear-gradient(135deg, #dc2626, #ef4444);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 0 0 15px 15px;
+            transition: all 0.3s ease;
+        }
+
+        .popup-logout-btn:hover {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+        }
+
         @media (max-width: 768px) {
             .sidebar {
                 width: 60px;
