@@ -21,6 +21,17 @@ $farm_categories_query = "SELECT c.* FROM tbl_category c
                          WHERE fc.farm_id = $farm_id";
 $farm_categories = mysqli_query($conn, $farm_categories_query);
 
+// Get all available categories that aren't already linked to this farm
+$available_categories_query = "SELECT c.* FROM tbl_category c 
+                             WHERE c.status = '1' 
+                             AND NOT EXISTS (
+                                 SELECT 1 FROM tbl_fc fc 
+                                 WHERE fc.category_id = c.category_id 
+                                 AND fc.farm_id = $farm_id
+                             )
+                             ORDER BY c.category, c.sub";
+$available_categories = mysqli_query($conn, $available_categories_query);
+
 // Handle image upload
 if(isset($_POST['upload'])) {
     $target_dir = "../uploads/farm_images/";
@@ -134,6 +145,35 @@ if(isset($_POST['delete_category'])) {
     }
 }
 
+// Handle adding existing category
+if(isset($_POST['add_existing_category'])) {
+    $category_id = mysqli_real_escape_string($conn, $_POST['category_id']);
+    
+    // Check if this category is already associated with the farm
+    $check_existing = "SELECT * FROM tbl_fc 
+                      WHERE farm_id = $farm_id 
+                      AND category_id = $category_id";
+    $existing_result = mysqli_query($conn, $check_existing);
+    
+    if(mysqli_num_rows($existing_result) > 0) {
+        echo "<script>alert('This category is already added to your farm!');</script>";
+        echo "<script>window.location.href='about.php';</script>";
+        exit();
+    } else {
+        // Link the category to the farm
+        $insert_fc = "INSERT INTO tbl_fc (farm_id, category_id) 
+                     VALUES ($farm_id, $category_id)";
+        
+        if(mysqli_query($conn, $insert_fc)) {
+            echo "<script>alert('Category added to farm successfully!');</script>";
+            echo "<script>window.location.href='about.php';</script>";
+            exit();
+        } else {
+            echo "<script>alert('Error adding category: " . mysqli_error($conn) . "');</script>";
+        }
+    }
+}
+
 ?>
 
 <!DOCTYPE html>
@@ -143,18 +183,50 @@ if(isset($_POST['delete_category'])) {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="stylesheet" href="farm.css">
     <style>
+        :root {
+            --primary: #1a4d2e;
+            --primary-light: #2d6a4f;
+            --primary-dark: #0c3820;
+            --primary-transparent: rgba(26, 77, 46, 0.05);
+            --secondary: #f59e0b;
+            --accent: #0ea5e9;
+            --success: #10b981;
+            --danger: #dc2626;
+            --light: #f3f4f6;
+            --dark: #1f2937;
+            --gray: #6b7280;
+            --gray-light: #e5e7eb;
+            --white: #ffffff;
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+            --shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --radius-sm: 4px;
+            --radius: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --transition: all 0.3s ease;
+        }
+
         .image-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 20px;
-            padding: 20px;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 24px;
+            padding: 24px;
         }
 
         .image-card {
-            background: white;
-            border-radius: 8px;
+            background: var(--white);
+            border-radius: var(--radius-md);
             overflow: hidden;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: var(--shadow-md);
+            transition: var(--transition);
+            border: 1px solid var(--gray-light);
+        }
+
+        .image-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
         }
 
         .image-container {
@@ -172,84 +244,122 @@ if(isset($_POST['delete_category'])) {
         }
 
         .image-actions {
-            padding: 10px;
+            padding: 12px;
             display: flex;
             justify-content: flex-end;
         }
 
         .delete-btn {
-            background: #dc2626;
-            color: white;
+            background: linear-gradient(to right, var(--danger), #ef4444);
+            color: var(--white);
             border: none;
-            padding: 5px 10px;
-            border-radius: 4px;
+            padding: 8px 16px;
+            border-radius: var(--radius-sm);
             cursor: pointer;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: var(--transition);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .delete-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
         }
 
         .upload-container {
-            background: white;
-            border-radius: 8px;
-            padding: 20px;
-            margin: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            background: var(--white);
+            border-radius: var(--radius-md);
+            padding: 24px;
+            margin: 24px;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--gray-light);
         }
 
         .upload-form {
             display: flex;
-            gap: 10px;
+            gap: 12px;
             align-items: center;
         }
 
         .file-input {
             flex: 1;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
+            padding: 12px;
+            border: 1px solid var(--gray-light);
+            border-radius: var(--radius-sm);
+            transition: var(--transition);
+        }
+
+        .file-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(26, 77, 46, 0.2);
+            outline: none;
         }
 
         .upload-btn {
-            background: #1a4d2e;
-            color: white;
+            background: linear-gradient(to right, var(--primary), var(--primary-light));
+            color: var(--white);
             border: none;
-            padding: 8px 16px;
-            border-radius: 4px;
+            padding: 12px 20px;
+            border-radius: var(--radius-sm);
             cursor: pointer;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: var(--transition);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .upload-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .upload-btn:disabled {
+            background: var(--gray);
+            cursor: not-allowed;
         }
 
         .inactive-message {
             text-align: center;
-            padding: 40px;
-            color: #666;
+            padding: 48px;
+            color: var(--gray);
+            background: var(--white);
+            border-radius: var(--radius-md);
+            margin: 24px;
+            box-shadow: var(--shadow-md);
         }
 
-        .upload-container {
-            background: white;
-            border-radius: 8px;
-            padding: 20px;
-            margin: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .upload-form {
-            width: 100%;
+        .inactive-message h2 {
+            color: var(--primary);
+            margin-bottom: 16px;
+            font-size: 1.5rem;
         }
 
         .upload-section {
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 16px;
         }
 
         .preview-container {
             width: 200px;
             height: 200px;
-            border: 2px dashed #ddd;
-            border-radius: 8px;
+            border: 2px dashed var(--gray-light);
+            border-radius: var(--radius);
             overflow: hidden;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
+            transition: var(--transition);
+        }
+
+        .preview-container:hover {
+            border-color: var(--primary-light);
         }
 
         #imagePreview {
@@ -261,110 +371,128 @@ if(isset($_POST['delete_category'])) {
         .input-container {
             display: flex;
             flex-direction: column;
-            gap: 5px;
-        }
-
-        .file-input {
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            width: 100%;
+            gap: 6px;
         }
 
         .error-message {
-            color: #dc2626;
+            color: var(--danger);
             font-size: 0.875rem;
-            margin-top: 5px;
+            margin-top: 6px;
         }
 
-        .upload-btn {
-            background: #1a4d2e;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 4px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            transition: background-color 0.3s;
-        }
-
-        .upload-btn:hover:not(:disabled) {
-            background: #2d6a4f;
-        }
-
-        .upload-btn:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-        }
-
-        /* Responsive styles */
-        @media (max-width: 768px) {
-            .preview-container {
-                width: 150px;
-                height: 150px;
-            }
-        }
-
+        /* Farm details section */
         .farm-details {
-            background: white;
-            border-radius: 8px;
-            padding: 20px;
-            margin: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            background: var(--white);
+            border-radius: var(--radius-md);
+            padding: 32px;
+            margin: 24px;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--gray-light);
         }
 
         .details-section {
-            margin-bottom: 30px;
+            margin-bottom: 36px;
         }
 
         .details-section h2 {
-            color: #1a4d2e;
-            margin-bottom: 15px;
-            border-bottom: 2px solid #1a4d2e;
-            padding-bottom: 10px;
+            color: var(--primary-dark);
+            margin-bottom: 20px;
+            position: relative;
+            padding-bottom: 12px;
+            font-size: 1.5rem;
+            font-weight: 600;
         }
 
+        .details-section h2::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 50px;
+            height: 3px;
+            background: var(--primary);
+            border-radius: 3px;
+        }
+
+        .details-section p {
+            color: var(--dark);
+            line-height: 1.6;
+        }
+
+        .details-section p strong {
+            color: var(--primary-dark);
+        }
+
+        /* Category grid styles */
         .category-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 15px;
-            margin-top: 20px;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            margin-top: 24px;
         }
 
         .category-card {
-            background: #f8f9fa;
-            border-radius: 6px;
-            padding: 15px;
+            background: var(--white);
+            border-radius: var(--radius);
+            padding: 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--gray-light);
+            transition: var(--transition);
+        }
+
+        .category-card:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-md);
+            border-color: var(--primary-light);
         }
 
         .category-info h3 {
             margin: 0;
-            color: #1a4d2e;
+            color: var(--primary-dark);
+            font-size: 1.1rem;
         }
 
         .category-info p {
-            margin: 5px 0 0;
-            color: #666;
-            font-size: 0.9em;
+            margin: 6px 0 0;
+            color: var(--gray);
+            font-size: 0.9rem;
         }
 
         .add-category-form {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 6px;
-            margin-top: 20px;
+            background: var(--white);
+            padding: 24px;
+            border-radius: var(--radius);
+            margin-top: 24px;
+            border: 1px solid var(--gray-light);
+            box-shadow: var(--shadow);
+        }
+
+        .add-category-form h3 {
+            color: var(--primary-dark);
+            margin-bottom: 16px;
+            font-size: 1.2rem;
+            position: relative;
+            display: inline-block;
+        }
+
+        .add-category-form h3::after {
+            content: '';
+            position: absolute;
+            bottom: -6px;
+            left: 0;
+            width: 40px;
+            height: 2px;
+            background: var(--primary);
+            border-radius: 2px;
         }
 
         .form-row {
             display: flex;
-            gap: 15px;
-            margin-bottom: 15px;
+            gap: 16px;
+            margin-bottom: 20px;
         }
 
         .form-group {
@@ -373,34 +501,163 @@ if(isset($_POST['delete_category'])) {
 
         .form-group label {
             display: block;
-            margin-bottom: 5px;
-            color: #333;
+            margin-bottom: 8px;
+            color: var(--dark);
+            font-weight: 500;
         }
 
-        .form-group input {
+        .form-group input, .form-group select {
             width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
+            padding: 12px;
+            border: 1px solid var(--gray-light);
+            border-radius: var(--radius-sm);
+            transition: var(--transition);
+            font-size: 0.95rem;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(26, 77, 46, 0.2);
+            outline: none;
+        }
+
+        .form-group select {
+            appearance: none;
+            background-image: url('data:image/svg+xml;charset=US-ASCII,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="none" d="M0 0h24v24H0z"/><path d="M12 15l-4.243-4.243 1.415-1.414L12 12.172l2.828-2.829 1.415 1.414z" fill="rgba(107,114,128,1)"/></svg>');
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 20px;
+            padding-right: 40px;
         }
 
         .add-category-btn {
-            background: #1a4d2e;
-            color: white;
+            background: linear-gradient(to right, var(--primary), var(--primary-light));
+            color: var(--white);
             border: none;
-            padding: 10px 20px;
-            border-radius: 4px;
+            padding: 12px 20px;
+            border-radius: var(--radius-sm);
             cursor: pointer;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: var(--transition);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .add-category-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
         }
 
         .delete-category-btn {
-            background: #dc2626;
-            color: white;
+            background: linear-gradient(to right, var(--danger), #ef4444);
+            color: var(--white);
             border: none;
-            padding: 5px 10px;
-            border-radius: 4px;
+            padding: 8px 12px;
+            border-radius: var(--radius-sm);
             cursor: pointer;
-            font-size: 0.9em;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            transition: var(--transition);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .delete-category-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                flex-direction: column;
+                gap: 12px;
+            }
+            
+            .category-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .farm-details {
+                padding: 20px;
+                margin: 16px;
+            }
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .category-card {
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+
+        .category-card:nth-child(2) { animation-delay: 0.05s; }
+        .category-card:nth-child(3) { animation-delay: 0.1s; }
+        .category-card:nth-child(4) { animation-delay: 0.15s; }
+        .category-card:nth-child(5) { animation-delay: 0.2s; }
+
+        .select-wrapper {
+            position: relative;
+        }
+
+        .select-wrapper::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            right: 15px;
+            transform: translateY(-50%);
+            width: 0;
+            height: 0;
+            border-left: 5px solid transparent;
+            border-right: 5px solid transparent;
+            border-top: 6px solid var(--gray);
+            pointer-events: none;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 30px 20px;
+            background-color: var(--light);
+            border-radius: var(--radius);
+            margin-top: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Additional select styling */
+        select.form-control {
+            width: 100%;
+            padding: 14px 15px;
+            border: 1px solid var(--gray-light);
+            border-radius: var(--radius);
+            appearance: none;
+            background-color: var(--white);
+            font-size: 1rem;
+            color: var(--dark);
+            box-shadow: var(--shadow-sm);
+            transition: var(--transition);
+        }
+        
+        select.form-control:focus {
+            border-color: var(--primary-light);
+            box-shadow: 0 0 0 3px rgba(26, 77, 46, 0.2);
+            outline: none;
+        }
+        
+        select.form-control:hover {
+            border-color: var(--primary-light);
         }
     </style>
     <script>
@@ -493,24 +750,33 @@ if(isset($_POST['delete_category'])) {
                     </div>
 
                     <div class="add-category-form">
-                        <h3>Add New Category</h3>
-                        <form method="POST">
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="category">Main Category*</label>
-                                    <input type="text" id="category" name="category" required 
-                                           placeholder="e.g., Vegetables, Fruits">
+                        <h3 style="margin-top: 30px;">Add New Category</h3>
+                        
+                        <?php if(mysqli_num_rows($available_categories) > 0): ?>
+                            <form method="POST">
+                                <div class="form-group" style="margin-bottom: 20px;">
+                                    <label for="existing_category">Available Categories</label>
+                                    <div class="select-wrapper">
+                                        <select id="existing_category" name="category_id" required class="form-control">
+                                            <option value="">-- Select a Category --</option>
+                                            <?php while($cat = mysqli_fetch_assoc($available_categories)): ?>
+                                                <option value="<?php echo $cat['category_id']; ?>">
+                                                    <?php echo htmlspecialchars($cat['category'] . ' - ' . $cat['sub']); ?>
+                                                </option>
+                                            <?php endwhile; ?>
+                                        </select>
+                                    </div>
                                 </div>
-                                <div class="form-group">
-                                    <label for="sub_category">Sub Category*</label>
-                                    <input type="text" id="sub_category" name="sub_category" required 
-                                           placeholder="e.g., Organic Vegetables">
-                                </div>
+                                <button type="submit" name="add_existing_category" class="add-category-btn">
+                                    <i class="fas fa-plus"></i> Add Selected Category
+                                </button>
+                            </form>
+                        <?php else: ?>
+                            <div class="empty-state">
+                                <i class="fas fa-list-ul" style="font-size: 2.5rem; color: var(--gray-light); margin-bottom: 1rem;"></i>
+                                <p style="color: var(--gray); font-style: italic;">No more categories available to add.</p>
                             </div>
-                            <button type="submit" name="add_category" class="add-category-btn">
-                                <i class="fas fa-plus"></i> Add Category
-                            </button>
-                        </form>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>

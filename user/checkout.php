@@ -363,8 +363,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['razorpay_payment_id']
             font-family: 'Segoe UI', Arial, sans-serif;
         }
 
+        :root {
+            --primary-color: #1a4d2e;
+            --primary-hover: #2d6a4f;
+            --light-green: #e8f5e9;
+            --border-color: #ddd;
+            --error-color: #ef4444;
+            --error-bg: #fee2e2;
+            --success-color: #22c55e;
+            --success-bg: #dcfce7;
+            --bg-color: #f0f2f5;
+            --text-color: #333;
+            --secondary-text: #6b7280;
+            --border-radius: 12px;
+            --box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
         body {
-            background-color: #f0f2f5;
+            background-color: var(--bg-color);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
@@ -375,39 +391,105 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['razorpay_payment_id']
             margin: 40px auto;
             padding: 30px;
             background: white;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
         }
 
         .checkout-header {
             margin-bottom: 30px;
             padding-bottom: 20px;
             border-bottom: 1px solid #eee;
+            text-align: center;
         }
 
         .checkout-header h1 {
-            color: #1a4d2e;
-            font-size: 24px;
+            color: var(--primary-color);
+            font-size: 28px;
+            position: relative;
+            display: inline-block;
+        }
+
+        .checkout-header h1:after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 3px;
+            background-color: var(--primary-color);
+            border-radius: 3px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .form-group.full-width {
+            grid-column: span 2;
         }
 
         .form-group {
             margin-bottom: 20px;
+            animation: slideIn 0.3s ease;
+            animation-fill-mode: both;
+            position: relative;
         }
 
         .form-group label {
             display: block;
             margin-bottom: 8px;
-            color: #333;
+            color: var(--text-color);
             font-weight: 500;
         }
 
         .form-group input,
         .form-group textarea {
             width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
+            padding: 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
             font-size: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(26, 77, 46, 0.1);
+            outline: none;
+        }
+
+        .form-group input.valid {
+            border-color: var(--success-color);
+            background-color: rgba(220, 252, 231, 0.2);
+        }
+
+        .form-group input.invalid {
+            border-color: var(--error-color);
+            background-color: rgba(254, 226, 226, 0.2);
+        }
+
+        .validation-message {
+            font-size: 0.85rem;
+            margin-top: 5px;
+            border-radius: 4px;
+            padding: 5px 10px;
+            display: none;
+        }
+
+        .error-message-field {
+            color: var(--error-color);
+            background-color: var(--error-bg);
+            display: none;
+        }
+
+        .success-message-field {
+            color: var(--success-color);
+            background-color: var(--success-bg);
+            display: none;
         }
 
         .form-group textarea {
@@ -417,18 +499,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['razorpay_payment_id']
 
         .order-summary {
             background: white;
-            border-radius: 12px;
+            border-radius: var(--border-radius);
             padding: 25px;
             margin: 30px 0;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            box-shadow: var(--box-shadow);
         }
 
         .summary-title {
-            color: #1a4d2e;
+            color: var(--primary-color);
             font-size: 1.5rem;
             margin-bottom: 20px;
             padding-bottom: 10px;
             border-bottom: 2px solid #e5e7eb;
+            position: relative;
+        }
+
+        .summary-title:after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 80px;
+            height: 2px;
+            background-color: var(--primary-color);
         }
 
         .summary-items {
@@ -445,25 +538,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['razorpay_payment_id']
             background: #f8f9fa;
             border-radius: 8px;
             transition: all 0.3s ease;
+            border-left: 3px solid var(--primary-color);
         }
 
         .summary-item:hover {
-            background: #f0f2f5;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
         }
 
         .item-details h3 {
-            color: #1a4d2e;
+            color: var(--primary-color);
             font-size: 1.1rem;
             margin-bottom: 5px;
         }
 
         .item-quantity {
-            color: #6b7280;
+            color: var(--secondary-text);
             font-size: 0.9rem;
         }
 
         .item-price p {
-            color: #1a4d2e;
+            color: var(--primary-color);
             font-weight: 600;
             font-size: 1.1rem;
         }
@@ -478,10 +573,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['razorpay_payment_id']
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 10px 15px;
-            background: #1a4d2e;
+            padding: 15px;
+            background: var(--primary-color);
             color: white;
             border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(26, 77, 46, 0.2);
         }
 
         .total-amount h3 {
@@ -489,178 +585,123 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['razorpay_payment_id']
         }
 
         .total-amount p {
-            font-size: 1.3rem;
+            font-size: 1.4rem;
             font-weight: 600;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
         }
 
         .empty-cart {
             text-align: center;
-            color: #6b7280;
-            padding: 20px;
+            color: var(--secondary-text);
+            padding: 30px 20px;
+            font-size: 1.1rem;
         }
 
         .submit-btn {
-            background-color: #1a4d2e;
+            background-color: var(--primary-color);
             color: white;
-            padding: 15px 30px;
+            padding: 16px 30px;
             border: none;
-            border-radius: 6px;
+            border-radius: 8px;
             font-size: 16px;
+            font-weight: 600;
             cursor: pointer;
             width: 100%;
-            transition: background-color 0.3s;
+            transition: all 0.3s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 6px rgba(26, 77, 46, 0.2);
         }
 
         .submit-btn:hover {
-            background-color: #2d6a4f;
+            background-color: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(26, 77, 46, 0.25);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(26, 77, 46, 0.2);
         }
 
         .payment-info {
-            background: #e8f5e9;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
+            background: var(--light-green);
+            padding: 25px;
+            border-radius: var(--border-radius);
+            margin-bottom: 30px;
+            box-shadow: var(--box-shadow);
         }
 
         .payment-info h3 {
-            color: #1a4d2e;
-            margin-bottom: 15px;
-            font-size: 1.1rem;
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            font-size: 1.2rem;
+            position: relative;
+            padding-bottom: 10px;
+        }
+
+        .payment-info h3:after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 50px;
+            height: 2px;
+            background-color: var(--primary-color);
         }
 
         .payment-methods {
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 15px;
         }
 
         .payment-option {
             display: flex;
             align-items: center;
-            gap: 10px;
-            padding: 10px;
+            gap: 15px;
+            padding: 15px;
             background: white;
-            border-radius: 6px;
+            border-radius: 8px;
             transition: all 0.3s ease;
+            border: 2px solid transparent;
         }
 
         .payment-option:hover {
             background: #f0f2f5;
+            transform: translateY(-2px);
+            border-color: var(--primary-color);
         }
 
         .payment-option input[type="radio"] {
-            accent-color: #1a4d2e;
+            accent-color: var(--primary-color);
+            width: 20px;
+            height: 20px;
         }
 
         .payment-option label {
             display: flex;
             align-items: center;
-            gap: 8px;
-            color: #1a4d2e;
+            gap: 10px;
+            color: var(--text-color);
             font-weight: 500;
             cursor: pointer;
+            font-size: 1.05rem;
+            width: 100%;
         }
 
         .payment-option i {
-            font-size: 1.1rem;
-            color: #1a4d2e;
+            font-size: 1.3rem;
+            color: var(--primary-color);
         }
 
-        @media (max-width: 768px) {
-            .payment-info {
-                padding: 15px;
-            }
-
-            .payment-option label {
-                font-size: 0.9rem;
-            }
-        }
-
-        /* Additional styles - will complement existing ones */
-        
-        /* Enhanced Form Fields */
-        input[type="text"],
-        input[type="tel"],
-        textarea {
-            transition: all 0.3s ease;
-            border: 1px solid #ddd;
-        }
-
-        input[type="text"]:focus,
-        input[type="tel"]:focus,
-        textarea:focus {
-            border-color: #1a4d2e;
-            box-shadow: 0 0 0 2px rgba(26, 77, 46, 0.1);
-            outline: none;
-        }
-
-        /* Error Message Styling */
-        .error-message {
-            background-color: #fee2e2;
-            border-left: 4px solid #ef4444;
-            padding: 12px 20px;
-            margin: 10px 0;
-            border-radius: 4px;
-            animation: slideIn 0.3s ease;
-        }
-
-        /* Success Message Styling */
-        .success-message {
-            background-color: #dcfce7;
-            border-left: 4px solid #22c55e;
-            padding: 12px 20px;
-            margin: 10px 0;
-            border-radius: 4px;
-            animation: slideIn 0.3s ease;
-        }
-
-        /* Enhanced Button Styles */
-        .place_order {
-            background: #1a4d2e;
-            color: white;
-            padding: 12px 25px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 1.1rem;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .place_order:hover {
-            background: #2d6a4f;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(45, 106, 79, 0.2);
-        }
-
-        /* Loading State */
-        .place_order.loading {
-            opacity: 0.8;
-            cursor: wait;
-        }
-
-        /* Responsive Enhancements */
-        @media (max-width: 768px) {
-            input[type="text"],
-            input[type="tel"],
-            textarea {
-                font-size: 16px; /* Prevents zoom on mobile */
-            }
-
-            .place_order {
-                width: 100%; /* Full width on mobile */
-                justify-content: center;
-            }
-        }
-
-        /* Animations */
+        /* Enhanced animations */
         @keyframes slideIn {
             from {
                 opacity: 0;
-                transform: translateY(-10px);
+                transform: translateY(-15px);
             }
             to {
                 opacity: 1;
@@ -674,82 +715,86 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['razorpay_payment_id']
         }
 
         /* Form Field Animations */
-        .form-group {
-            animation: slideIn 0.3s ease;
-            animation-fill-mode: both;
-        }
-
         .form-group:nth-child(1) { animation-delay: 0.1s; }
-        .form-group:nth-child(2) { animation-delay: 0.2s; }
-        .form-group:nth-child(3) { animation-delay: 0.3s; }
-        .form-group:nth-child(4) { animation-delay: 0.4s; }
-        .form-group:nth-child(5) { animation-delay: 0.5s; }
-
-        /* Hover Effects */
-        input[type="text"]:hover,
-        input[type="tel"]:hover,
-        textarea:hover {
-            border-color: #2d6a4f;
-        }
-
-        /* Accessibility Improvements */
-        .place_order:focus {
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(26, 77, 46, 0.3);
-        }
+        .form-group:nth-child(2) { animation-delay: 0.15s; }
+        .form-group:nth-child(3) { animation-delay: 0.2s; }
+        .form-group:nth-child(4) { animation-delay: 0.25s; }
+        .form-group:nth-child(5) { animation-delay: 0.3s; }
 
         /* Required Field Indicator */
         .required::after {
             content: '*';
-            color: #ef4444;
+            color: var(--error-color);
             margin-left: 4px;
-        }
-
-        /* Form Field Status */
-        .field-success {
-            border-color: #22c55e !important;
-        }
-
-        .field-error {
-            border-color: #ef4444 !important;
-        }
-
-        /* Helper Text */
-        .helper-text {
-            font-size: 0.875rem;
-            color: #6b7280;
-            margin-top: 4px;
-        }
-
-        /* Total Amount Highlight */
-        .total-amount {
-            font-size: 1.25rem;
-            color: #1a4d2e;
-            font-weight: 600;
-            padding: 15px;
-            background: #f0fdf4;
-            border-radius: 8px;
-            margin: 20px 0;
-            text-align: right;
         }
 
         /* Responsive styles */
         @media (max-width: 768px) {
-            .order-summary {
-                padding: 15px;
+            .checkout-container {
+                padding: 20px;
+                margin: 20px 10px;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-group.full-width {
+                grid-column: span 1;
+            }
+
+            .payment-info {
+            padding: 15px;
+            }
+
+            .payment-option label {
+                font-size: 0.95rem;
             }
 
             .summary-item {
                 flex-direction: column;
                 text-align: center;
                 gap: 10px;
+                align-items: flex-start;
             }
 
             .total-amount {
                 flex-direction: column;
                 gap: 5px;
                 text-align: center;
+                padding: 15px 10px;
             }
+        }
+
+        /* Improved debug section */
+        .debug-section {
+            background-color: #fef3c7; 
+            border-left: 4px solid #d97706; 
+            padding: 20px; 
+            margin: 20px auto;
+            max-width: 800px; 
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .debug-section h3 {
+            margin-top: 0;
+            color: #92400e;
+            font-size: 1.2rem;
+            border-bottom: 1px solid #fcd34d;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+
+        .debug-section pre {
+            white-space: pre-wrap;
+            overflow-x: auto;
+            background: #fffbeb;
+            padding: 10px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 0.9rem;
+            color: #78350f;
         }
     </style>
 </head>
@@ -814,11 +859,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['razorpay_payment_id']
         <form method="POST" id="checkout-form">
             <input type="hidden" name="total_amount" value="<?php echo $totalCartPrice; ?>">
             
+            <div class="form-grid">
             <div class="form-group">
                 <label for="house_name" class="required">House Name</label>
                 <input type="text" id="house_name" name="house_name" required 
                     placeholder="Enter your house name"
                     autocomplete="address-line1">
+                    <div class="validation-message error-message-field" id="house_name_error"></div>
             </div>
 
             <div class="form-group">
@@ -826,6 +873,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['razorpay_payment_id']
                 <input type="text" id="post_office" name="post_office" required 
                     placeholder="Enter your post office"
                     autocomplete="address-line2">
+                    <div class="validation-message error-message-field" id="post_office_error"></div>
             </div>
 
             <div class="form-group">
@@ -833,6 +881,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['razorpay_payment_id']
                 <input type="text" id="place" name="place" required 
                     placeholder="Enter your place"
                     autocomplete="address-level2">
+                    <div class="validation-message error-message-field" id="place_error"></div>
             </div>
 
             <div class="form-group">
@@ -842,6 +891,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['razorpay_payment_id']
                     pattern="[0-9]{6}" 
                     title="Please enter a valid 6-digit PIN code"
                     autocomplete="postal-code">
+                    <div class="validation-message error-message-field" id="pin_error"></div>
+                    <div class="validation-message success-message-field" id="pin_success"></div>
             </div>
 
             <div class="form-group">
@@ -851,88 +902,293 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['razorpay_payment_id']
                     pattern="[0-9]{10}" 
                     title="Please enter a valid 10-digit phone number"
                     autocomplete="tel">
+                    <div class="validation-message error-message-field" id="phone_error"></div>
             </div>
 
-            <button type="submit" class="submit-btn" name="place_order">Place Order</button>
+                <div class="form-group full-width">
+                    <button type="submit" class="submit-btn" name="place_order">
+                        <i class="fas fa-shopping-bag"></i> Place Order
+                    </button>
+                </div>
+            </div>
         </form>
     </div>
 
     <!-- Add Razorpay script -->
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <script>
-    document.getElementById('checkout-form').addEventListener('submit', function(e) {
-        const paymentMethod = document.querySelector('input[name="payment_method"]:checked').value;
-        console.log('Form submitted with payment method:', paymentMethod);
+    // Fetch valid PINs from JSON file
+    let validPincodes = [];
+    fetch('../sign up/pincode.json')
+        .then(response => response.json())
+        .then(data => {
+            validPincodes = data.pincodes;
+            console.log('Loaded', validPincodes.length, 'valid pincodes');
+        })
+        .catch(error => console.error('Error loading pincodes:', error));
+
+    // Form validation functions
+    document.addEventListener('DOMContentLoaded', function() {
+        const formFields = {
+            house_name: document.getElementById('house_name'),
+            post_office: document.getElementById('post_office'),
+            place: document.getElementById('place'),
+            pin: document.getElementById('pin'),
+            phone: document.getElementById('phone')
+        };
         
-        if (paymentMethod === 'cod') {
-            // For Cash on Delivery, let the form submit normally
-            console.log('COD selected - allowing normal form submission');
-            document.getElementById('checkout-form').setAttribute('action', '');
-            return true;
-        } else {
-            // For Razorpay, prevent the default form submission
-            e.preventDefault();
-            console.log('Razorpay selected - handling through AJAX');
+        // Validate PIN code against JSON data
+        function validatePincode(pin) {
+            pin = parseInt(pin);
+            if (isNaN(pin)) return false;
+            return validPincodes.includes(pin);
+        }
+        
+        // Function to show validation error
+        function showError(fieldId, message) {
+            const errorElement = document.getElementById(`${fieldId}_error`);
+            const field = document.getElementById(fieldId);
             
-            // Show loading state on button
-            const btn = document.querySelector('.submit-btn');
-            if (btn) {
-                btn.textContent = 'Processing...';
-                btn.disabled = true;
+            if (errorElement) {
+                errorElement.textContent = message;
+                errorElement.style.display = 'block';
             }
             
-            // Get form data
-            const formData = new FormData(this);
+            if (field) {
+                field.classList.add('invalid');
+                field.classList.remove('valid');
+            }
+        }
+        
+        // Function to show validation success
+        function showSuccess(fieldId, message) {
+            const successElement = document.getElementById(`${fieldId}_success`);
+            const errorElement = document.getElementById(`${fieldId}_error`);
+            const field = document.getElementById(fieldId);
             
-            // Send AJAX request
-            fetch(window.location.href, {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log('Razorpay data received:', data);
+            if (successElement) {
+                successElement.textContent = message;
+                successElement.style.display = 'block';
+            }
+            
+            if (errorElement) {
+                errorElement.style.display = 'none';
+            }
+            
+            if (field) {
+                field.classList.add('valid');
+                field.classList.remove('invalid');
+            }
+        }
+        
+        // Function to hide validation messages
+        function hideValidation(fieldId) {
+            const errorElement = document.getElementById(`${fieldId}_error`);
+            const successElement = document.getElementById(`${fieldId}_success`);
+            const field = document.getElementById(fieldId);
+            
+            if (errorElement) errorElement.style.display = 'none';
+            if (successElement) successElement.style.display = 'none';
+            if (field) {
+                field.classList.remove('valid');
+                field.classList.remove('invalid');
+            }
+        }
+        
+        // PIN code validation
+        if (formFields.pin) {
+            formFields.pin.addEventListener('input', function() {
+                const pin = this.value.trim();
+                hideValidation('pin');
                 
-                const options = {
-                    key: data.key,
-                    amount: data.amount,
-                    currency: data.currency,
-                    name: data.name,
-                    description: data.description,
-                    order_id: data.order_id,
-                    prefill: data.prefill,
-                    handler: function(response) {
-                        // Payment successful
-                        document.getElementById('razorpay_payment_id').value = response.razorpay_payment_id;
-                        document.getElementById('razorpay_order_id').value = response.razorpay_order_id;
-                        document.getElementById('razorpay_signature').value = response.razorpay_signature;
-                        
-                        // Submit the payment form
-                        document.getElementById('payment-form').submit();
+                if (pin.length === 6) {
+                    if (validatePincode(pin)) {
+                        showSuccess('pin', 'Valid PIN code. Delivery available!');
+                    } else {
+                        showError('pin', 'Sorry, delivery is not available for this PIN code');
                     }
-                };
-                
-                const rzp = new Razorpay(options);
-                rzp.open();
-                
-                // Reset button state if user closes the Razorpay popup
-                rzp.on('payment.failed', function(response){
-                    alert('Payment failed: ' + response.error.description);
-                    if (btn) {
-                        btn.textContent = 'Place Order';
-                        btn.disabled = false;
-                    }
-                });
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Error processing payment. Please try again.');
-                if (btn) {
-                    btn.textContent = 'Place Order';
-                    btn.disabled = false;
+                } else if (pin.length > 0) {
+                    showError('pin', 'PIN code must be 6 digits');
+                }
+            });
+            
+            // Validate on blur
+            formFields.pin.addEventListener('blur', function() {
+                const pin = this.value.trim();
+                if (pin.length === 0) {
+                    showError('pin', 'PIN code is required');
+                } else if (pin.length !== 6) {
+                    showError('pin', 'PIN code must be 6 digits');
+                } else if (!validatePincode(pin)) {
+                    showError('pin', 'Sorry, delivery is not available for this PIN code');
                 }
             });
         }
+        
+        // Phone validation
+        if (formFields.phone) {
+            formFields.phone.addEventListener('input', function() {
+                const phone = this.value.trim();
+                hideValidation('phone');
+                
+                if (phone.length > 0 && !/^\d+$/.test(phone)) {
+                    showError('phone', 'Phone number must contain only digits');
+                } else if (phone.length === 10) {
+                    this.classList.add('valid');
+                } else if (phone.length > 0) {
+                    showError('phone', 'Phone number must be 10 digits');
+                }
+            });
+            
+            // Validate on blur
+            formFields.phone.addEventListener('blur', function() {
+                const phone = this.value.trim();
+                if (phone.length === 0) {
+                    showError('phone', 'Phone number is required');
+                } else if (phone.length !== 10) {
+                    showError('phone', 'Phone number must be 10 digits');
+                } else if (!/^\d+$/.test(phone)) {
+                    showError('phone', 'Phone number must contain only digits');
+                }
+            });
+        }
+        
+        // Text field validations
+        ['house_name', 'post_office', 'place'].forEach(fieldId => {
+            const field = formFields[fieldId];
+            if (field) {
+                field.addEventListener('blur', function() {
+                    const value = this.value.trim();
+                    if (value.length === 0) {
+                        showError(fieldId, 'This field is required');
+                    } else if (value.length < 3) {
+                        showError(fieldId, 'Please enter at least 3 characters');
+                    } else {
+                        hideValidation(fieldId);
+                        this.classList.add('valid');
+                    }
+                });
+                
+                field.addEventListener('input', function() {
+                    if (this.value.trim().length > 0) {
+                        hideValidation(fieldId);
+                    }
+                });
+            }
+        });
+        
+        // Form submission validation
+        document.getElementById('checkout-form').addEventListener('submit', function(e) {
+            let isValid = true;
+            
+            // Validate all required fields
+            Object.keys(formFields).forEach(fieldId => {
+                const field = formFields[fieldId];
+                if (field && field.required && field.value.trim() === '') {
+                    showError(fieldId, 'This field is required');
+                    isValid = false;
+                }
+            });
+            
+            // Special validation for PIN
+            if (formFields.pin && formFields.pin.value.trim() !== '') {
+                const pin = formFields.pin.value.trim();
+                if (pin.length !== 6) {
+                    showError('pin', 'PIN code must be 6 digits');
+                    isValid = false;
+                } else if (!validatePincode(pin)) {
+                    showError('pin', 'Sorry, delivery is not available for this PIN code');
+                    isValid = false;
+                }
+            }
+            
+            // Special validation for phone
+            if (formFields.phone && formFields.phone.value.trim() !== '') {
+                const phone = formFields.phone.value.trim();
+                if (phone.length !== 10 || !/^\d+$/.test(phone)) {
+                    showError('phone', 'Please enter a valid 10-digit phone number');
+                    isValid = false;
+                }
+            }
+            
+            if (!isValid) {
+        e.preventDefault();
+                return false;
+            }
+        
+        const paymentMethod = document.querySelector('input[name="payment_method"]:checked').value;
+            console.log('Form validation passed. Payment method:', paymentMethod);
+        
+        if (paymentMethod === 'cod') {
+                // For Cash on Delivery, let the form submit normally
+                console.log('COD selected - allowing normal form submission');
+                document.getElementById('checkout-form').setAttribute('action', '');
+                return true;
+            } else {
+                // For Razorpay, prevent the default form submission
+                e.preventDefault();
+                console.log('Razorpay selected - handling through AJAX');
+                
+                // Show loading state on button
+                const btn = document.querySelector('.submit-btn');
+                if (btn) {
+                    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+                    btn.disabled = true;
+                }
+                
+                // Get form data
+            const formData = new FormData(this);
+            
+                // Send AJAX request
+                fetch(window.location.href, {
+                method: 'POST',
+                body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Razorpay data received:', data);
+            
+            const options = {
+                key: data.key,
+                amount: data.amount,
+                currency: data.currency,
+                name: data.name,
+                description: data.description,
+                        order_id: data.order_id,
+                prefill: data.prefill,
+                        handler: function(response) {
+                            // Payment successful
+                            document.getElementById('razorpay_payment_id').value = response.razorpay_payment_id;
+                            document.getElementById('razorpay_order_id').value = response.razorpay_order_id;
+                            document.getElementById('razorpay_signature').value = response.razorpay_signature;
+                            
+                            // Submit the payment form
+                            document.getElementById('payment-form').submit();
+                }
+            };
+            
+            const rzp = new Razorpay(options);
+            rzp.open();
+            
+                    // Reset button state if user closes the Razorpay popup
+                    rzp.on('payment.failed', function(response){
+                        alert('Payment failed: ' + response.error.description);
+                        if (btn) {
+                            btn.innerHTML = '<i class="fas fa-shopping-bag"></i> Place Order';
+                            btn.disabled = false;
+                        }
+                    });
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error processing payment. Please try again.');
+                    if (btn) {
+                        btn.innerHTML = '<i class="fas fa-shopping-bag"></i> Place Order';
+                        btn.disabled = false;
+                    }
+                });
+            }
+        });
     });
 
     // Debug Information 
@@ -956,9 +1212,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['razorpay_payment_id']
 
     <!-- Debugging code - visible only in debug mode -->
     <?php if(isset($_GET['debug'])): ?>
-    <div style="background-color: #fef3c7; border-left: 4px solid #d97706; padding: 15px; margin: 20px auto; max-width: 800px; border-radius: 8px;">
-        <h3 style="margin-top: 0; color: #92400e;">Debug Information</h3>
-        <pre style="white-space: pre-wrap; overflow-x: auto;">
+    <div class="debug-section">
+        <h3>Debug Information</h3>
+        <pre>
 Session: <?php print_r($_SESSION); ?>
 
 POST: <?php print_r($_POST); ?>

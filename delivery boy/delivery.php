@@ -226,13 +226,7 @@ $current_deliveries_result = mysqli_query($conn, $current_deliveries_query);
             font-size: 1.1rem;
         }
 
-        .sidebar.shrink .sidebar-menu span {
-            display: none;
-        }
-
-        .sidebar.shrink .sidebar-menu i {
-            margin-right: 0;
-        }
+        
 
         .active {
             background: rgba(255, 255, 255, 0.15);
@@ -360,129 +354,250 @@ $current_deliveries_result = mysqli_query($conn, $current_deliveries_query);
             margin-bottom: 30px;
             box-shadow: 0 5px 15px rgba(0,0,0,0.05);
         }
-
+        
         .delivery-list h2 {
             margin-bottom: 20px;
             color: #1a4d2e;
             font-weight: 600;
             position: relative;
             padding-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
-
-        .delivery-list h2:after {
+        
+        .delivery-list h2::before {
+            content: '\f0d1';
+            font-family: 'Font Awesome 5 Free';
+            font-weight: 900;
+            font-size: 1.2rem;
+            color: #1a4d2e;
+        }
+        
+        .delivery-list h2::after {
             content: '';
             position: absolute;
             bottom: 0;
             left: 0;
-            width: 40px;
+            width: 50px;
             height: 3px;
             background: linear-gradient(90deg, #1a4d2e, #2d6a4f);
             border-radius: 3px;
         }
 
-        .delivery-item {
+        .delivery-card-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .delivery-card {
+            background: #f9fafb;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            border-top: 4px solid #1a4d2e;
+            position: relative;
+        }
+
+        .delivery-card::after {
+            content: '\f0d1';
+            font-family: 'Font Awesome 5 Free';
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            font-size: 5rem;
+            opacity: 0.05;
+            font-weight: 900;
+            z-index: 0;
+            transition: all 0.3s ease;
+        }
+        
+        .delivery-card:hover::after {
+            opacity: 0.08;
+            transform: scale(1.1);
+        }
+
+        /* Variant icons for different cards */
+        .delivery-card:nth-child(3n+1)::after {
+            content: '\f0d1'; /* truck */
+        }
+        
+        .delivery-card:nth-child(3n+2)::after {
+            content: '\f3c5'; /* map-marker-alt */
+        }
+        
+        .delivery-card:nth-child(3n+3)::after {
+            content: '\f4b8'; /* shipping-fast */
+        }
+
+        .delivery-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+        }
+
+        .delivery-card:nth-child(3n+1) {
+            border-top-color: #1a4d2e;
+        }
+
+        .delivery-card:nth-child(3n+2) {
+            border-top-color: #2563eb;
+        }
+
+        .delivery-card:nth-child(3n+3) {
+            border-top-color: #d97706;
+        }
+
+        .delivery-card:nth-child(3n+1) .card-body p i {
+            color: #1a4d2e;
+        }
+
+        .delivery-card:nth-child(3n+2) .card-body p i {
+            color: #2563eb;
+        }
+
+        .delivery-card:nth-child(3n+3) .card-body p i {
+            color: #d97706;
+        }
+
+        .card-header {
+            padding: 15px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 20px;
-            margin-bottom: 15px;
-            background: #f9fafb;
-            border-radius: 12px;
-            box-shadow: 0 3px 8px rgba(0,0,0,0.03);
-            transition: all 0.3s ease;
-            border-left: 4px solid #1a4d2e;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            background-color: white;
         }
 
-        .delivery-item:hover {
-            background: white;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-            transform: translateY(-3px);
+        .card-title {
+            font-weight: 600;
+            color: #1a4d2e;
+            font-size: 1.1em;
         }
 
-        .delivery-item:last-child {
-            margin-bottom: 0;
-        }
-
-        .delivery-info {
+        .card-body {
+            padding: 15px;
             flex: 1;
+            position: relative;
+            z-index: 1;
         }
 
-        .delivery-meta {
-            display: grid;
-            gap: 10px;
-            margin-top: 10px;
-        }
-
-        .delivery-meta p {
+        .card-body p {
+            margin-bottom: 10px;
             display: flex;
             align-items: center;
             gap: 10px;
             color: #4b5563;
             font-size: 0.95rem;
+            position: relative;
+            z-index: 1;
         }
 
-        .delivery-meta i {
-            width: 16px;
+        .card-body p i {
             color: #1a4d2e;
+            width: 16px;
+            text-align: center;
+        }
+        
+        /* Key information highlight */
+        .card-body p:nth-child(1),  /* Customer name */
+        .card-body p:nth-child(4),  /* Address */
+        .card-body p:nth-child(5) { /* Total amount */
+            font-weight: 500;
         }
 
-        .delivery-actions {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            align-items: flex-end;
-        }
-
+        /* Status badges with enhanced styling */
         .status-badge {
-            padding: 8px 15px;
+            padding: 6px 12px;
             border-radius: 30px;
-            font-size: 0.8em;
+            font-size: 0.75em;
             font-weight: 600;
             letter-spacing: 0.5px;
-            min-width: 100px;
-            text-align: center;
-            box-shadow: 0 3px 6px rgba(0,0,0,0.08);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            min-width: 90px;
+        }
+
+        .status-pending::before,
+        .status-processing::before,
+        .status-shipped::before,
+        .status-delivered::before {
+            font-family: 'Font Awesome 5 Free';
+            font-weight: 900;
+            font-size: 0.9em;
         }
 
         .status-pending {
             background-color: #fee2e2;
             color: #991b1b;
         }
+        .status-pending::before {
+            content: '\f017'; /* clock */
+        }
 
         .status-processing {
             background-color: #fef3c7;
             color: #92400e;
+        }
+        .status-processing::before {
+            content: '\f021'; /* sync */
         }
 
         .status-shipped {
             background-color: #dbeafe;
             color: #1e40af;
         }
+        .status-shipped::before {
+            content: '\f0d1'; /* truck */
+        }
 
         .status-delivered {
             background-color: #dcfce7;
             color: #166534;
         }
+        .status-delivered::before {
+            content: '\f058'; /* check-circle */
+        }
 
-        .action-btn {
-            padding: 10px 18px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 0.9em;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+        .card-date {
+            margin-top: 12px;
+            font-size: 0.9em !important;
+            padding-top: 10px;
+            border-top: 1px dashed rgba(0,0,0,0.1);
+        }
+
+        .card-footer {
+            padding: 15px;
+            border-top: 1px solid rgba(0,0,0,0.05);
+            background-color: white;
             display: flex;
-            align-items: center;
-            gap: 8px;
-            min-width: 140px;
             justify-content: center;
         }
 
-        .action-btn:hover {
+        /* Action buttons inside cards */
+        .delivery-card .action-btn {
+            width: 100%;
+            padding: 12px 15px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+        }
+
+        .delivery-card .action-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 10px rgba(0,0,0,0.15);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
         }
 
         .pickup-btn {
@@ -495,11 +610,17 @@ $current_deliveries_result = mysqli_query($conn, $current_deliveries_query);
             color: white;
         }
 
-        .no-deliveries {
-            padding: 30px;
-            text-align: center;
-            color: #6b7280;
-            font-style: italic;
+        /* Responsive adjustments for cards */
+        @media (max-width: 1200px) {
+            .delivery-card-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .delivery-card-grid {
+                grid-template-columns: 1fr;
+            }
         }
 
         /* Toast Notifications */
@@ -626,6 +747,30 @@ $current_deliveries_result = mysqli_query($conn, $current_deliveries_query);
                 display: none;
             }
         }
+
+        .no-deliveries {
+            padding: 40px 20px;
+            text-align: center;
+            color: #6b7280;
+            background: #f9fafb;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .no-deliveries i {
+            font-size: 3rem;
+            color: #d1d5db;
+            margin-bottom: 10px;
+        }
+
+        .no-deliveries p {
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
     </style>
 </head>
 <body>
@@ -685,48 +830,49 @@ $current_deliveries_result = mysqli_query($conn, $current_deliveries_query);
 
             <div class="delivery-list">
                 <h2>Current Deliveries</h2>
-                <?php 
-                if(mysqli_num_rows($current_deliveries_result) > 0):
-                    while($delivery = mysqli_fetch_assoc($current_deliveries_result)):
-                        $status_class = 'status-' . $delivery['order_status'];
-                ?>
-                    <div class="delivery-item">
-                        <div class="delivery-info">
-                            <div class="delivery-meta">
-                                <p><i class="fas fa-user"></i> <?php echo $delivery['customer_name']; ?></p>
-                                <p><i class="fas fa-phone"></i> <?php echo $delivery['phone_number']; ?></p>
-                                <?php if(isset($delivery['farm_name'])): ?>
-                                    <p><i class="fas fa-store"></i> <?php echo $delivery['farm_name']; ?> 
-                                       (<?php echo $delivery['farm_location']; ?>)</p>
-                                <?php endif; ?>
-                                <p><i class="fas fa-map-marker-alt"></i> <?php echo $delivery['delivery_address']; ?></p>
-                                <p><i class="fas fa-money-bill"></i> Order Amount: ₹<?php echo number_format($delivery['total_amount'], 2); ?></p>
-                                <p><i class="fas fa-hand-holding-usd"></i> Delivery Earnings: ₹<?php echo number_format($delivery['delivery_earnings'], 2); ?></p>
-                                <p><i class="fas fa-clock"></i> <?php echo date('d M Y, h:i A', strtotime($delivery['order_date'])); ?></p>
+                
+                <?php if(mysqli_num_rows($current_deliveries_result) > 0): ?>
+                    <div class="delivery-card-grid">
+                        <?php while($delivery = mysqli_fetch_assoc($current_deliveries_result)): 
+                            $status_class = 'status-' . $delivery['order_status'];
+                        ?>
+                            <div class="delivery-card">
+                                <div class="card-header">
+                                    <span class="card-title">Order #<?php echo $delivery['order_id']; ?></span>
+                                    <span class="status-badge <?php echo $status_class; ?>">
+                                        <?php echo ucfirst($delivery['order_status']); ?>
+                                    </span>
+                                </div>
+                                <div class="card-body">
+                                    <p><i class="fas fa-user"></i> <?php echo $delivery['customer_name']; ?></p>
+                                    <p><i class="fas fa-phone"></i> <?php echo $delivery['phone_number']; ?></p>
+                                    <?php if(isset($delivery['farm_name'])): ?>
+                                        <p><i class="fas fa-store"></i> <?php echo $delivery['farm_name']; ?></p>
+                                    <?php endif; ?>
+                                    <p><i class="fas fa-map-marker-alt"></i> <?php echo $delivery['delivery_address']; ?></p>
+                                    <p><i class="fas fa-money-bill"></i> ₹<?php echo number_format($delivery['total_amount'], 2); ?></p>
+                                    <p><i class="fas fa-hand-holding-usd"></i> ₹<?php echo number_format($delivery['delivery_earnings'], 2); ?></p>
+                                    <p class="card-date"><i class="fas fa-clock"></i> <?php echo date('d M Y, h:i A', strtotime($delivery['order_date'])); ?></p>
+                                </div>
+                                <div class="card-footer">
+                                    <?php if($delivery['order_status'] == 'processing'): ?>
+                                        <button onclick="updateStatus(<?php echo $delivery['order_id']; ?>, 'shipped')" 
+                                                class="action-btn pickup-btn">
+                                            <i class="fas fa-truck"></i> Start Delivery
+                                        </button>
+                                    <?php elseif($delivery['order_status'] == 'shipped'): ?>
+                                        <button onclick="updateStatus(<?php echo $delivery['order_id']; ?>, 'delivered')" 
+                                                class="action-btn complete-btn">
+                                            <i class="fas fa-check-circle"></i> Mark Delivered
+                                        </button>
+                                    <?php endif; ?>
+                                </div>
                             </div>
-                        </div>
-                        <div class="delivery-actions">
-                            <span class="status-badge <?php echo $status_class; ?>">
-                                <?php echo ucfirst($delivery['order_status']); ?>
-                            </span>
-                            <?php if($delivery['order_status'] == 'processing'): ?>
-                                <button onclick="updateStatus(<?php echo $delivery['order_id']; ?>, 'shipped')" 
-                                        class="action-btn pickup-btn">
-                                    <i class="fas fa-truck"></i> Start Delivery
-                                </button>
-                            <?php elseif($delivery['order_status'] == 'shipped'): ?>
-                                <button onclick="updateStatus(<?php echo $delivery['order_id']; ?>, 'delivered')" 
-                                        class="action-btn complete-btn">
-                                    <i class="fas fa-check-circle"></i> Mark Delivered
-                                </button>
-                            <?php endif; ?>
-                        </div>
+                        <?php endwhile; ?>
                     </div>
-                <?php 
-                    endwhile;
-                else:
-                ?>
+                <?php else: ?>
                     <div class="no-deliveries">
+                        <i class="fas fa-exclamation-circle"></i>
                         <p>No current deliveries</p>
                     </div>
                 <?php endif; ?>

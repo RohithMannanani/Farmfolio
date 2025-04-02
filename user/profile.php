@@ -512,7 +512,7 @@ include '../databse/connect.php';
 //     die("Unauthorized access.");
 // }
 
-$userid =36;
+$userid =$_SESSION['userid'];
 $errors = [];
 $data = [];
 
@@ -637,7 +637,7 @@ echo "Error updating profile: " . $query->error;
             <div class="form-group">
                 <label for="pin"><i class="fas fa-map-pin"></i> PIN Code</label>
                 <input type="text" id="pin" name="pin" 
-                    data-pattern="^\d{6}$/"
+                    data-pattern="^\d{6}$"
                     data-error="Please enter a valid 6-digit PIN code"
                     value="<?= htmlspecialchars($_POST['pin'] ?? $user['pin'] ?? '') ?>" required>
                 <div class="error-message"></div>

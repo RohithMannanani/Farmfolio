@@ -81,19 +81,26 @@ if(isset($_POST['submit'])) {
     $category_id = mysqli_real_escape_string($conn, $_POST['productCategory']);
     $unit = mysqli_real_escape_string($conn, $_POST['productUnit']);
 
+    // Validate price server-side
+    if (floatval($price) > 500) {
+        echo "<script>alert('Price is huge! Maximum allowed price is ₹500.');</script>";
+        return;
+    }
+
     // Check if product exists
     if (checkProductExists($conn, $product_name, $category_id, $farm_id)) {
         echo "<script>alert('A product with this name already exists in the selected category!');</script>";
-    } else {
-        $insert_query = "INSERT INTO tbl_products (farm_id, product_name, price, stock, description, category_id, unit) 
-                     VALUES ('$farm_id', '$product_name', '$price', '$stock', '$description', '$category_id', '$unit')";
+        return; // Stop execution
+    } 
+    
+    $insert_query = "INSERT INTO tbl_products (farm_id, product_name, price, stock, description, category_id, unit, status) 
+                VALUES ('$farm_id', '$product_name', '$price', '$stock', '$description', '$category_id', '$unit', '0')";
 
-        if(mysqli_query($conn, $insert_query)) {
-            echo "<script>alert('Product added successfully!');</script>";
-            echo "<script>window.location.href='product.php';</script>";
-        } else {
-            echo "<script>alert('Error adding product: " . mysqli_error($conn) . "');</script>";
-        }
+    if(mysqli_query($conn, $insert_query)) {
+        echo "<script>alert('Product added successfully!');</script>";
+        echo "<script>window.location.href='product.php';</script>";
+    } else {
+        echo "<script>alert('Error adding product: " . mysqli_error($conn) . "');</script>";
     }
 }
 
@@ -107,25 +114,32 @@ if(isset($_POST['edit_submit'])) {
     $category_id = mysqli_real_escape_string($conn, $_POST['productCategory']);
     $unit = mysqli_real_escape_string($conn, $_POST['productUnit']);
 
+    // Validate price server-side
+    if (floatval($price) > 500) {
+        echo "<script>alert('Price is huge! Maximum allowed price is ₹500.');</script>";
+        return;
+    }
+
     // Check if product exists (excluding current product)
     if (checkProductExists($conn, $product_name, $category_id, $farm_id, $product_id)) {
         echo "<script>alert('A product with this name already exists in the selected category!');</script>";
-    } else {
-        $update_query = "UPDATE tbl_products 
-                    SET product_name = '$product_name',
-                        price = '$price',
-                        stock = '$stock',
-                        description = '$description',
-                        category_id = '$category_id',
-                        unit = '$unit'
-                    WHERE product_id = '$product_id' AND farm_id = '$farm_id'";
+        return; // Stop execution
+    }
 
-        if(mysqli_query($conn, $update_query)) {
-            echo "<script>alert('Product updated successfully!');</script>";
-            echo "<script>window.location.href='product.php';</script>";
-        } else {
-            echo "<script>alert('Error updating product: " . mysqli_error($conn) . "');</script>";
-        }
+    $update_query = "UPDATE tbl_products 
+                SET product_name = '$product_name',
+                    price = '$price',
+                    stock = '$stock',
+                    description = '$description',
+                    category_id = '$category_id',
+                    unit = '$unit'
+                WHERE product_id = '$product_id' AND farm_id = '$farm_id'";
+
+    if(mysqli_query($conn, $update_query)) {
+        echo "<script>alert('Product updated successfully!');</script>";
+        echo "<script>window.location.href='product.php';</script>";
+    } else {
+        echo "<script>alert('Error updating product: " . mysqli_error($conn) . "');</script>";
     }
 }
 
@@ -557,7 +571,7 @@ if (isset($_POST['check_product'])) {
 </div>
 <div class="form-group">
     <label for="productPrice">Price (₹)</label>
-    <input type="number" id="productPrice" name="productPrice" step="0.01" required>
+    <input type="number" id="productPrice" name="productPrice" step="0.01" min="0.01" max="500" required>
     <!-- Error message will be inserted here -->
 </div>
 
@@ -672,15 +686,148 @@ $actionButton = $product['status'] == '0'
         }
 
         // Update form submission
-        document.getElementById('productForm').addEventListener('submit', function(e) {
-            // Remove the default e.preventDefault() to allow form submission
-            // Add any additional client-side validation if needed
-        });
+     // Replace the existing productForm submit event listener with this:
+document.getElementById('productForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    if (await validateForm()) {
+        const productId = document.getElementById('product_id').value;
+        const formData = new FormData(this);
+        
+        // Add appropriate submit type
+        if (productId) {
+            formData.append('edit_submit', '1');
+        } else {
+            formData.append('submit', '1');
+        }
+
+        try {
+            const response = await fetch('product.php', {
+                method: 'POST',
+                body: formData
+            });
+            
+            const text = await response.text();
+            // Check if the response contains our success alert
+            if (text.includes('Product added successfully') || text.includes('Product updated successfully')) {
+                closeModal();
+                location.reload();
+            } else {
+                console.error('Unexpected response:', text);
+                alert('An error occurred while saving the product');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('An error occurred: ' + error.message);
+        }
+    }
+});
 
         // Initialize the page
         renderProducts();
 
-     
+        // Function to validate the form
+        async function validateForm() {
+            let isValid = true;
+
+            const productName = document.getElementById("productName");
+            const productDescription = document.getElementById("productDescription");
+            const productPrice = document.getElementById("productPrice");
+            const productStock = document.getElementById("productStock");
+            const productCategory = document.getElementById("productCategory");
+            const productUnit = document.getElementById("productUnit");
+
+            const namePattern = /^[a-zA-Z-_ ]{4,50}$/;
+            const descriptionPattern = /^[a-zA-Z0-9.,'"\-_\s]{10,}$/;
+
+            // Function to show error messages
+            function showError(input, message) {
+                let errorDiv = input.nextElementSibling;
+                
+                // Check if the error message element already exists
+                if (!errorDiv || !errorDiv.classList.contains("error-message")) {
+                    errorDiv = document.createElement("span");
+                    errorDiv.className = "error-message";
+                    errorDiv.style.color = "red";
+                    errorDiv.style.fontSize = "0.9em";
+                    input.parentNode.appendChild(errorDiv);
+                }
+
+                errorDiv.textContent = message; // Set the error message
+                isValid = false; // Mark the form as invalid
+            }
+
+            // Function to clear error messages
+            function clearError(input) {
+                let errorDiv = input.nextElementSibling;
+                if (errorDiv && errorDiv.classList.contains("error-message")) {
+                    errorDiv.textContent = ""; // Clear the error message
+                }
+            }
+
+            // Validate Product Name
+            if (productName.value.trim() === "") {
+                showError(productName, "Product name is required.");
+            } else if (!namePattern.test(productName.value.trim())) {
+                showError(productName, "Name must be 3-50 characters long and contain only letters, numbers, - or _.");
+            } else {
+                clearError(productName);
+            }
+
+            // Validate Description
+            if (productDescription.value.trim() === "") {
+                showError(productDescription, "Description is required.");
+            } else if (!descriptionPattern.test(productDescription.value.trim())) {
+                showError(productDescription, "Description must be at least 10 characters long.");
+            } else {
+                clearError(productDescription);
+            }
+
+            // Validate Price
+            if (productPrice.value.trim() === "" || isNaN(productPrice.value) || productPrice.value <= 0) {
+                showError(productPrice, "Enter a valid price.");
+            } else if (parseFloat(productPrice.value) > 500) {
+                showError(productPrice, "Price is huge!");
+            } else {
+                clearError(productPrice);
+            }
+
+            // Validate Stock
+            if (productStock.value.trim() === "" || isNaN(productStock.value) || productStock.value < 0) {
+                showError(productStock, "Enter a valid stock quantity.");
+            } else {
+                clearError(productStock);
+            }
+
+            // Validate Category
+            if (productCategory.value === "") {
+                showError(productCategory, "Please select a category.");
+            } else {
+                clearError(productCategory);
+            }
+
+            // Validate Unit
+            if (productUnit.value === "") {
+                showError(productUnit, "Please select a unit.");
+            } else {
+                clearError(productUnit);
+            }
+
+            // Check for duplicate product
+            const exists = await checkProductExists(productName.value, productCategory.value, document.getElementById("product_id").value);
+            if (exists) {
+                showError(productName, "A product with this name already exists in the selected category.");
+                isValid = false;
+            }
+
+            // Enable/disable buttons based on form validity
+            submitBtn.disabled = !isValid;
+            editBtn.disabled = !isValid;
+
+            console.log("Form validation completed. Form is valid:", isValid); // Debugging
+            return isValid;
+        }
+
         async function activateProduct(productId) {
             if (confirm("Are you sure you want to activate this product?")) {
                 const response = await fetch(`product.php?activate_product=1&id=${productId}`);
@@ -777,6 +924,8 @@ $actionButton = $product['status'] == '0'
         // Validate Price
         if (productPrice.value.trim() === "" || isNaN(productPrice.value) || productPrice.value <= 0) {
             showError(productPrice, "Enter a valid price.");
+        } else if (parseFloat(productPrice.value) > 500) {
+            showError(productPrice, "Price is huge!");
         } else {
             clearError(productPrice);
         }
@@ -824,14 +973,6 @@ $actionButton = $product['status'] == '0'
 
     form.addEventListener("change", function (e) {
         validateForm();
-    });
-
-    // Update form submission to be async
-    form.addEventListener("submit", async function(e) {
-        e.preventDefault();
-        if (await validateForm()) {
-            this.submit();
-        }
     });
 
     // Initial validation on page load

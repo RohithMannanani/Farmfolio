@@ -38,87 +38,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     if ($stmt->execute()) {
         $success_message = "Profile updated successfully!";
+        
+        // Add JavaScript to reload the page after showing the success message
+        echo "<script>
+            setTimeout(function() {
+                window.location.href = 'profile.php';
+            }, 1500);
+        </script>";
+        $_SESSION['username'] = $username;
     } else {
         $error_message = "Failed to update profile. Please try again.";
     }
 }
 
-// Get today's deliveries count
-$today_query = "SELECT 
-    COUNT(*) as total_deliveries,
-    SUM(CASE WHEN order_status = 'delivered' THEN 1 ELSE 0 END) as completed_deliveries
-FROM tbl_orders 
-WHERE DATE(order_date) = CURDATE()";
-$today_result = mysqli_query($conn, $today_query);
-$today_stats = mysqli_fetch_assoc($today_result);
-
-// Get weekly earnings (assuming there's a delivery charge column or using a percentage of total_amount)
-$earnings_query = "SELECT COALESCE(SUM(total_amount * 0.1), 0) as weekly_earnings
-FROM tbl_orders 
-WHERE order_status = 'delivered'
-AND order_date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)";
-$earnings_result = mysqli_query($conn, $earnings_query);
-$earnings = mysqli_fetch_assoc($earnings_result);
-
-
-
-// Get active orders
-$active_orders_query = "SELECT COUNT(*) as active_count
-FROM tbl_orders 
-WHERE order_status IN ('processing', 'shipped')";
-$active_result = mysqli_query($conn, $active_orders_query);
-$active_orders = mysqli_fetch_assoc($active_result);
-
-// Get current deliveries
-$current_deliveries_query = "SELECT 
-    o.order_id,
-    o.delivery_address,
-    o.order_status,
-    o.total_amount,
-    o.phone_number,
-    o.order_date,
-    o.payment_method,
-    o.payment_status,
-    u.username as customer_name,
-    f.farm_name,
-    f.location as farm_location
-FROM tbl_orders o
-JOIN tbl_signup u ON o.user_id = u.userid
-JOIN tbl_order_items oi ON o.order_id = oi.order_id
-JOIN tbl_products p ON oi.product_id = p.product_id
-JOIN tbl_farms f ON p.farm_id = f.farm_id
-WHERE o.order_status IN ('processing', 'shipped', 'delivered')
-GROUP BY o.order_id
-ORDER BY o.order_date DESC
-LIMIT 5";
-$current_deliveries_result = mysqli_query($conn, $current_deliveries_query);
-
-// Fetch available orders (pending orders)
-$orders_query = "SELECT 
-    o.order_id,
-    o.delivery_address,
-    o.order_status,
-    o.total_amount,
-    o.phone_number,
-    o.order_date,
-    o.payment_method,
-    o.payment_status,
-    u.username as customer_name,
-    GROUP_CONCAT(DISTINCT CONCAT(p.product_name, ' (', oi.quantity, ' ', p.unit, ')')) as order_items,
-    GROUP_CONCAT(DISTINCT f.farm_name) as farms,
-    GROUP_CONCAT(DISTINCT f.location) as farm_locations
-FROM tbl_orders o
-JOIN tbl_signup u ON o.user_id = u.userid
-JOIN tbl_order_items oi ON o.order_id = oi.order_id
-JOIN tbl_products p ON oi.product_id = p.product_id
-JOIN tbl_farms f ON p.farm_id = f.farm_id
-WHERE o.order_status = 'pending'
-GROUP BY o.order_id
-ORDER BY o.order_date DESC";
-
-$orders_result = mysqli_query($conn, $orders_query);
 ?>
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -126,577 +59,440 @@ $orders_result = mysqli_query($conn, $orders_query);
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     
     <style>
+        :root {
+            --primary: #1a4d2e;
+            --primary-dark: #15402a;
+            --primary-light: #2d6a4f;
+            --accent: #4ade80;
+            --success: #22c55e;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --info: #3b82f6;
+            --dark: #1f2937;
+            --medium: #4b5563;
+            --light: #9ca3af;
+            --lighter: #e5e7eb;
+            --lightest: #f9fafb;
+            --white: #ffffff;
+            
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+            --shadow: 0 4px 6px rgba(0,0,0,0.05), 0 1px 3px rgba(0,0,0,0.1);
+            --shadow-md: 0 10px 15px rgba(0,0,0,0.07), 0 4px 6px rgba(0,0,0,0.05);
+            --shadow-lg: 0 20px 25px rgba(0,0,0,0.1), 0 10px 10px rgba(0,0,0,0.04);
+            
+            --radius-sm: 4px;
+            --radius: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            
+            --transition: all 0.3s ease;
+        }
+        
         * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: Arial, sans-serif;
-}
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', 'Segoe UI', Arial, sans-serif;
+        }
 
-body {
-    display: flex;
-    min-height: 100vh;
-}
+        body {
+            display: flex;
+            min-height: 100vh;
+            background-color: #f3f4f6;
+            color: var(--dark);
+            line-height: 1.5;
+        }
 
-/* Header Styles */
-.header {
-    position: fixed;
-    top: 0;
-    right: 0;
-    left: 250px;
-    height: 60px;
-    background: #ffffff;
-    padding: 0 20px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    z-index: 100;
-    transition: left 0.3s;
-}
+        /* Header Styles */
+        .header {
+            position: fixed;
+            top: 0;
+            right: 0;
+            left: 250px;
+            height: 70px;
+            background: var(--white);
+            padding: 0 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: var(--shadow);
+            z-index: 100;
+            transition: left 0.3s;
+        }
 
-.logo-section {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
 
-.logo {
-    width: 40px;
-    height: 40px;
-    background: #1a4d2e;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-}
+        .logo {
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            border-radius: var(--radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--white);
+            box-shadow: var(--shadow);
+            font-size: 1.2rem;
+        }
 
+        .logo-section h2 {
+            font-weight: 600;
+            color: var(--primary);
+            letter-spacing: 0.5px;
+            font-size: 1.4rem;
+        }
 
-.user-section {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-}
+        .user-section {
+            display: flex;
+            align-items: center;
+            gap: 25px;
+        }
 
-.logout-btn {
-    padding: 8px 16px;
-    background: #dc2626;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background 0.3s;
-}
-
-.logout-btn:hover {
-    background: #b91c1c;
-}
-
-/* Sidebar Styles */
-.sidebar {
-    width: 250px;
-    background: #1a4d2e;
-    color: white;
-    padding: 80px 20px 20px;
-    position: fixed;
-    height: 100vh;
-    left: 0;
-    top: 0;
-    transition: width 0.3s;
-}
-
-
-
-.sidebar .menu-btn {
-    position: absolute;
-    top: 20px;
-    left: 20px;
-    background: none;
-    border: none;
-    color: white;
-    font-size: 20px;
-    cursor: pointer;
-}
-
-.sidebar-menu {
-    list-style: none;
-}
-
-.sidebar-menu li {
-    margin: 5px 0;
-}
-
-.sidebar-menu a {
-    color: white;
-    text-decoration: none;
-    display: flex;
-    align-items: center;
-    padding: 12px;
-    border-radius: 5px;
-    transition: background 0.3s;
-}
-
-.sidebar-menu a:hover {
-    background: #2d6a4f;
-}
-
-.sidebar-menu i {
-    margin-right: 10px;
-    width: 20px;
-    text-align: center;
-}
-
-
-.active {
-    background: #2d6a4f;
-}
-
-/* Main Content Styles */
-.main-content {
-    margin-left: 250px;
-    flex: 1;
-    padding-top: 60px;
-    background: #f3f4f6;
-    transition: margin-left 0.3s;
-}
-
-
-
-content-area {
-    padding: 20px;
-    min-height: 100vh;
-}
-
-.dashboard-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 20px;
-    margin-bottom: 20px;
-}
-
-.stat-card {
-    background: white;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.stat-card h3 {
-    color: #666;
-    font-size: 0.9em;
-    margin-bottom: 10px;
-}
-
-.stat-card .value {
-    font-size: 1.8em;
-    font-weight: bold;
-    color: #1a4d2e;
-}
-
-.delivery-list {
-    background: white;
-    border-radius: 8px;
-    padding: 20px;
-    margin-bottom: 20px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.delivery-item {
-    padding: 15px;
-    border-bottom: 1px solid #eee;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.delivery-item:last-child {
-    border-bottom: none;
-}
-
-.status-badge {
-    padding: 5px 10px;
-    border-radius: 15px;
-    font-size: 0.8em;
-    font-weight: 500;
-}
-
-.status-pending {
-    background-color: #fee2e2;
-    color: #991b1b;
-}
-
-.status-processing {
-    background-color: #fef3c7;
-    color: #92400e;
-}
-
-.status-shipped {
-    background-color: #dbeafe;
-    color: #1e40af;
-}
-
-.status-delivered {
-    background-color: #dcfce7;
-    color: #166534;
-}
-
-/* Footer Styles */
-.footer {
-    background: #1a4d2e;
-    color: white;
-    padding: 20px;
-    text-align: center;
-}
-
-.footer-items {
-    display: flex;
-    justify-content: center;
-    gap: 20px;
-    margin-top: 10px;
-}
-
-.footer-items a {
-    color: white;
-    text-decoration: none;
-}
-        /* Add these styles to your existing CSS */
-        .status-badge {
-            padding: 5px 10px;
-            border-radius: 15px;
-            font-size: 0.8em;
+        .user-section span {
+            color: var(--medium);
             font-weight: 500;
         }
 
-        .status-pending {
-            background-color: #fee2e2;
-            color: #991b1b;
-        }
-
-        .status-processing {
-            background-color: #fef3c7;
-            color: #92400e;
-        }
-
-        .status-shipped {
-            background-color: #dbeafe;
-            color: #1e40af;
-        }
-
-        .status-delivered {
-            background-color: #dcfce7;
-            color: #166534;
-        }
-
-        .delivery-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px;
-            margin-bottom: 10px;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-
-        .delivery-info {
-            flex: 1;
-        }
-
-        .delivery-info h3 {
-            margin-bottom: 5px;
-            color: #1a4d2e;
-        }
-
-        .delivery-meta {
-            display: grid;
-            gap: 8px;
-            margin-top: 10px;
-        }
-
-        .delivery-meta p {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .delivery-meta i {
-            width: 16px;
-            color: #1a4d2e;
-        }
-
-        .delivery-actions {
-            display: flex;
-            gap: 10px;
-        }
-
-        .action-btn {
-            padding: 5px 10px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.9em;
-        }
-
-        .pickup-btn {
-            background-color: #1a4d2e;
-            color: white;
-        }
-
-        .complete-btn {
-            background-color: #15803d;
-            color: white;
-        }
-
-        .order-card {
-            background: white;
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .order-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #eee;
-        }
-
-        .order-id {
-            font-size: 1.2em;
-            font-weight: bold;
-            color: #1a4d2e;
-        }
-
-        .order-date {
-            color: #666;
-            font-size: 0.9em;
-        }
-
-        .order-details {
-            display: grid;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-
-        .detail-row {
-            display: flex;
-            align-items: start;
-            gap: 10px;
-        }
-
-        .detail-row i {
-            color: #1a4d2e;
-            width: 20px;
-            margin-top: 3px;
-        }
-
-        .detail-content {
-            flex: 1;
-        }
-
-        .order-items {
-            background: #f8f9fa;
-            padding: 10px;
-            border-radius: 4px;
-            margin: 10px 0;
-        }
-
-        .order-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 1px solid #eee;
-        }
-
-        .accept-btn, .reject-btn {
+        .logout-btn {
             padding: 10px 20px;
+            background: linear-gradient(135deg, #dc2626, #ef4444);
+            color: white;
             border: none;
-            border-radius: 4px;
+            border-radius: var(--radius);
             cursor: pointer;
+            transition: var(--transition);
             font-weight: 500;
             display: flex;
             align-items: center;
             gap: 8px;
-            transition: transform 0.2s;
+            box-shadow: var(--shadow);
         }
 
-        .accept-btn {
-            background: #1a4d2e;
-            color: white;
-        }
-
-        .reject-btn {
-            background: #dc2626;
-            color: white;
-        }
-
-        .accept-btn:hover, .reject-btn:hover {
+        .logout-btn:hover {
             transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
         }
 
-        .payment-badge {
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 0.8em;
+        /* Sidebar Styles */
+        .sidebar {
+            width: 250px;
+            background: linear-gradient(180deg, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 80px 20px 20px;
+            position: fixed;
+            height: 100vh;
+            left: 0;
+            top: 0;
+            transition: width 0.3s;
+            box-shadow: var(--shadow-md);
+            z-index: 90;
+        }
+
+        .sidebar .menu-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            margin-top: 20px;
+        }
+
+        .sidebar-menu li {
+            margin: 8px 0;
+        }
+
+        .sidebar-menu a {
+            color: rgba(255, 255, 255, 0.85);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            border-radius: var(--radius);
+            transition: var(--transition);
             font-weight: 500;
         }
 
-        .payment-pending {
-            background: #fef3c7;
-            color: #92400e;
+        .sidebar-menu a:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            transform: translateX(5px);
         }
 
-        .payment-paid {
-            background: #dcfce7;
-            color: #166534;
-        }
-
-        .payment-failed {
-            background: #fee2e2;
-            color: #991b1b;
-        }
-
-        .no-orders {
+        .sidebar-menu i {
+            margin-right: 12px;
+            width: 20px;
             text-align: center;
-            padding: 40px;
-            color: #666;
+            font-size: 1.1rem;
         }
 
+        .active {
+            background: rgba(255, 255, 255, 0.15) !important;
+            color: white !important;
+            font-weight: 600 !important;
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* Main Content Styles */
+        .main-content {
+            margin-left: 250px;
+            flex: 1;
+            padding-top: 70px;
+            transition: margin-left 0.3s;
+            min-height: 100vh;
+        }
+
+        .content-area {
+            padding: 30px;
+        }
+
+        /* Profile Styles */
         .profile-container {
-            max-width: 800px;
+            max-width: 900px;
             margin: 0 auto;
-            padding: 20px;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 30px;
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .profile-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 8px;
+            background: linear-gradient(90deg, var(--primary), var(--primary-light));
+            z-index: 1;
         }
 
         .profile-container h1 {
-            color: #1a4d2e;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #eee;
+            color: var(--primary);
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--lighter);
+            font-size: 1.8rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .profile-container h1::before {
+            content: '\f007';
+            font-family: 'Font Awesome 5 Free';
+            font-weight: 900;
+            font-size: 1.4rem;
+            color: var(--primary);
+            background: rgba(26, 77, 46, 0.1);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
         .form-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-bottom: 20px;
+            gap: 25px;
+            margin-bottom: 30px;
         }
 
         .form-group {
-            margin-bottom: 15px;
+            margin-bottom: 5px;
             position: relative;
         }
 
         .form-group label {
             display: block;
-            margin-bottom: 5px;
-            color: #374151;
+            margin-bottom: 8px;
+            color: var(--medium);
             font-weight: 500;
+            font-size: 0.95rem;
         }
 
         .form-group input {
             width: 100%;
-            padding: 8px 12px;
-            border: 1px solid #d1d5db;
-            border-radius: 4px;
+            padding: 12px 15px;
+            border: 1px solid var(--lighter);
+            border-radius: var(--radius);
             font-size: 1rem;
-            transition: border-color 0.3s ease;
-            padding-right: 35px;
+            transition: var(--transition);
+            padding-right: 40px;
+            background-color: var(--lightest);
         }
 
         .form-group input:focus {
-            border-color: #1a4d2e;
+            border-color: var(--primary);
             outline: none;
-            box-shadow: 0 0 0 2px rgba(26, 77, 46, 0.1);
+            box-shadow: 0 0 0 3px rgba(26, 77, 46, 0.1);
+            background-color: var(--white);
         }
 
         .form-group.valid input {
-            border-color: #22c55e;
-            background-color: #f0fdf4;
+            border-color: var(--success);
+            background-color: rgba(34, 197, 94, 0.05);
         }
 
         .form-group.invalid input {
-            border-color: #dc2626;
-            background-color: #fef2f2;
+            border-color: var(--danger);
+            background-color: rgba(239, 68, 68, 0.05);
         }
 
         .validation-message {
             display: block;
             font-size: 0.8rem;
-            margin-top: 5px;
+            margin-top: 6px;
             min-height: 20px;
-            color: #dc2626;
+            color: var(--danger);
+            font-weight: 500;
+            transition: opacity 0.3s ease, color 0.3s ease;
+        }
+
+        .validation-message.success {
+            color: var(--success);
+        }
+        
+        .validation-message.warning {
+            color: var(--warning);
         }
 
         .validation-icon {
             position: absolute;
-            right: 10px;
-            top: 38px;
-            font-size: 1rem;
+            right: 15px;
+            top: 42px;
+            font-size: 1.1rem;
         }
 
         .form-group.valid .validation-icon {
-            color: #22c55e;
+            color: var(--success);
         }
 
         .form-group.invalid .validation-icon {
-            color: #dc2626;
+            color: var(--danger);
         }
 
         .form-actions {
             text-align: right;
             padding-top: 20px;
-            border-top: 1px solid #eee;
+            border-top: 1px solid var(--lighter);
+            display: flex;
+            justify-content: flex-end;
         }
 
         .update-btn {
-            padding: 10px 20px;
-            background: #1a4d2e;
+            padding: 12px 25px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
             color: white;
             border: none;
-            border-radius: 4px;
+            border-radius: var(--radius);
             cursor: pointer;
             font-size: 1rem;
-            transition: background-color 0.3s ease;
+            font-weight: 500;
+            transition: var(--transition);
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-width: 160px;
+            position: relative;
+            overflow: hidden;
         }
 
-        .update-btn:hover {
-            background: #2d6a4f;
+        .update-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                90deg, 
+                rgba(255, 255, 255, 0) 0%, 
+                rgba(255, 255, 255, 0.2) 50%, 
+                rgba(255, 255, 255, 0) 100%
+            );
+            transition: left 0.7s ease;
+        }
+
+        .update-btn.enabled:hover::before {
+            left: 100%;
+        }
+
+        .update-btn.enabled:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
         }
 
         .update-btn:disabled {
-            background-color: #9ca3af;
+            background: var(--light);
             cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
         }
 
         .alert {
-            padding: 12px 16px;
-            border-radius: 4px;
-            margin-bottom: 20px;
+            padding: 15px 20px;
+            border-radius: var(--radius);
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 500;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .alert::before {
+            font-family: 'Font Awesome 5 Free';
+            font-weight: 900;
+            font-size: 1.2rem;
         }
 
         .alert.success {
-            background: #dcfce7;
-            color: #166534;
-            border: 1px solid #6ee7b7;
+            background: rgba(34, 197, 94, 0.1);
+            color: var(--success);
+            border-left: 4px solid var(--success);
+        }
+
+        .alert.success::before {
+            content: '\f058'; /* check-circle */
         }
 
         .alert.error {
-            background: #fee2e2;
-            color: #991b1b;
-            border: 1px solid #fca5a5;
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+            border-left: 4px solid var(--danger);
         }
 
-        input:invalid {
-            border-color: #dc2626;
+        .alert.error::before {
+            content: '\f057'; /* times-circle */
         }
 
         .readonly-input {
@@ -708,8 +504,105 @@ content-area {
         .hint {
             display: block;
             font-size: 0.8rem;
-            color: #6b7280;
-            margin-top: 4px;
+            color: var(--medium);
+            margin-top: 5px;
+            font-style: italic;
+        }
+
+        .form-group.focused input {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(26, 77, 46, 0.1);
+            background-color: white;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--medium);
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: color 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-group.focused label {
+            color: var(--primary);
+        }
+
+        .form-group.focused label i {
+            color: var(--primary);
+        }
+
+        .form-group label i {
+            color: var(--medium);
+            font-size: 0.9rem;
+            width: 16px;
+            text-align: center;
+        }
+
+        /* PIN Code validation specific styles */
+        .form-group#pin-group .validation-icon.fa-circle-notch {
+            color: var(--warning);
+        }
+        
+        /* Loading animation for PIN verification */
+        @keyframes pinVerifying {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .form-group.verifying input {
+            background-size: 200% 200%;
+            animation: pinVerifying 2s ease infinite;
+            background-image: linear-gradient(270deg, var(--lightest), rgba(79, 173, 128, 0.1), var(--lightest));
+            border-color: var(--warning);
+        }
+
+        /* Responsive Styles */
+        @media (max-width: 992px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 70px;
+            }
+            
+            .sidebar .sidebar-menu span {
+                display: none;
+            }
+            
+            .sidebar .sidebar-menu i {
+                margin-right: 0;
+            }
+            
+            .main-content {
+                margin-left: 70px;
+            }
+            
+            .header {
+                left: 70px;
+            }
+            
+            .content-area {
+                padding: 20px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .user-section span {
+                display: none;
+            }
+            
+            .profile-container {
+                padding: 20px;
+            }
         }
     </style>
 </head>
@@ -754,16 +647,16 @@ content-area {
             <form method="POST" class="profile-form">
                 <div class="form-grid">
                     <div class="form-group">
-                        <label for="username">Username</label>
+                        <label for="username"><i class="fas fa-user-circle"></i> Username</label>
                         <input type="text" id="username" name="username" 
                             data-pattern="^[A-Za-z][A-Za-z\s]{1,49}$"
-                            data-error="Username must start with a letter and can contain only letters and spaces"
+                            data-error="Username must start with a letter and contain only letters and spaces"
                             value="<?php echo htmlspecialchars($profile['username']); ?>" required>
                         <span class="validation-message"></span>
                     </div>
 
                     <div class="form-group">
-                        <label for="mobile">Mobile Number</label>
+                        <label for="mobile"><i class="fas fa-mobile-alt"></i> Mobile Number</label>
                         <input type="tel" id="mobile" name="mobile" 
                             data-pattern="^[6-9]\d{9}$"
                             data-error="Please enter a valid 10-digit mobile number starting with 6-9"
@@ -772,7 +665,7 @@ content-area {
                     </div>
 
                     <div class="form-group">
-                        <label for="email">Email</label>
+                        <label for="email"><i class="fas fa-envelope"></i> Email</label>
                         <input type="email" id="email" name="email" 
                             value="<?php echo htmlspecialchars($profile['email']); ?>" 
                             readonly 
@@ -781,16 +674,16 @@ content-area {
                     </div>
 
                     <div class="form-group">
-                        <label for="house">House Name/Number</label>
+                        <label for="house"><i class="fas fa-home"></i> House Name/Number</label>
                         <input type="text" id="house" name="house" 
                             data-pattern="^[a-zA-Z0-9\s,.-]{3,}$"
-                            data-error="House name must be at least 3 characters long and can contain letters, numbers, spaces, commas, dots and hyphens"
+                            data-error="House name must be at least 3 characters long"
                             value="<?php echo htmlspecialchars($profile['house']); ?>" required>
                         <span class="validation-message"></span>
                     </div>
 
                     <div class="form-group">
-                        <label for="state">State</label>
+                        <label for="state"><i class="fas fa-map"></i> State</label>
                         <input type="text" id="state" name="state" 
                             data-pattern="^[A-Za-z\s]{3,}$"
                             data-error="State name must contain only letters and spaces"
@@ -799,7 +692,7 @@ content-area {
                     </div>
 
                     <div class="form-group">
-                        <label for="district">District</label>
+                        <label for="district"><i class="fas fa-city"></i> District</label>
                         <input type="text" id="district" name="district" 
                             data-pattern="^[A-Za-z\s]{3,}$"
                             data-error="District name must contain only letters and spaces"
@@ -807,13 +700,13 @@ content-area {
                         <span class="validation-message"></span>
                     </div>
 
-                    <div class="form-group">
-                        <label for="pin">PIN Code</label>
+                    <div class="form-group" id="pin-group">
+                        <label for="pin"><i class="fas fa-map-pin"></i> PIN Code</label>
                         <input type="text" id="pin" name="pin" 
-                            data-pattern="^[0-9]{6}$"
+                            data-pattern="^\d{6}$"
                             data-error="Please enter a valid 6-digit PIN code"
                             value="<?php echo htmlspecialchars($profile['pin']); ?>" required>
-                        <span class="validation-message"></span>
+                        <span class="validation-message">We'll check if delivery is available in this area</span>
                     </div>
                 </div>
 
@@ -833,8 +726,94 @@ document.addEventListener('DOMContentLoaded', function() {
     const form = document.querySelector('.profile-form');
     const submitBtn = document.querySelector('.update-btn');
     const inputs = form.querySelectorAll('input[data-pattern]');
-
+    const pinInput = document.getElementById('pin');
+    let validPincodes = [];
+    
+    // Add loading indicator to update button
+    submitBtn.innerHTML = '<span>Update Profile</span>';
+    
+    // Fetch valid pincodes from JSON file
+    fetch('../sign up/pincode.json')
+        .then(response => response.json())
+        .then(data => {
+            validPincodes = data.pincodes.map(String);
+            console.log(`Loaded ${validPincodes.length} valid PIN codes`);
+            // Validate PIN input if it already has a value
+            if (pinInput.value.trim()) {
+                validatePincode(pinInput);
+            }
+        })
+        .catch(error => {
+            console.error('Error loading PIN codes:', error);
+        });
+    
+    function validatePincode(input) {
+        const value = input.value.trim();
+        const formGroup = input.closest('.form-group');
+        const messageEl = formGroup.querySelector('.validation-message');
+        
+        // Remove existing validation icon if any
+        const existingIcon = formGroup.querySelector('.validation-icon');
+        if (existingIcon) existingIcon.remove();
+        
+        // Create new icon
+        const icon = document.createElement('i');
+        icon.classList.add('fas', 'validation-icon');
+        
+        // First check format using regex
+        const patternValid = new RegExp(input.dataset.pattern).test(value);
+        
+        if (!patternValid) {
+            formGroup.classList.remove('valid', 'verifying');
+            formGroup.classList.add('invalid');
+            messageEl.textContent = input.dataset.error;
+            messageEl.style.opacity = '1';
+            messageEl.className = 'validation-message';
+            icon.classList.add('fa-exclamation-circle');
+            formGroup.appendChild(icon);
+            return false;
+        }
+        
+        // If pincodes haven't loaded yet, show verifying state
+        if (validPincodes.length === 0) {
+            formGroup.classList.remove('valid', 'invalid');
+            formGroup.classList.add('verifying');
+            messageEl.textContent = "Checking PIN code availability...";
+            messageEl.style.opacity = '1';
+            messageEl.className = 'validation-message warning';
+            icon.classList.add('fa-circle-notch', 'fa-spin');
+            formGroup.appendChild(icon);
+            return true;
+        }
+        
+        // Check if it's in the valid pincodes list
+        if (validPincodes.includes(value)) {
+            formGroup.classList.remove('invalid', 'verifying');
+            formGroup.classList.add('valid');
+            messageEl.textContent = " ";
+            messageEl.style.opacity = '1';
+            messageEl.className = 'validation-message success';
+            icon.classList.add('fa-check-circle');
+            formGroup.appendChild(icon);
+            return true;
+        } else {
+            formGroup.classList.remove('valid', 'verifying');
+            formGroup.classList.add('invalid');
+            messageEl.textContent = "Sorry, delivery is not available in this area";
+            messageEl.style.opacity = '1';
+            messageEl.className = 'validation-message';
+            icon.classList.add('fa-exclamation-circle');
+            formGroup.appendChild(icon);
+            return false;
+        }
+    }
+    
     function validateInput(input) {
+        // Special handling for PIN code
+        if (input.id === 'pin') {
+            return validatePincode(input);
+        }
+        
         const pattern = new RegExp(input.dataset.pattern);
         const value = input.value.trim();
         const formGroup = input.closest('.form-group');
@@ -852,6 +831,7 @@ document.addEventListener('DOMContentLoaded', function() {
             formGroup.classList.remove('invalid');
             formGroup.classList.add('valid');
             messageEl.textContent = '';
+            messageEl.style.opacity = '0';
             icon.classList.add('fa-check-circle');
             formGroup.appendChild(icon);
             return true;
@@ -859,6 +839,7 @@ document.addEventListener('DOMContentLoaded', function() {
             formGroup.classList.remove('valid');
             formGroup.classList.add('invalid');
             messageEl.textContent = input.dataset.error;
+            messageEl.style.opacity = '1';
             icon.classList.add('fa-exclamation-circle');
             formGroup.appendChild(icon);
             return false;
@@ -868,11 +849,29 @@ document.addEventListener('DOMContentLoaded', function() {
     function checkFormValidity() {
         const isValid = Array.from(inputs).every(input => validateInput(input));
         submitBtn.disabled = !isValid;
+        
+        // Add visual feedback on button
+        if (isValid) {
+            submitBtn.classList.add('enabled');
+        } else {
+            submitBtn.classList.remove('enabled');
+        }
+        
         return isValid;
     }
 
-    // Add validation listeners to all inputs
+    // Add transition animations to input fields
     inputs.forEach(input => {
+        // Add focus animation
+        input.addEventListener('focus', () => {
+            input.closest('.form-group').classList.add('focused');
+        });
+        
+        input.addEventListener('blur', () => {
+            input.closest('.form-group').classList.remove('focused');
+        });
+        
+        // Add validation on input and blur
         ['input', 'blur'].forEach(eventType => {
             input.addEventListener(eventType, () => {
                 validateInput(input);
@@ -882,28 +881,45 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Validate all fields on initial load
-    checkFormValidity();
+    setTimeout(() => {
+        checkFormValidity();
+    }, 100);
 
     // Form submission handler
     form.addEventListener('submit', function(e) {
         e.preventDefault();
         
         if (checkFormValidity()) {
-            this.submit();
+            // Add loading indicator
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Updating...</span>';
+            submitBtn.disabled = true;
+            
+            // Submit the form after a small delay to show the loading state
+            setTimeout(() => {
+                this.submit();
+            }, 400);
         } else {
             // Show error message at the top of the form
             const errorDiv = document.createElement('div');
             errorDiv.classList.add('alert', 'error');
-            errorDiv.textContent = 'Please fix all validation errors before submitting.';
-            form.insertBefore(errorDiv, form.firstChild);
+            errorDiv.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Please fix all validation errors before submitting.';
             
-            // Remove error message after 3 seconds
-            setTimeout(() => errorDiv.remove(), 3000);
+            // Only add if no error message already exists
+            if (!document.querySelector('.alert.error')) {
+                form.insertBefore(errorDiv, form.firstChild);
+                
+                // Remove error message after 3 seconds with fade out
+                setTimeout(() => {
+                    errorDiv.style.opacity = '0';
+                    setTimeout(() => errorDiv.remove(), 300);
+                }, 3000);
+            }
             
             // Scroll to first invalid input
             const firstInvalid = form.querySelector('.form-group.invalid');
             if (firstInvalid) {
                 firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                firstInvalid.querySelector('input').focus();
             }
         }
     });

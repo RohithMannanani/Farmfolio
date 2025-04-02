@@ -170,560 +170,349 @@ $my_deliveries_result = mysqli_query($conn, $my_deliveries_query);
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     
     <style>
+        :root {
+            --primary: #1a4d2e;
+            --primary-light: #2d6a4f;
+            --primary-dark: #0c3820;
+            --secondary: #f59e0b;
+            --accent: #0ea5e9;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --info: #3b82f6;
+            --light: #f3f4f6;
+            --dark: #1f2937;
+            --gray: #6b7280;
+            --gray-light: #e5e7eb;
+            --white: #ffffff;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --font-sans: 'Segoe UI', Arial, sans-serif;
+            --transition: all 0.3s ease;
+            --radius-sm: 4px;
+            --radius: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+        }
+
         * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: Arial, sans-serif;
-}
-
-body {
-    display: flex;
-    min-height: 100vh;
-}
-
-/* Header Styles */
-.header {
-    position: fixed;
-    top: 0;
-    right: 0;
-    left: 250px;
-    height: 60px;
-    background: #ffffff;
-    padding: 0 20px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    z-index: 100;
-    transition: left 0.3s;
-}
-
-.logo-section {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.logo {
-    width: 40px;
-    height: 40px;
-    background: #1a4d2e;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-}
-
-
-.user-section {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-}
-
-.logout-btn {
-    padding: 8px 16px;
-    background: #dc2626;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background 0.3s;
-}
-
-.logout-btn:hover {
-    background: #b91c1c;
-}
-
-/* Sidebar Styles */
-.sidebar {
-    width: 250px;
-    background: #1a4d2e;
-    color: white;
-    padding: 80px 20px 20px;
-    position: fixed;
-    height: 100vh;
-    left: 0;
-    top: 0;
-    transition: width 0.3s;
-}
-
-
-
-.sidebar .menu-btn {
-    position: absolute;
-    top: 20px;
-    left: 20px;
-    background: none;
-    border: none;
-    color: white;
-    font-size: 20px;
-    cursor: pointer;
-}
-
-.sidebar-menu {
-    list-style: none;
-}
-
-.sidebar-menu li {
-    margin: 5px 0;
-}
-
-.sidebar-menu a {
-    color: white;
-    text-decoration: none;
-    display: flex;
-    align-items: center;
-    padding: 12px;
-    border-radius: 5px;
-    transition: background 0.3s;
-}
-
-.sidebar-menu a:hover {
-    background: #2d6a4f;
-}
-
-.sidebar-menu i {
-    margin-right: 10px;
-    width: 20px;
-    text-align: center;
-}
-
-
-.active {
-    background: #2d6a4f;
-}
-
-/* Main Content Styles */
-.main-content {
-    margin-left: 250px;
-    flex: 1;
-    padding-top: 60px;
-    background: #f3f4f6;
-    transition: margin-left 0.3s;
-}
-
-
-
-.content-area {
-    padding: 20px;
-    min-height: 100vh;
-}
-
-.dashboard-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 20px;
-    margin-bottom: 20px;
-}
-
-.stat-card {
-    background: white;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.stat-card h3 {
-    color: #666;
-    font-size: 0.9em;
-    margin-bottom: 10px;
-}
-
-.stat-card .value {
-    font-size: 1.8em;
-    font-weight: bold;
-    color: #1a4d2e;
-}
-
-.delivery-list {
-    background: white;
-    border-radius: 8px;
-    padding: 20px;
-    margin-bottom: 20px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.delivery-item {
-    padding: 15px;
-    border-bottom: 1px solid #eee;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.delivery-item:last-child {
-    border-bottom: none;
-}
-
-.status-badge {
-    padding: 5px 10px;
-    border-radius: 15px;
-    font-size: 0.8em;
-    font-weight: 500;
-}
-
-.status-pending {
-    background-color: #fee2e2;
-    color: #991b1b;
-}
-
-.status-processing {
-    background-color: #fef3c7;
-    color: #92400e;
-}
-
-.status-shipped {
-    background-color: #dbeafe;
-    color: #1e40af;
-}
-
-.status-delivered {
-    background-color: #dcfce7;
-    color: #166534;
-}
-
-/* Footer Styles */
-.footer {
-    background: #1a4d2e;
-    color: white;
-    padding: 20px;
-    text-align: center;
-}
-
-.footer-items {
-    display: flex;
-    justify-content: center;
-    gap: 20px;
-    margin-top: 10px;
-}
-
-.footer-items a {
-    color: white;
-    text-decoration: none;
-}
-        /* Add these styles to your existing CSS */
-        .status-badge {
-            padding: 5px 10px;
-            border-radius: 15px;
-            font-size: 0.8em;
-            font-weight: 500;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: var(--font-sans);
         }
 
-        .status-pending {
-            background-color: #fee2e2;
-            color: #991b1b;
-        }
-
-        .status-processing {
-            background-color: #fef3c7;
-            color: #92400e;
-        }
-
-        .status-shipped {
-            background-color: #dbeafe;
-            color: #1e40af;
-        }
-
-        .status-delivered {
-            background-color: #dcfce7;
-            color: #166534;
-        }
-
-        .delivery-item {
+        body {
             display: flex;
+            min-height: 100vh;
+            background-color: var(--light);
+            color: var(--dark);
+        }
+
+        /* Header Styles */
+        .header {
+            position: fixed;
+            top: 0;
+            right: 0;
+            left: 250px;
+            height: 70px;
+            background: var(--white);
+            padding: 0 25px;
+            display: flex;
+            align-items: center;
             justify-content: space-between;
-            align-items: center;
-            padding: 15px;
-            margin-bottom: 10px;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            box-shadow: var(--shadow);
+            z-index: 100;
+            transition: var(--transition);
         }
 
-        .delivery-info {
-            flex: 1;
-        }
-
-        .delivery-info h3 {
-            margin-bottom: 5px;
-            color: #1a4d2e;
-        }
-
-        .delivery-meta {
-            display: grid;
-            gap: 8px;
-            margin-top: 10px;
-        }
-
-        .delivery-meta p {
+        .logo-section {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 15px;
         }
 
-        .delivery-meta i {
-            width: 16px;
-            color: #1a4d2e;
-        }
-
-        .delivery-actions {
-            display: flex;
-            gap: 10px;
-        }
-
-        .action-btn {
-            padding: 5px 10px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.9em;
-        }
-
-        .pickup-btn {
-            background-color: #1a4d2e;
-            color: white;
-        }
-
-        .complete-btn {
-            background-color: #15803d;
-            color: white;
-        }
-
-        .order-card {
-            background: white;
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .order-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #eee;
-        }
-
-        .order-id {
-            font-size: 1.2em;
-            font-weight: bold;
-            color: #1a4d2e;
-        }
-
-        .order-date {
-            color: #666;
-            font-size: 0.9em;
-        }
-
-        .order-details {
-            display: grid;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-
-        .detail-row {
-            display: flex;
-            align-items: start;
-            gap: 10px;
-        }
-
-        .detail-row i {
-            color: #1a4d2e;
-            width: 20px;
-            margin-top: 3px;
-        }
-
-        .detail-content {
-            flex: 1;
-        }
-
-        .order-items {
-            background: #f8f9fa;
-            padding: 10px;
-            border-radius: 4px;
-            margin: 10px 0;
-        }
-
-        .order-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 1px solid #eee;
-        }
-
-        .accept-btn, .reject-btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: 500;
+        .logo {
+            width: 40px;
+            height: 40px;
+            background: var(--primary);
+            border-radius: 50%;
             display: flex;
             align-items: center;
-            gap: 8px;
-            transition: transform 0.2s;
+            justify-content: center;
+            color: var(--white);
+            box-shadow: var(--shadow-md);
         }
 
-        .accept-btn {
-            background: #1a4d2e;
-            color: white;
-        }
-
-        .reject-btn {
-            background: #dc2626;
-            color: white;
-        }
-
-        .accept-btn:hover, .reject-btn:hover {
-            transform: translateY(-2px);
-        }
-
-        .payment-badge {
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 0.8em;
-            font-weight: 500;
-        }
-
-        .payment-pending {
-            background: #fef3c7;
-            color: #92400e;
-        }
-
-        .payment-paid {
-            background: #dcfce7;
-            color: #166534;
-        }
-
-        .payment-failed {
-            background: #fee2e2;
-            color: #991b1b;
-        }
-
-        .no-orders {
-            text-align: center;
-            padding: 40px;
-            color: #666;
-        }
-
-        .stats-section {
-            margin-bottom: 30px;
-        }
-
-        .stats-section h2 {
-            margin-bottom: 20px;
-            color: #1a4d2e;
-        }
-
-        .delivery-table-container {
-            background: white;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            overflow-x: auto;
-        }
-
-        .delivery-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-        }
-
-        .delivery-table th {
-            background-color: #f8f9fa;
-            padding: 12px;
-            text-align: left;
+        .logo-section h2 {
             font-weight: 600;
-            color: #1a4d2e;
-            border-bottom: 2px solid #e5e7eb;
+            color: var(--primary);
+            letter-spacing: 0.5px;
+            font-size: 1.3rem;
         }
 
-        .delivery-table td {
-            padding: 12px;
-            border-bottom: 1px solid #e5e7eb;
+        .user-section {
+            display: flex;
+            align-items: center;
+            gap: 20px;
         }
 
-        .delivery-table tr:last-child td {
-            border-bottom: none;
-        }
-
-        .no-data {
-            text-align: center;
-            color: #666;
-            padding: 20px;
-        }
-
-        .my-deliveries-section {
-            margin-top: 30px;
-        }
-
-        .my-deliveries-section h2 {
-            margin-bottom: 20px;
-            color: #1a4d2e;
-        }
-
-        .status-badge {
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 0.8em;
+        .user-section span {
             font-weight: 500;
+            color: var(--dark);
         }
 
-        /* Add more status colors if needed */
-        .status-processing {
-            background-color: #fef3c7;
-            color: #92400e;
+        .logout-btn {
+            padding: 8px 16px;
+            background: linear-gradient(135deg, var(--danger), #b91c1c);
+            color: var(--white);
+            border: none;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: var(--transition);
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: var(--shadow-sm);
         }
 
-        .status-shipped {
-            background-color: #dbeafe;
-            color: #1e40af;
+        .logout-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
         }
 
-        .status-delivered {
-            background-color: #dcfce7;
-            color: #166534;
+        /* Sidebar Styles */
+        .sidebar {
+            width: 250px;
+            background: linear-gradient(180deg, var(--primary-dark), var(--primary));
+            color: var(--white);
+            padding: 80px 20px 20px;
+            position: fixed;
+            height: 100vh;
+            left: 0;
+            top: 0;
+            transition: var(--transition);
+            box-shadow: var(--shadow-lg);
+            z-index: 99;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            margin-top: 20px;
+        }
+
+        .sidebar-menu li {
+            margin: 8px 0;
+        }
+
+        .sidebar-menu a {
+            color: var(--white);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            border-radius: var(--radius);
+            transition: var(--transition);
+            font-weight: 500;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sidebar-menu a:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(5px);
+        }
+
+        .sidebar-menu a.active {
+            background: rgba(255, 255, 255, 0.2);
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar-menu a.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 4px;
+            background: var(--secondary);
+            border-radius: 0 2px 2px 0;
+        }
+
+        .sidebar-menu i {
+            margin-right: 12px;
+            width: 20px;
+            text-align: center;
+            font-size: 1.1rem;
+        }
+
+        /* Main Content Styles */
+        .main-content {
+            margin-left: 250px;
+            flex: 1;
+            padding-top: 90px;
+            background: var(--light);
+            transition: var(--transition);
+        }
+
+        .content-area {
+            padding: 0 25px 30px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .content-area h1 {
+            color: var(--primary-dark);
+            margin-bottom: 25px;
+            font-size: 1.8rem;
+            position: relative;
+            display: inline-block;
+        }
+
+        .content-area h1::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: -5px;
+            width: 50px;
+            height: 3px;
+            background: var(--primary);
+            border-radius: 2px;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 35px;
+        }
+
+        .stat-card {
+            background: var(--white);
+            padding: 25px;
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+            border-top: 4px solid var(--primary);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            right: -15px;
+            bottom: -15px;
+            width: 80px;
+            height: 80px;
+            background: var(--primary);
+            opacity: 0.1;
+            border-radius: 50%;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-8px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .stat-card h3 {
+            color: var(--gray);
+            font-size: 0.95rem;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+
+        .stat-card .value {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin: 10px 0;
+            line-height: 1.1;
+        }
+
+        .stat-card small {
+            color: var(--gray);
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .stat-card small i {
+            color: var(--success);
         }
 
         .earnings-section {
-            background: white;
-            border-radius: 8px;
-            padding: 20px;
-            margin-top: 30px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            background: var(--white);
+            border-radius: var(--radius-md);
+            padding: 25px;
+            margin-top: 35px;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            border-left: 4px solid var(--primary);
+        }
+
+        .earnings-section:hover {
+            box-shadow: var(--shadow-md);
         }
 
         .earnings-section h2 {
-            color: #1a4d2e;
-            margin-bottom: 20px;
-            font-size: 1.2em;
+            color: var(--primary);
+            margin-bottom: 25px;
+            font-size: 1.3rem;
+            position: relative;
+            display: inline-block;
+        }
+
+        .earnings-section h2::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: -8px;
+            width: 40px;
+            height: 3px;
+            background: var(--primary);
+            border-radius: 2px;
         }
 
         .table-container {
             overflow-x: auto;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-sm);
         }
 
         .earnings-table {
             width: 100%;
             border-collapse: collapse;
+            background: var(--white);
         }
 
         .earnings-table th,
         .earnings-table td {
-            padding: 12px;
+            padding: 16px;
             text-align: left;
-            border-bottom: 1px solid #eee;
+            border-bottom: 1px solid var(--gray-light);
         }
 
         .earnings-table th {
             background-color: #f8f9fa;
-            color: #1a4d2e;
+            color: var(--primary);
             font-weight: 600;
+            position: sticky;
+            top: 0;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .earnings-table tr:nth-child(even) {
+            background-color: rgba(243, 244, 246, 0.4);
         }
 
         .earnings-table tr:last-child td {
@@ -731,38 +520,113 @@ body {
         }
 
         .earnings-table tr:hover {
-            background-color: #f8f9fa;
+            background-color: rgba(26, 77, 46, 0.05);
+        }
+
+        .earnings-table td:nth-child(3) {
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        /* Add these for mobile responsiveness */
+        @media (max-width: 992px) {
+            .header {
+                left: 70px;
+            }
+            
+            .sidebar {
+                width: 70px;
+                padding: 80px 10px 20px;
+            }
+            
+            .sidebar-menu span {
+                display: none;
+            }
+            
+            .sidebar-menu i {
+                margin-right: 0;
+                font-size: 1.2rem;
+            }
+            
+            .main-content {
+                margin-left: 70px;
+            }
+            
+            .dashboard-grid {
+                grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: 0 15px;
+            }
+            
+            .content-area {
+                padding: 0 15px 20px;
+            }
+            
+            .user-section span {
+                display: none;
+            }
+            
+            .dashboard-grid {
+                gap: 15px;
+            }
+            
+            .stat-card {
+                padding: 20px;
+            }
+            
+            .earnings-section {
+                padding: 20px;
+                margin-top: 25px;
+            }
+            
+            .table-container {
+                margin: 0 -15px;
+                width: calc(100% + 30px);
+                border-radius: 0;
+            }
+            
+            .earnings-table th,
+            .earnings-table td {
+                padding: 12px 15px;
+            }
+        }
+
+        /* Add some animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .stat-card {
-            transition: transform 0.3s ease;
+            animation: fadeIn 0.5s ease forwards;
         }
 
-        .stat-card:hover {
-            transform: translateY(-5px);
+        .stat-card:nth-child(1) { animation-delay: 0.1s; }
+        .stat-card:nth-child(2) { animation-delay: 0.2s; }
+        .stat-card:nth-child(3) { animation-delay: 0.3s; }
+        .stat-card:nth-child(4) { animation-delay: 0.4s; }
+
+        .earnings-section {
+            animation: fadeIn 0.5s ease forwards;
+            animation-delay: 0.5s;
         }
 
-        .value {
-            color: #1a4d2e;
-            font-size: 1.8em;
-            font-weight: bold;
-            margin: 10px 0;
-        }
-
-        small {
-            color: #666;
-            font-size: 0.9em;
+        .earnings-section:nth-of-type(2) {
+            animation-delay: 0.6s;
         }
     </style>
 </head>
 <body>
     <nav class="sidebar">
-        
         <ul class="sidebar-menu">
-            <li><a href="delivery.php" ><i class="fas fa-home"></i><span>Dashboard</span></a></li>
+            <li><a href="delivery.php"><i class="fas fa-home"></i><span>Dashboard</span></a></li>
             <li><a href="assign.php"><i class="fas fa-truck"></i><span>Assigned Deliveries</span></a></li>
             <li><a href="history.php"><i class="fas fa-history"></i><span>Delivery History</span></a></li>
-            <li><a href="earning.php"class="active"><i class="fas fa-wallet"></i><span>Earnings</span></a></li>
+            <li><a href="earning.php" class="active"><i class="fas fa-wallet"></i><span>Earnings</span></a></li>
             <li><a href="profile.php"><i class="fas fa-user"></i><span>Profile</span></a></li> 
         </ul>
     </nav>
@@ -776,27 +640,21 @@ body {
         </div>
         <div class="user-section">
              <span>Welcome, <?php echo ucfirst($_SESSION['username']);?></span>
-            <button class="logout-btn" onclick="window.location.href='http://localhost/mini%20project/logout/logout.php'"><i class="fas fa-sign-out-alt"  ></i> Logout</button>
+            <button class="logout-btn" onclick="window.location.href='http://localhost/mini%20project/logout/logout.php'"><i class="fas fa-sign-out-alt"></i> Logout</button>
         </div>
     </header>
 
     <main class="main-content">
         <div class="content-area">
-            <h1 style="margin-bottom: 20px">My Earnings</h1>
+            <h1>My Earnings</h1>
             
             <!-- Earnings Overview -->
             <div class="dashboard-grid">
                 <div class="stat-card">
                     <h3>Total Earnings</h3>
                     <div class="value">₹<?php echo number_format($earnings_data['total_earnings'], 2); ?></div>
-                    <small><?php echo $earnings_data['total_deliveries']; ?> deliveries completed</small>
+                    <small><i class="fas fa-check-circle"></i> <?php echo $earnings_data['total_deliveries']; ?> deliveries completed</small>
                 </div>
-              
-                <!-- <div class="stat-card">
-                    <h3>Pending Earnings</h3>
-                    <div class="value">₹<?php echo number_format($earnings_data['pending_earnings'], 2); ?></div>
-                    <small>Awaiting payments</small>
-                </div> -->
             </div>
 
             <!-- Monthly Earnings -->
@@ -812,13 +670,19 @@ body {
                             </tr>
                         </thead>
                         <tbody>
-                            <?php while($month = mysqli_fetch_assoc($monthly_result)): ?>
+                            <?php if(mysqli_num_rows($monthly_result) > 0): ?>
+                                <?php while($month = mysqli_fetch_assoc($monthly_result)): ?>
+                                    <tr>
+                                        <td><?php echo date('F Y', strtotime($month['month'] . '-01')); ?></td>
+                                        <td><?php echo $month['deliveries']; ?></td>
+                                        <td>₹<?php echo number_format($month['earnings'], 2); ?></td>
+                                    </tr>
+                                <?php endwhile; ?>
+                            <?php else: ?>
                                 <tr>
-                                    <td><?php echo date('F Y', strtotime($month['month'] . '-01')); ?></td>
-                                    <td><?php echo $month['deliveries']; ?></td>
-                                    <td>₹<?php echo number_format($month['earnings'], 2); ?></td>
+                                    <td colspan="3" style="text-align: center; padding: 30px;">No monthly earnings data available yet</td>
                                 </tr>
-                            <?php endwhile; ?>
+                            <?php endif; ?>
                         </tbody>
                     </table>
                 </div>
@@ -837,33 +701,24 @@ body {
                             </tr>
                         </thead>
                         <tbody>
-                            <?php while($day = mysqli_fetch_assoc($daily_result)): ?>
+                            <?php if(mysqli_num_rows($daily_result) > 0): ?>
+                                <?php while($day = mysqli_fetch_assoc($daily_result)): ?>
+                                    <tr>
+                                        <td><?php echo date('d M Y', strtotime($day['date'])); ?></td>
+                                        <td><?php echo $day['deliveries']; ?></td>
+                                        <td>₹<?php echo number_format($day['earnings'], 2); ?></td>
+                                    </tr>
+                                <?php endwhile; ?>
+                            <?php else: ?>
                                 <tr>
-                                    <td><?php echo date('d M Y', strtotime($day['date'])); ?></td>
-                                    <td><?php echo $day['deliveries']; ?></td>
-                                    <td>₹<?php echo number_format($day['earnings'], 2); ?></td>
+                                    <td colspan="3" style="text-align: center; padding: 30px;">No daily earnings data available yet</td>
                                 </tr>
-                            <?php endwhile; ?>
+                            <?php endif; ?>
                         </tbody>
                     </table>
                 </div>
             </div>
         </div>
-        <!-- <footer class="footer">
-        <p>© 2024 Farmfolio Delivery. All rights reserved.</p>
-        <div class="footer-items">
-            <a href="#">Terms of Service</a>
-            <a href="#">Privacy Policy</a>
-            <a href="#">Contact Us</a>
-            <a href="#">FAQ</a>
-        </div>
-    </footer> -->
     </main>
-
-  
-
-    <script>
-    
-    </script>
 </body>
 </html>
