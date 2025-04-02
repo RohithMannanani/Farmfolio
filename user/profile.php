@@ -637,7 +637,7 @@ echo "Error updating profile: " . $query->error;
             <div class="form-group">
                 <label for="pin"><i class="fas fa-map-pin"></i> PIN Code</label>
                 <input type="text" id="pin" name="pin" 
-                    data-pattern="^\d{6}$"
+                    data-pattern="^\d{6}$/"
                     data-error="Please enter a valid 6-digit PIN code"
                     value="<?= htmlspecialchars($_POST['pin'] ?? $user['pin'] ?? '') ?>" required>
                 <div class="error-message"></div>
@@ -782,6 +782,144 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
+</script>
+
+<!-- Add this script for PIN code validation -->
+<script>
+let pincodes = []; // Will store valid pincodes
+
+// Fetch pincodes from the JSON file
+fetch('../sign up/pincode.json')
+    .then(response => response.json())
+    .then(data => {
+        pincodes = data.pincodes;
+        console.log('Pincodes loaded:', pincodes.length);
+    })
+    .catch(error => console.error('Error loading pincodes:', error));
+
+// Live validation function
+function validatePincode(input) {
+    const pinValue = input.value.trim();
+    const errorElement = document.getElementById('pin-error');
+    const successElement = document.getElementById('pin-success');
+    
+    // Hide both messages initially
+    errorElement.style.display = 'none';
+    successElement.style.display = 'none';
+    
+    // Basic format check (6 digits)
+    if (!/^\d{6}$/.test(pinValue)) {
+        errorElement.textContent = 'PIN code must be 6 digits';
+        errorElement.style.display = 'block';
+        input.classList.add('invalid');
+        input.classList.remove('valid');
+        return false;
+    }
+    
+    // Check against loaded pincodes
+    if (pincodes.length > 0) {
+        const pinNumber = parseInt(pinValue, 10);
+        if (pincodes.includes(pinNumber)) {
+            successElement.textContent = 'Valid PIN code';
+            successElement.style.display = 'block';
+            input.classList.add('valid');
+            input.classList.remove('invalid');
+            return true;
+        } else {
+            errorElement.textContent = 'This PIN code is not serviceable';
+            errorElement.style.display = 'block';
+            input.classList.add('invalid');
+            input.classList.remove('valid');
+            return false;
+        }
+    }
+    
+    return true; // If pincodes not loaded yet, don't block submission
+}
+
+// Add event listeners when DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+    const pinInput = document.getElementById('pin');
+    
+    if (pinInput) {
+        // Create validation message elements if they don't exist
+        if (!document.getElementById('pin-error')) {
+            const errorElement = document.createElement('div');
+            errorElement.id = 'pin-error';
+            errorElement.className = 'validation-message error';
+            errorElement.style.display = 'none';
+            pinInput.parentNode.appendChild(errorElement);
+        }
+        
+        if (!document.getElementById('pin-success')) {
+            const successElement = document.createElement('div');
+            successElement.id = 'pin-success';
+            successElement.className = 'validation-message success';
+            successElement.style.display = 'none';
+            pinInput.parentNode.appendChild(successElement);
+        }
+        
+        // Add input event listener for live validation
+        pinInput.addEventListener('input', function() {
+            validatePincode(this);
+        });
+        
+        // Validate on blur to handle initial value
+        pinInput.addEventListener('blur', function() {
+            validatePincode(this);
+        });
+        
+        // Add validation to form submission
+        const form = pinInput.closest('form');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                if (!validatePincode(pinInput)) {
+                    e.preventDefault();
+                    pinInput.focus();
+                }
+            });
+        }
+        
+        // Initial validation for existing value
+        if (pinInput.value) {
+            validatePincode(pinInput);
+        }
+    }
+});
+
+// Add CSS for validation styling
+const style = document.createElement('style');
+style.textContent = `
+    .validation-message {
+        margin-top: 5px;
+        font-size: 0.85rem;
+        border-radius: 4px;
+        padding: 5px 10px;
+    }
+    
+    .validation-message.error {
+        color: #d32f2f;
+        background-color: rgba(211, 47, 47, 0.1);
+        border-left: 3px solid #d32f2f;
+    }
+    
+    .validation-message.success {
+        color: #388e3c;
+        background-color: rgba(56, 142, 60, 0.1);
+        border-left: 3px solid #388e3c;
+    }
+    
+    input.valid {
+        border-color: #388e3c !important;
+        background-color: rgba(56, 142, 60, 0.05);
+    }
+    
+    input.invalid {
+        border-color: #d32f2f !important;
+        background-color: rgba(211, 47, 47, 0.05);
+    }
+`;
+document.head.appendChild(style);
 </script>
 </body>
 </html>

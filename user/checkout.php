@@ -91,7 +91,7 @@ if (isset($_SESSION['cart']) && count($_SESSION['cart']) > 0) {
 
 // Modify the order processing code
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
-    $userId = $_SESSION['user_id'];
+    $userId = $_SESSION['userid'];
     $house_name = mysqli_real_escape_string($conn, trim($_POST['house_name']));
     $post_office = mysqli_real_escape_string($conn, trim($_POST['post_office']));
     $place = mysqli_real_escape_string($conn, trim($_POST['place']));
@@ -99,11 +99,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
     $phone = mysqli_real_escape_string($conn, trim($_POST['phone']));
     $payment_method = mysqli_real_escape_string($conn, trim($_POST['payment_method']));
     
+    // Debug info - log the received data
+    error_log("Checkout POST data: " . print_r($_POST, true));
+    error_log("Payment method: " . $payment_method);
+    
     // Combine address fields
     $full_address = "$house_name, $post_office, $place, PIN: $pin";
 
     // Add server-side PIN validation
-    $pincode_json = file_get_contents('../signup/pincode.json');
+    $pincode_json = file_get_contents('../sign up/pincode.json');
     $pincodes = json_decode($pincode_json, true)['pincodes'];
     
     if (!in_array($pin, $pincodes)) {
@@ -161,10 +165,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
         ]);
         exit;
     } else {
+        // For COD payment - process directly
         // Start transaction
         mysqli_begin_transaction($conn);
         
         try {
+            error_log("Processing COD order");
+            
             // Create order in orders table with delivery details
             $orderQuery = "INSERT INTO tbl_orders (user_id, total_amount, order_status, order_date, delivery_address, phone_number, payment_method) 
                           VALUES (?, ?, 'pending', NOW(), ?, ?, 'cod')";
@@ -172,6 +179,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
             $stmt->bind_param("idss", $userId, $totalAmount, $full_address, $phone);
             $stmt->execute();
             $orderId = $conn->insert_id;
+            
+            error_log("Created order ID: " . $orderId);
             
             // Insert order items
             foreach ($_SESSION['cart'] as $productId => $quantity) {
@@ -192,6 +201,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
                 $stmt = $conn->prepare($itemQuery);
                 $stmt->bind_param("iiids", $orderId, $productId, $quantity, $itemPrice, $subtotal);
                 $stmt->execute();
+                
+                error_log("Added item to order: Product ID: $productId, Quantity: $quantity");
             }
             
             // Update product stock
@@ -212,13 +223,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
             // Commit transaction
             mysqli_commit($conn);
             
+            error_log("COD order completed successfully. Redirecting to success page.");
+            
             // Redirect to success page
-            header('Location: order_success.php?order_id=' . $orderId);
+            header("Location: order_success.php?order_id=" . $orderId);
             exit;
             
         } catch (Exception $e) {
             // Rollback transaction on error
             mysqli_rollback($conn);
+            error_log("Order processing error: " . $e->getMessage());
             $_SESSION['error'] = "Error processing order: " . $e->getMessage();
             header('Location: cart.php');
             exit;
@@ -801,37 +815,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['razorpay_payment_id']
             <input type="hidden" name="total_amount" value="<?php echo $totalCartPrice; ?>">
             
             <div class="form-group">
-                <label for="house_name">House Name *</label>
+                <label for="house_name" class="required">House Name</label>
                 <input type="text" id="house_name" name="house_name" required 
-                    placeholder="Enter your house name">
+                    placeholder="Enter your house name"
+                    autocomplete="address-line1">
             </div>
 
             <div class="form-group">
-                <label for="post_office">Post Office *</label>
+                <label for="post_office" class="required">Post Office</label>
                 <input type="text" id="post_office" name="post_office" required 
-                    placeholder="Enter your post office">
+                    placeholder="Enter your post office"
+                    autocomplete="address-line2">
             </div>
 
             <div class="form-group">
-                <label for="place">Place *</label>
+                <label for="place" class="required">Place</label>
                 <input type="text" id="place" name="place" required 
-                    placeholder="Enter your place">
+                    placeholder="Enter your place"
+                    autocomplete="address-level2">
             </div>
 
             <div class="form-group">
-                <label for="pin">PIN Code *</label>
+                <label for="pin" class="required">PIN Code</label>
                 <input type="text" id="pin" name="pin" required 
                     placeholder="Enter your PIN code"
                     pattern="[0-9]{6}" 
-                    title="Please enter a valid 6-digit PIN code">
+                    title="Please enter a valid 6-digit PIN code"
+                    autocomplete="postal-code">
             </div>
 
             <div class="form-group">
-                <label for="phone">Phone Number *</label>
+                <label for="phone" class="required">Phone Number</label>
                 <input type="tel" id="phone" name="phone" required 
                     placeholder="Enter your contact number"
                     pattern="[0-9]{10}" 
-                    title="Please enter a valid 10-digit phone number">
+                    title="Please enter a valid 10-digit phone number"
+                    autocomplete="tel">
             </div>
 
             <button type="submit" class="submit-btn" name="place_order">Place Order</button>
@@ -841,69 +860,90 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['razorpay_payment_id']
     <!-- Add Razorpay script -->
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <script>
-    document.getElementById('checkout-form').addEventListener('submit', async function(e) {
-        e.preventDefault();
-        
+    document.getElementById('checkout-form').addEventListener('submit', function(e) {
         const paymentMethod = document.querySelector('input[name="payment_method"]:checked').value;
+        console.log('Form submitted with payment method:', paymentMethod);
         
         if (paymentMethod === 'cod') {
-            this.submit(); // Process normally for COD
-            return;
-        }
-        
-        // For Razorpay payment
-        try {
-            const formData = new FormData(this);
+            // For Cash on Delivery, let the form submit normally
+            console.log('COD selected - allowing normal form submission');
+            document.getElementById('checkout-form').setAttribute('action', '');
+            return true;
+        } else {
+            // For Razorpay, prevent the default form submission
+            e.preventDefault();
+            console.log('Razorpay selected - handling through AJAX');
             
-            const response = await fetch('process_payment.php', {
-                method: 'POST',
-                body: formData
-            });
-            
-            const data = await response.json();
-            
-            if (data.status === 'error') {
-                throw new Error(data.message);
+            // Show loading state on button
+            const btn = document.querySelector('.submit-btn');
+            if (btn) {
+                btn.textContent = 'Processing...';
+                btn.disabled = true;
             }
             
-            const options = {
-                key: data.key,
-                amount: data.amount,
-                currency: data.currency,
-                name: data.name,
-                description: data.description,
-                prefill: data.prefill,
-                handler: async function(response) {
-                    try {
-                        // Create form data for verification
-                        const verifyData = new FormData();
-                        verifyData.append('razorpay_payment_id', response.razorpay_payment_id);
-                        verifyData.append('razorpay_signature', response.razorpay_signature);
+            // Get form data
+            const formData = new FormData(this);
+            
+            // Send AJAX request
+            fetch(window.location.href, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Razorpay data received:', data);
+                
+                const options = {
+                    key: data.key,
+                    amount: data.amount,
+                    currency: data.currency,
+                    name: data.name,
+                    description: data.description,
+                    order_id: data.order_id,
+                    prefill: data.prefill,
+                    handler: function(response) {
+                        // Payment successful
+                        document.getElementById('razorpay_payment_id').value = response.razorpay_payment_id;
+                        document.getElementById('razorpay_order_id').value = response.razorpay_order_id;
+                        document.getElementById('razorpay_signature').value = response.razorpay_signature;
                         
-                        const verifyResponse = await fetch('verify_payment.php', {
-                            method: 'POST',
-                            body: verifyData
-                        });
-                        
-                        const result = await verifyResponse.json();
-                        
-                        if (result.status === 'success') {
-                            window.location.href = result.redirect;
-                        } else {
-                            throw new Error(result.message || 'Payment verification failed');
-                        }
-                    } catch (error) {
-                        alert('Payment verification failed: ' + error.message);
+                        // Submit the payment form
+                        document.getElementById('payment-form').submit();
                     }
+                };
+                
+                const rzp = new Razorpay(options);
+                rzp.open();
+                
+                // Reset button state if user closes the Razorpay popup
+                rzp.on('payment.failed', function(response){
+                    alert('Payment failed: ' + response.error.description);
+                    if (btn) {
+                        btn.textContent = 'Place Order';
+                        btn.disabled = false;
+                    }
+                });
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error processing payment. Please try again.');
+                if (btn) {
+                    btn.textContent = 'Place Order';
+                    btn.disabled = false;
                 }
-            };
-            
-            const rzp = new Razorpay(options);
-            rzp.open();
-            
-        } catch (error) {
-            alert('Error: ' + error.message);
+            });
         }
+    });
+
+    // Debug Information 
+    if (document.querySelector('input[name="payment_method"]:checked')) {
+        console.log('Initial payment method:', document.querySelector('input[name="payment_method"]:checked').value);
+    }
+
+    document.querySelectorAll('input[name="payment_method"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            console.log('Payment method changed to:', this.value);
+        });
     });
     </script>
 
@@ -913,5 +953,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['razorpay_payment_id']
         <input type="hidden" id="razorpay_order_id" name="razorpay_order_id">
         <input type="hidden" id="razorpay_signature" name="razorpay_signature">
     </form>
+
+    <!-- Debugging code - visible only in debug mode -->
+    <?php if(isset($_GET['debug'])): ?>
+    <div style="background-color: #fef3c7; border-left: 4px solid #d97706; padding: 15px; margin: 20px auto; max-width: 800px; border-radius: 8px;">
+        <h3 style="margin-top: 0; color: #92400e;">Debug Information</h3>
+        <pre style="white-space: pre-wrap; overflow-x: auto;">
+Session: <?php print_r($_SESSION); ?>
+
+POST: <?php print_r($_POST); ?>
+
+Cart: <?php echo isset($_SESSION['cart']) ? print_r($_SESSION['cart'], true) : 'Empty'; ?>
+        </pre>
+    </div>
+    <?php endif; ?>
 </body>
 </html>

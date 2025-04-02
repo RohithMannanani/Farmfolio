@@ -78,277 +78,370 @@ $current_deliveries_result = mysqli_query($conn, $current_deliveries_query);
     
     <style>
         * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: Arial, sans-serif;
-}
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', 'Segoe UI', Arial, sans-serif;
+        }
 
-body {
-    display: flex;
-    min-height: 100vh;
-}
+        body {
+            display: flex;
+            min-height: 100vh;
+            background-color: #f5f7fa;
+        }
 
-/* Header Styles */
-.header {
-    position: fixed;
-    top: 0;
-    right: 0;
-    left: 250px;
-    height: 60px;
-    background: #ffffff;
-    padding: 0 20px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    z-index: 100;
-    transition: left 0.3s;
-}
+        /* Header Styles */
+        .header {
+            position: fixed;
+            top: 0;
+            right: 0;
+            left: 250px;
+            height: 70px;
+            background: #ffffff;
+            padding: 0 25px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+            z-index: 100;
+            transition: left 0.3s;
+        }
 
-.logo-section {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
 
-.logo {
-    width: 40px;
-    height: 40px;
-    background: #1a4d2e;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-}
+        .logo {
+            width: 42px;
+            height: 42px;
+            background: linear-gradient(135deg, #1a4d2e, #2d6a4f);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            box-shadow: 0 3px 6px rgba(26, 77, 46, 0.2);
+        }
 
+        .logo-section h2 {
+            font-weight: 600;
+            color: #1a4d2e;
+            letter-spacing: 0.5px;
+        }
 
-.user-section {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-}
+        .user-section {
+            display: flex;
+            align-items: center;
+            gap: 25px;
+        }
 
-.logout-btn {
-    padding: 8px 16px;
-    background: #dc2626;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background 0.3s;
-}
-
-.logout-btn:hover {
-    background: #b91c1c;
-}
-
-/* Sidebar Styles */
-.sidebar {
-    width: 250px;
-    background: #1a4d2e;
-    color: white;
-    padding: 80px 20px 20px;
-    position: fixed;
-    height: 100vh;
-    left: 0;
-    top: 0;
-    transition: width 0.3s;
-}
-
-.sidebar.shrink {
-    width: 60px;
-    padding: 80px 10px 20px;
-}
-
-.sidebar .menu-btn {
-    position: absolute;
-    top: 20px;
-    left: 20px;
-    background: none;
-    border: none;
-    color: white;
-    font-size: 20px;
-    cursor: pointer;
-}
-
-.sidebar-menu {
-    list-style: none;
-}
-
-.sidebar-menu li {
-    margin: 5px 0;
-}
-
-.sidebar-menu a {
-    color: white;
-    text-decoration: none;
-    display: flex;
-    align-items: center;
-    padding: 12px;
-    border-radius: 5px;
-    transition: background 0.3s;
-    position: relative;
-}
-
-.sidebar-menu a:hover {
-    background: #2d6a4f;
-}
-
-.sidebar-menu i {
-    margin-right: 10px;
-    width: 20px;
-    text-align: center;
-}
-
-.sidebar.shrink .sidebar-menu span {
-    display: none;
-}
-
-.sidebar.shrink .sidebar-menu i {
-    margin-right: 0;
-}
-
-.active {
-    background: #2d6a4f;
-}
-
-.badge {
-    position: absolute;
-    right: 1px;
-    background: #dc2626;
-    color: white;
-    font-size: 0.8em;
-    padding: 3px 6px;
-    border-radius: 10px;
-    min-width: 20px;
-    text-align: center;
-    
-}
-
-.sidebar.shrink .badge {
-    right: 5px;
-    top: 5px;
-    font-size: 0.7em;
-    padding: 1px 4px;
-}
-
-/* Main Content Styles */
-.main-content {
-    margin-left: 250px;
-    flex: 1;
-    padding-top: 60px;
-    background: #f3f4f6;
-    transition: margin-left 0.3s;
-}
-
-.main-content.shrink {
-    margin-left: 60px;
-}
-
-.content-area {
-    padding: 20px;
-}
-
-.dashboard-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 20px;
-    margin-bottom: 20px;
-}
-
-.stat-card {
-    background: white;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.stat-card h3 {
-    color: #666;
-    font-size: 0.9em;
-    margin-bottom: 10px;
-}
-
-.stat-card .value {
-    font-size: 1.8em;
-    font-weight: bold;
-    color: #1a4d2e;
-}
-
-.delivery-list {
-    background: white;
-    border-radius: 8px;
-    padding: 20px;
-    margin-bottom: 20px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.delivery-item {
-    padding: 15px;
-    border-bottom: 1px solid #eee;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.delivery-item:last-child {
-    border-bottom: none;
-}
-
-.status-badge {
-    padding: 5px 10px;
-    border-radius: 15px;
-    font-size: 0.8em;
-    font-weight: 500;
-}
-
-.status-pending {
-    background-color: #fee2e2;
-    color: #991b1b;
-}
-
-.status-processing {
-    background-color: #fef3c7;
-    color: #92400e;
-}
-
-.status-shipped {
-    background-color: #dbeafe;
-    color: #1e40af;
-}
-
-.status-delivered {
-    background-color: #dcfce7;
-    color: #166534;
-}
-
-/* Footer Styles */
-.footer {
-    background: #1a4d2e;
-    color: white;
-    padding: 20px;
-    text-align: center;
-}
-
-.footer-items {
-    display: flex;
-    justify-content: center;
-    gap: 20px;
-    margin-top: 10px;
-}
-
-.footer-items a {
-    color: white;
-    text-decoration: none;
-}
-        /* Add these styles to your existing CSS */
-        .status-badge {
-            padding: 5px 10px;
-            border-radius: 15px;
-            font-size: 0.8em;
+        .user-section span {
+            color: #4b5563;
             font-weight: 500;
+        }
+
+        .logout-btn {
+            padding: 9px 18px;
+            background: linear-gradient(135deg, #dc2626, #ef4444);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 3px 6px rgba(220, 38, 38, 0.2);
+        }
+
+        .logout-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 12px rgba(220, 38, 38, 0.25);
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: 250px;
+            background: linear-gradient(180deg, #1a4d2e, #2d6a4f);
+            color: white;
+            padding: 80px 20px 20px;
+            position: fixed;
+            height: 100vh;
+            left: 0;
+            top: 0;
+            transition: width 0.3s;
+            box-shadow: 3px 0 10px rgba(0,0,0,0.1);
+        }
+
+        .sidebar.shrink {
+            width: 70px;
+            padding: 80px 15px 20px;
+        }
+
+        .sidebar .menu-btn {
+            position: absolute;
+            top: 25px;
+            left: 20px;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            margin-top: 15px;
+        }
+
+        .sidebar-menu li {
+            margin: 8px 0;
+        }
+
+        .sidebar-menu a {
+            color: rgba(255, 255, 255, 0.85);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            border-radius: 10px;
+            transition: all 0.3s;
+            position: relative;
+            font-weight: 500;
+        }
+
+        .sidebar-menu a:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            transform: translateX(3px);
+        }
+
+        .sidebar-menu i {
+            margin-right: 12px;
+            width: 20px;
+            text-align: center;
+            font-size: 1.1rem;
+        }
+
+        .sidebar.shrink .sidebar-menu span {
+            display: none;
+        }
+
+        .sidebar.shrink .sidebar-menu i {
+            margin-right: 0;
+        }
+
+        .active {
+            background: rgba(255, 255, 255, 0.15);
+            color: white !important;
+            font-weight: 600 !important;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .badge {
+            position: absolute;
+            right: 10px;
+            background: #ef4444;
+            color: white;
+            font-size: 0.7em;
+            padding: 3px 8px;
+            border-radius: 12px;
+            min-width: 20px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(239, 68, 68, 0.3);
+            font-weight: 600;
+        }
+
+        .sidebar.shrink .badge {
+            right: 0;
+            top: 0;
+            font-size: 0.6em;
+            padding: 2px 5px;
+        }
+
+        /* Main Content Styles */
+        .main-content {
+            margin-left: 250px;
+            flex: 1;
+            padding-top: 70px;
+            background: #f5f7fa;
+            transition: margin-left 0.3s;
+        }
+
+        .main-content.shrink {
+            margin-left: 70px;
+        }
+
+        .content-area {
+            padding: 25px;
+        }
+
+        .content-area h1 {
+            margin-bottom: 25px;
+            color: #1a4d2e;
+            font-weight: 600;
+            font-size: 1.8rem;
+            position: relative;
+            padding-bottom: 10px;
+        }
+
+        .content-area h1:after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 50px;
+            height: 3px;
+            background: linear-gradient(90deg, #1a4d2e, #2d6a4f);
+            border-radius: 3px;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+        }
+
+        .stat-card h3 {
+            color: #6b7280;
+            font-size: 0.9em;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+
+        .stat-card .value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1a4d2e;
+            margin-bottom: 5px;
+        }
+
+        .stat-card small {
+            color: #6b7280;
+            font-size: 0.85em;
+        }
+
+        .stat-card:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 5px;
+            height: 100%;
+            background: linear-gradient(to bottom, #1a4d2e, #2d6a4f);
+            border-radius: 15px 0 0 15px;
+        }
+
+        .delivery-list {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+
+        .delivery-list h2 {
+            margin-bottom: 20px;
+            color: #1a4d2e;
+            font-weight: 600;
+            position: relative;
+            padding-bottom: 10px;
+        }
+
+        .delivery-list h2:after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 40px;
+            height: 3px;
+            background: linear-gradient(90deg, #1a4d2e, #2d6a4f);
+            border-radius: 3px;
+        }
+
+        .delivery-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            margin-bottom: 15px;
+            background: #f9fafb;
+            border-radius: 12px;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.03);
+            transition: all 0.3s ease;
+            border-left: 4px solid #1a4d2e;
+        }
+
+        .delivery-item:hover {
+            background: white;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            transform: translateY(-3px);
+        }
+
+        .delivery-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .delivery-info {
+            flex: 1;
+        }
+
+        .delivery-meta {
+            display: grid;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .delivery-meta p {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #4b5563;
+            font-size: 0.95rem;
+        }
+
+        .delivery-meta i {
+            width: 16px;
+            color: #1a4d2e;
+        }
+
+        .delivery-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: flex-end;
+        }
+
+        .status-badge {
+            padding: 8px 15px;
+            border-radius: 30px;
+            font-size: 0.8em;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            min-width: 100px;
+            text-align: center;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.08);
         }
 
         .status-pending {
@@ -371,87 +464,67 @@ body {
             color: #166534;
         }
 
-        .delivery-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px;
-            margin-bottom: 10px;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-
-        .delivery-info {
-            flex: 1;
-        }
-
-        .delivery-info h3 {
-            margin-bottom: 5px;
-            color: #1a4d2e;
-        }
-
-        .delivery-meta {
-            display: grid;
-            gap: 8px;
-            margin-top: 10px;
-        }
-
-        .delivery-meta p {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .delivery-meta i {
-            width: 16px;
-            color: #1a4d2e;
-        }
-
-        .delivery-actions {
-            display: flex;
-            gap: 10px;
-        }
-
         .action-btn {
-            padding: 5px 10px;
+            padding: 10px 18px;
             border: none;
-            border-radius: 4px;
+            border-radius: 8px;
             cursor: pointer;
             font-size: 0.9em;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 140px;
+            justify-content: center;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 10px rgba(0,0,0,0.15);
         }
 
         .pickup-btn {
-            background-color: #1a4d2e;
+            background: linear-gradient(135deg, #1a4d2e, #2d6a4f);
             color: white;
         }
 
         .complete-btn {
-            background-color: #15803d;
+            background: linear-gradient(135deg, #15803d, #22c55e);
             color: white;
         }
 
-        /* Add these to your existing CSS */
+        .no-deliveries {
+            padding: 30px;
+            text-align: center;
+            color: #6b7280;
+            font-style: italic;
+        }
+
+        /* Toast Notifications */
         .toast-notification {
             position: fixed;
-            bottom: 20px;
-            right: 20px;
-            padding: 12px 24px;
-            border-radius: 8px;
+            bottom: 25px;
+            right: 25px;
+            padding: 15px 25px;
+            border-radius: 10px;
             color: white;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
             animation: slideIn 0.3s ease-out;
             z-index: 1000;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            font-weight: 500;
         }
 
         .toast-notification.success {
-            background-color: #166534;
+            background: linear-gradient(135deg, #15803d, #22c55e);
         }
 
         .toast-notification.error {
-            background-color: #dc2626;
+            background: linear-gradient(135deg, #dc2626, #ef4444);
         }
 
         @keyframes slideIn {
@@ -469,26 +542,109 @@ body {
             opacity: 0.7;
             cursor: not-allowed;
         }
+
+        /* Footer Styles */
+        .footer {
+            background: white;
+            color: #6b7280;
+            padding: 20px;
+            text-align: center;
+            border-radius: 15px;
+            margin-top: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+
+        .footer-items {
+            display: flex;
+            justify-content: center;
+            gap: 25px;
+            margin-top: 10px;
+        }
+
+        .footer-items a {
+            color: #1a4d2e;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .footer-items a:hover {
+            color: #2d6a4f;
+        }
+
+        /* Responsive Styles */
+        @media (max-width: 992px) {
+            .dashboard-grid {
+                grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+                gap: 20px;
+            }
+            
+            .delivery-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .delivery-actions {
+                width: 100%;
+                flex-direction: row;
+                margin-top: 15px;
+                justify-content: flex-end;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 70px;
+            }
+            
+            .sidebar .sidebar-menu span {
+                display: none;
+            }
+            
+            .sidebar .sidebar-menu i {
+                margin-right: 0;
+            }
+            
+            .main-content {
+                margin-left: 70px;
+            }
+            
+            .header {
+                left: 70px;
+            }
+            
+            .content-area {
+                padding: 20px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .user-section span {
+                display: none;
+            }
+        }
     </style>
 </head>
 <body>
     <nav class="sidebar">
-        
         <ul class="sidebar-menu">
-    <li><a href="delivery.php" class="active"><i class="fas fa-home"></i><span>Dashboard</span></a></li>
-    <li>
-        <a href="assign.php">
-            <i class="fas fa-truck"></i>
-            <span>Assigned Deliveries</span>
-            <?php if($pending_orders['pending_count'] > 0): ?>
-                <span class="badge"><?php echo $pending_orders['pending_count']; ?></span>
-            <?php endif; ?>
-        </a>
-    </li>
-    <li><a href="history.php"><i class="fas fa-history"></i><span>Delivery History</span></a></li>
-    <li><a href="earning.php"><i class="fas fa-wallet"></i><span>Earnings</span></a></li>
-    <li><a href="profile.php"><i class="fas fa-user"></i><span>Profile</span></a></li> 
-</ul>
+            <li><a href="delivery.php" class="active"><i class="fas fa-home"></i><span>Dashboard</span></a></li>
+            <li>
+                <a href="assign.php">
+                    <i class="fas fa-truck"></i>
+                    <span>Assigned Deliveries</span>
+                    <?php if($pending_orders['pending_count'] > 0): ?>
+                        <span class="badge"><?php echo $pending_orders['pending_count']; ?></span>
+                    <?php endif; ?>
+                </a>
+            </li>
+            <li><a href="history.php"><i class="fas fa-history"></i><span>Delivery History</span></a></li>
+            <li><a href="earning.php"><i class="fas fa-wallet"></i><span>Earnings</span></a></li>
+            <li><a href="profile.php"><i class="fas fa-user"></i><span>Profile</span></a></li> 
+        </ul>
     </nav>
 
     <header class="header">
@@ -500,13 +656,13 @@ body {
         </div>
         <div class="user-section">
              <span>Welcome, <?php echo ucfirst($_SESSION['username']);?></span>
-            <button class="logout-btn" onclick="window.location.href='http://localhost/mini%20project/logout/logout.php'"><i class="fas fa-sign-out-alt"  ></i> Logout</button>
+            <button class="logout-btn" onclick="window.location.href='http://localhost/mini%20project/logout/logout.php'"><i class="fas fa-sign-out-alt"></i> Logout</button>
         </div>
     </header>
 
     <main class="main-content">
         <div class="content-area">
-            <h1 style="margin-bottom: 20px">Delivery Dashboard</h1>
+            <h1>Delivery Dashboard</h1>
             
             <div class="dashboard-grid">
                 <div class="stat-card">
@@ -528,7 +684,7 @@ body {
             </div>
 
             <div class="delivery-list">
-                <h2 style="margin-bottom: 15px">Current Deliveries</h2>
+                <h2>Current Deliveries</h2>
                 <?php 
                 if(mysqli_num_rows($current_deliveries_result) > 0):
                     while($delivery = mysqli_fetch_assoc($current_deliveries_result)):
@@ -536,7 +692,6 @@ body {
                 ?>
                     <div class="delivery-item">
                         <div class="delivery-info">
-                            <!-- <h3>Order #<?php echo $delivery['order_id']; ?></h3> -->
                             <div class="delivery-meta">
                                 <p><i class="fas fa-user"></i> <?php echo $delivery['customer_name']; ?></p>
                                 <p><i class="fas fa-phone"></i> <?php echo $delivery['phone_number']; ?></p>
@@ -557,12 +712,12 @@ body {
                             <?php if($delivery['order_status'] == 'processing'): ?>
                                 <button onclick="updateStatus(<?php echo $delivery['order_id']; ?>, 'shipped')" 
                                         class="action-btn pickup-btn">
-                                    Start Delivery
+                                    <i class="fas fa-truck"></i> Start Delivery
                                 </button>
                             <?php elseif($delivery['order_status'] == 'shipped'): ?>
                                 <button onclick="updateStatus(<?php echo $delivery['order_id']; ?>, 'delivered')" 
                                         class="action-btn complete-btn">
-                                    Mark Delivered
+                                    <i class="fas fa-check-circle"></i> Mark Delivered
                                 </button>
                             <?php endif; ?>
                         </div>
@@ -577,16 +732,6 @@ body {
                 <?php endif; ?>
             </div>
         </div>
-
-        <!-- <footer class="footer">
-            <p>© 2024 Farmfolio Delivery. All rights reserved.</p>
-            <div class="footer-items">
-                <a href="#">Terms of Service</a>
-                <a href="#">Privacy Policy</a>
-                <a href="#">Contact Us</a>
-                <a href="#">FAQ</a>
-            </div>
-        </footer> -->
     </main>
 
     <script>

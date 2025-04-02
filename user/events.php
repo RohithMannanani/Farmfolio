@@ -672,64 +672,145 @@ $events_result = mysqli_query($conn, $events_query);
 
         .events-header {
             margin-bottom: 30px;
-            padding: 20px;
+            padding: 25px;
             background: white;
             border-radius: 12px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+            position: relative;
+            overflow: hidden;
+            background-image: linear-gradient(to right, rgba(255,255,255,0.95), rgba(255,255,255,0.98)), 
+                              url('https://img.freepik.com/free-photo/green-field-with-sun_1160-878.jpg');
+            background-size: cover;
+            background-position: center;
+        }
+
+        .events-header::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 5px;
+            height: 100%;
+            background: linear-gradient(to bottom, #1a4d2e, #3E885B);
         }
 
         .events-header h1 {
             color: #1a4d2e;
             margin-bottom: 10px;
+            font-size: 2rem;
+            letter-spacing: -0.5px;
+            position: relative;
+            display: inline-block;
+        }
+
+        .events-header h1::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: -5px;
+            width: 40px;
+            height: 3px;
+            background: #3E885B;
+        }
+
+        .events-header p {
+            color: #4b5563;
+            font-size: 1.1rem;
         }
 
         .events-list {
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 25px;
         }
 
         .event-item {
             background: white;
             border-radius: 12px;
-            padding: 20px;
+            padding: 25px;
             display: flex;
-            gap: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            transition: transform 0.3s ease;
+            gap: 25px;
+            box-shadow: 0 3px 15px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(0,0,0,0.03);
         }
 
         .event-item:hover {
-            transform: translateY(-2px);
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            border-color: rgba(0,0,0,0);
+        }
+
+        .event-item::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 3px;
+            width: 100%;
+            background: linear-gradient(to right, #1a4d2e, #3E885B);
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.3s ease;
+        }
+
+        .event-item:hover::after {
+            transform: scaleX(1);
         }
 
         .event-date {
-            min-width: 100px;
+            min-width: 110px;
             text-align: center;
-            padding: 15px;
-            background: #1a4d2e;
+            padding: 20px 15px;
+            background: linear-gradient(to bottom, #1a4d2e, #3E885B);
             color: white;
-            border-radius: 8px;
+            border-radius: 10px;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
+            box-shadow: 0 4px 15px rgba(26, 77, 46, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .event-date::before {
+            content: '';
+            position: absolute;
+            width: 150%;
+            height: 100%;
+            background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,0.1), rgba(255,255,255,0));
+            transform: translateX(-100%);
+            animation: shimmer 3s infinite;
+        }
+
+        @keyframes shimmer {
+            100% {
+                transform: translateX(100%);
+            }
         }
 
         .date-day {
-            font-size: 2rem;
+            font-size: 2.4rem;
             font-weight: bold;
             line-height: 1;
+            margin-bottom: 5px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
         .date-month {
-            font-size: 1.1rem;
+            font-size: 1.2rem;
             text-transform: uppercase;
+            font-weight: 600;
+            margin-bottom: 2px;
+            letter-spacing: 1px;
         }
 
         .date-year {
-            font-size: 0.9rem;
-            opacity: 0.8;
+            font-size: 1rem;
+            opacity: 0.9;
         }
 
         .event-details {
@@ -737,96 +818,252 @@ $events_result = mysqli_query($conn, $events_query);
         }
 
         .event-title {
-            font-size: 1.3rem;
+            font-size: 1.5rem;
             color: #1a4d2e;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
+            line-height: 1.3;
+            font-weight: 600;
+            transition: color 0.3s ease;
+        }
+
+        .event-item:hover .event-title {
+            color: #3E885B;
         }
 
         .event-farm {
             color: #4b5563;
-            margin-bottom: 15px;
+            margin-bottom: 18px;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
+            font-size: 1.05rem;
+        }
+
+        .event-farm i {
+            color: #3E885B;
+            font-size: 1.1rem;
         }
 
         .event-info {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 15px;
-            margin-bottom: 15px;
+            margin-bottom: 18px;
+            background: #f9fafb;
+            padding: 15px;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            border-left: 4px solid #e8f5e9;
+        }
+
+        .event-item:hover .event-info {
+            background: #f0f9f0;
+            border-left-color: #3E885B;
         }
 
         .info-item {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
             color: #4b5563;
+            transition: all 0.2s ease;
+            padding: 8px;
+            border-radius: 6px;
+        }
+
+        .info-item:hover {
+            background: rgba(62, 136, 91, 0.1);
+            transform: translateX(5px);
         }
 
         .info-item i {
-            color: #1a4d2e;
-            width: 16px;
+            color: #3E885B;
+            width: 18px;
+            font-size: 1.1rem;
         }
 
         .event-description {
             color: #4b5563;
-            margin: 15px 0;
-            line-height: 1.6;
+            margin: 18px 0;
+            line-height: 1.7;
+            font-size: 1.05rem;
+            padding: 15px;
+            padding-left: 18px;
+            border-left: 4px solid #e8f5e9;
+            background: rgba(248, 250, 252, 0.5);
+            border-radius: 0 8px 8px 0;
+            transition: all 0.3s ease;
+        }
+
+        .event-item:hover .event-description {
+            border-left-color: #3E885B;
+            background: rgba(240, 249, 240, 0.5);
         }
 
         .event-actions {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-top: 15px;
-            padding-top: 15px;
+            margin-top: 18px;
+            padding-top: 18px;
             border-top: 1px solid #e5e7eb;
         }
 
         .participant-count {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
             color: #4b5563;
+            padding: 8px 15px;
+            background: #f9fafb;
+            border-radius: 20px;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+        }
+
+        .event-item:hover .participant-count {
+            background: #f0f9f0;
+        }
+
+        .participant-count i {
+            color: #3E885B;
         }
 
         .register-btn {
-            background: #1a4d2e;
+            background: linear-gradient(to right, #1a4d2e, #2d6a4f);
             color: white;
-            padding: 8px 20px;
-            border-radius: 6px;
+            padding: 12px 25px;
+            border-radius: 25px;
             text-decoration: none;
-            transition: background 0.3s ease;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 500;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(26, 77, 46, 0.15);
+            z-index: 1;
+        }
+
+        .register-btn::before {
+            content: '\f274';
+            font-family: 'Font Awesome 5 Free';
+            font-weight: 900;
+        }
+
+        .register-btn::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to right, #2d6a4f, #1a4d2e);
+            z-index: -1;
+            opacity: 0;
+            transition: opacity 0.3s ease;
         }
 
         .register-btn:hover {
-            background: #2d6a4f;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(45, 106, 79, 0.25);
+        }
+
+        .register-btn:hover::after {
+            opacity: 1;
         }
 
         .registered-btn {
             background: #e8f5e9;
             color: #1a4d2e;
-            padding: 8px 20px;
-            border-radius: 6px;
+            padding: 12px 25px;
+            border-radius: 25px;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
             cursor: not-allowed;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(232, 245, 233, 0.5);
+        }
+
+        .registered-btn:hover {
+            background: #d5ebd7;
         }
 
         .no-events {
             text-align: center;
-            padding: 40px;
+            padding: 60px 20px;
             background: white;
             border-radius: 12px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 3px 15px rgba(0,0,0,0.05);
+            background-image: linear-gradient(to bottom, rgba(255,255,255,0.98), rgba(255,255,255,0.95)), 
+                              url('https://img.freepik.com/free-photo/green-field-with-sun_1160-878.jpg');
+            background-size: cover;
+            background-position: center;
         }
 
         .no-events i {
-            font-size: 48px;
-            color: #d1d5db;
+            font-size: 60px;
+            color: #3E885B;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .no-events h3 {
+            font-size: 1.6rem;
+            color: #1a4d2e;
             margin-bottom: 15px;
+        }
+
+        .no-events p {
+            color: #4b5563;
+            max-width: 500px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        /* Animation for event items */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .event-item {
+            animation: fadeInUp 0.6s ease forwards;
+            opacity: 0;
+        }
+        
+        .event-item:nth-child(1) {animation-delay: 0.1s;}
+        .event-item:nth-child(2) {animation-delay: 0.2s;}
+        .event-item:nth-child(3) {animation-delay: 0.3s;}
+        .event-item:nth-child(4) {animation-delay: 0.4s;}
+        .event-item:nth-child(5) {animation-delay: 0.5s;}
+
+        /* Custom scrollbar for webkit browsers */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #3E885B;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #1a4d2e;
         }
 
         @media (max-width: 768px) {
@@ -836,12 +1073,86 @@ $events_result = mysqli_query($conn, $events_query);
 
             .event-date {
                 align-self: flex-start;
+                flex-direction: row;
+                width: fit-content;
+                padding: 10px 15px;
+                gap: 10px;
+                margin-bottom: 15px;
+            }
+
+            .date-day {
+                font-size: 1.8rem;
+                margin-bottom: 0;
+            }
+
+            .date-month, .date-year {
+                font-size: 0.9rem;
             }
 
             .event-info {
                 grid-template-columns: 1fr;
             }
+
+            .event-actions {
+                flex-direction: column;
+                gap: 15px;
+                align-items: flex-start;
+            }
+
+            .register-btn, .registered-btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .sidebar {
+                width: 60px;
+            }
+
+            .sidebar-menu span {
+                display: none;
+            }
+
+            .main-content {
+                margin-left: 60px;
+            }
         }
+
+        @media (max-width: 480px) {
+            .sidebar {
+                width: 0;
+                padding: 0;
+                overflow: hidden;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .pro {
+                justify-content: flex-end;
+            }
+
+            .head {
+                display: none;
+            }
+
+            .events-header {
+                padding: 15px;
+            }
+
+            .events-header h1 {
+                font-size: 1.5rem;
+            }
+
+            .event-item {
+                padding: 15px;
+            }
+
+            .event-title {
+                font-size: 1.2rem;
+            }
+        }
+
     </style>
 </head>
 <body>
@@ -1000,7 +1311,7 @@ $events_result = mysqli_query($conn, $events_query);
     }
     </script>
 
-    <div class="events-container" style="margin-top: 60px;">
+    <div class="events-container" style="margin-top: 40px;">
         <div class="events-header">
             <h1>Upcoming Farm Events</h1>
             <p>Join exciting farm events and activities in your area</p>
@@ -1009,7 +1320,9 @@ $events_result = mysqli_query($conn, $events_query);
         <div class="events-list">
             <?php 
             if(mysqli_num_rows($events_result) > 0):
+                $event_count = 0;
                 while($event = mysqli_fetch_assoc($events_result)):
+                    $event_count++;
                     // Check if user is already registered
                     $check_registration = "SELECT * FROM tbl_participants 
                                         WHERE event_id = ? AND user_id = ?";
@@ -1018,7 +1331,7 @@ $events_result = mysqli_query($conn, $events_query);
                     $stmt->execute();
                     $is_registered = $stmt->get_result()->num_rows > 0;
             ?>
-                <div class="event-item">
+                <div class="event-item" style="animation-delay: <?php echo (0.1 * $event_count); ?>s">
                     <div class="event-date">
                         <span class="date-day"><?php echo date('d', strtotime($event['event_date'])); ?></span>
                         <span class="date-month"><?php echo date('M', strtotime($event['event_date'])); ?></span>
@@ -1033,7 +1346,7 @@ $events_result = mysqli_query($conn, $events_query);
                         <div class="event-info">
                             <div class="info-item">
                                 <i class="fas fa-clock"></i>
-                                <span></span>
+                                <span><?php echo date('l, F d, Y', strtotime($event['event_date'])); ?></span>
                             </div>
                             <div class="info-item">
                                 <i class="fas fa-map-marker-alt"></i>
@@ -1050,7 +1363,7 @@ $events_result = mysqli_query($conn, $events_query);
                         <div class="event-actions">
                             <div class="participant-count">
                                 <i class="fas fa-calendar-check"></i>
-                                <span><?php echo date('l, F d, Y', strtotime($event['event_date'])); ?></span>
+                                <span>Event Date: <?php echo date('l, F d, Y', strtotime($event['event_date'])); ?></span>
                             </div>
                             <?php if($is_registered): ?>
                                 <button class="registered-btn">
