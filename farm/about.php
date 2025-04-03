@@ -32,6 +32,16 @@ $available_categories_query = "SELECT c.* FROM tbl_category c
                              ORDER BY c.category, c.sub";
 $available_categories = mysqli_query($conn, $available_categories_query);
 
+// Get ALL categories for the new dropdown
+$all_categories_query = "SELECT c.*, 
+                        (SELECT COUNT(*) FROM tbl_fc fc 
+                         WHERE fc.category_id = c.category_id 
+                         AND fc.farm_id = $farm_id) as is_assigned 
+                        FROM tbl_category c 
+                        WHERE c.status = '1'
+                        ORDER BY c.category, c.sub";
+$all_categories = mysqli_query($conn, $all_categories_query);
+
 // Handle image upload
 if(isset($_POST['upload'])) {
     $target_dir = "../uploads/farm_images/";
@@ -147,30 +157,45 @@ if(isset($_POST['delete_category'])) {
 
 // Handle adding existing category
 if(isset($_POST['add_existing_category'])) {
+    if(empty($_POST['category_id'])) {
+        echo "<script>alert('Please select a category!');</script>";
+        echo "<script>window.location.href='about.php';</script>";
+        exit();
+    }
+    
     $category_id = mysqli_real_escape_string($conn, $_POST['category_id']);
     
-    // Check if this category is already associated with the farm
+    // Check if this category is already associated with the farm in tbl_fc - with error handling
     $check_existing = "SELECT * FROM tbl_fc 
                       WHERE farm_id = $farm_id 
                       AND category_id = $category_id";
     $existing_result = mysqli_query($conn, $check_existing);
     
+    if(!$existing_result) {
+        echo "<script>alert('Database error: " . mysqli_error($conn) . "');</script>";
+        echo "<script>window.location.href='about.php';</script>";
+        exit();
+    }
+    
     if(mysqli_num_rows($existing_result) > 0) {
+        // Category already exists for this farm
         echo "<script>alert('This category is already added to your farm!');</script>";
         echo "<script>window.location.href='about.php';</script>";
         exit();
+    } 
+    
+    // Link the category to the farm
+    $insert_fc = "INSERT INTO tbl_fc (farm_id, category_id) 
+                VALUES ($farm_id, $category_id)";
+    
+    if(mysqli_query($conn, $insert_fc)) {
+        echo "<script>alert('Category added to farm successfully!');</script>";
+        echo "<script>window.location.href='about.php';</script>";
+        exit();
     } else {
-        // Link the category to the farm
-        $insert_fc = "INSERT INTO tbl_fc (farm_id, category_id) 
-                     VALUES ($farm_id, $category_id)";
-        
-        if(mysqli_query($conn, $insert_fc)) {
-            echo "<script>alert('Category added to farm successfully!');</script>";
-            echo "<script>window.location.href='about.php';</script>";
-            exit();
-        } else {
-            echo "<script>alert('Error adding category: " . mysqli_error($conn) . "');</script>";
-        }
+        echo "<script>alert('Error adding category: " . mysqli_error($conn) . "');</script>";
+        echo "<script>window.location.href='about.php';</script>";
+        exit();
     }
 }
 
@@ -659,6 +684,146 @@ if(isset($_POST['add_existing_category'])) {
         select.form-control:hover {
             border-color: var(--primary-light);
         }
+        
+        /* Styles for assigned categories */
+        .assigned-category {
+            background-color: #f3f4f6;
+            color: #9ca3af;
+            font-style: italic;
+        }
+        
+        option:disabled {
+            background-color: #f3f4f6;
+            color: #9ca3af;
+        }
+        
+        /* Hint text styling */
+        .hint-text {
+            color: var(--gray);
+            font-size: 0.85rem;
+            margin-top: 8px;
+            font-style: italic;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .hint-text i {
+            color: var(--primary);
+            font-size: 0.9rem;
+        }
+
+        /* Styles for category selection grid */
+        .category-select-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .category-select-card {
+            display: block;
+            background: var(--white);
+            border: 2px solid var(--gray-light);
+            border-radius: var(--radius);
+            padding: 15px;
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .category-select-card:hover:not(.disabled) {
+            border-color: var(--primary);
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .category-select-card input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .category-select-card input[type="radio"]:checked + .card-content {
+            background-color: rgba(26, 77, 46, 0.05);
+        }
+        
+        .category-select-card input[type="radio"]:checked + .card-content::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 5px;
+            height: 100%;
+            background: var(--primary);
+        }
+        
+        .category-select-card.selected {
+            border-color: var(--primary);
+            border-width: 2px;
+            box-shadow: var(--shadow-md);
+            transform: translateY(-3px);
+        }
+        
+        .category-select-card.selected .card-content {
+            background-color: rgba(26, 77, 46, 0.05);
+        }
+        
+        .card-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            transition: var(--transition);
+        }
+        
+        .category-select-info h4 {
+            margin: 0;
+            color: var(--primary-dark);
+            font-size: 1rem;
+            font-weight: 600;
+        }
+        
+        .category-select-info p {
+            margin: 5px 0 0;
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+        
+        .already-added {
+            color: var(--gray);
+            font-size: 1.2rem;
+        }
+        
+        .category-select-card.disabled {
+            opacity: 0.7;
+            background-color: var(--light);
+            cursor: not-allowed;
+            border-color: var(--gray-light);
+        }
+        
+        .category-select-card.disabled .category-select-info h4,
+        .category-select-card.disabled .category-select-info p {
+            color: var(--gray);
+        }
+        
+        /* Animation for the cards */
+        .category-select-card {
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+        
+        .category-select-card:nth-child(2n) { animation-delay: 0.05s; }
+        .category-select-card:nth-child(3n) { animation-delay: 0.1s; }
+        .category-select-card:nth-child(4n) { animation-delay: 0.15s; }
+        
+        /* Form actions styling */
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+        }
     </style>
     <script>
     function validateImage(input) {
@@ -707,6 +872,40 @@ if(isset($_POST['add_existing_category'])) {
     return true;
 }
 
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add form validation for category selection
+        const categoryForm = document.querySelector('.add-category-form form');
+        const categoryRadios = document.querySelectorAll('input[name="category_id"]');
+        
+        if(categoryForm) {
+            // Add visual feedback when a card is selected
+            categoryRadios.forEach(radio => {
+                radio.addEventListener('change', function() {
+                    // Remove selection highlight from all cards
+                    document.querySelectorAll('.category-select-card').forEach(card => {
+                        card.classList.remove('selected');
+                    });
+                    
+                    // Add selection highlight to selected card
+                    if(this.checked && !this.disabled) {
+                        this.closest('.category-select-card').classList.add('selected');
+                    }
+                });
+            });
+            
+            // Form submission validation
+            categoryForm.addEventListener('submit', function(e) {
+                // Check if any category is selected
+                const isAnySelected = Array.from(categoryRadios).some(radio => radio.checked);
+                
+                if(!isAnySelected) {
+                    e.preventDefault();
+                    alert('Please select a category to add to your farm.');
+                    return false;
+                }
+            });
+        }
+    });
     </script>
 </head>
 <body>
@@ -750,33 +949,57 @@ if(isset($_POST['add_existing_category'])) {
                     </div>
 
                     <div class="add-category-form">
-                        <h3 style="margin-top: 30px;">Add New Category</h3>
+                        <h3 style="margin-top: 30px;">Add Category to Farm</h3>
                         
-                        <?php if(mysqli_num_rows($available_categories) > 0): ?>
-                            <form method="POST">
-                                <div class="form-group" style="margin-bottom: 20px;">
-                                    <label for="existing_category">Available Categories</label>
-                                    <div class="select-wrapper">
-                                        <select id="existing_category" name="category_id" required class="form-control">
-                                            <option value="">-- Select a Category --</option>
-                                            <?php while($cat = mysqli_fetch_assoc($available_categories)): ?>
-                                                <option value="<?php echo $cat['category_id']; ?>">
-                                                    <?php echo htmlspecialchars($cat['category'] . ' - ' . $cat['sub']); ?>
-                                                </option>
-                                            <?php endwhile; ?>
-                                        </select>
-                                    </div>
+                        <form method="POST">
+                            <div class="form-group" style="margin-bottom: 20px;">
+                                <label class="form-label">All Available Categories</label>
+                                
+                                <div class="category-select-grid">
+                                    <?php 
+                                    // Use all_categories
+                                    mysqli_data_seek($all_categories, 0);
+                                    $available_count = 0;
+                                    while($cat = mysqli_fetch_assoc($all_categories)): 
+                                        $isAssigned = $cat['is_assigned'] > 0;
+                                        if(!$isAssigned) {
+                                            $available_count++;
+                                        }
+                                        $cardClass = $isAssigned ? 'category-select-card disabled' : 'category-select-card';
+                                    ?>
+                                        <label class="<?php echo $cardClass; ?>">
+                                            <input type="radio" name="category_id" value="<?php echo $cat['category_id']; ?>" 
+                                                  <?php echo $isAssigned ? 'disabled' : ''; ?> required>
+                                            <div class="card-content">
+                                                <div class="category-select-info">
+                                                    <h4><?php echo htmlspecialchars($cat['category']); ?></h4>
+                                                    <p><?php echo htmlspecialchars($cat['sub']); ?></p>
+                                                </div>
+                                                <?php if($isAssigned): ?>
+                                                    <div class="already-added">
+                                                        <i class="fas fa-check-circle"></i>
+                                                    </div>
+                                                <?php endif; ?>
+                                            </div>
+                                        </label>
+                                    <?php endwhile; ?>
                                 </div>
-                                <button type="submit" name="add_existing_category" class="add-category-btn">
-                                    <i class="fas fa-plus"></i> Add Selected Category
-                                </button>
-                            </form>
-                        <?php else: ?>
-                            <div class="empty-state">
-                                <i class="fas fa-list-ul" style="font-size: 2.5rem; color: var(--gray-light); margin-bottom: 1rem;"></i>
-                                <p style="color: var(--gray); font-style: italic;">No more categories available to add.</p>
+                                
+                                <?php if($available_count == 0): ?>
+                                    <div class="empty-state">
+                                        <i class="fas fa-list-ul" style="font-size: 2.5rem; color: var(--gray-light); margin-bottom: 1rem;"></i>
+                                        <p style="color: var(--gray); font-style: italic;">All categories have been added to your farm.</p>
+                                    </div>
+                                <?php else: ?>
+                                    <p class="hint-text"><i class="fas fa-info-circle"></i> Click a card to select that category. Gray cards are already added to your farm.</p>
+                                    <div class="form-actions" style="margin-top: 20px;">
+                                        <button type="submit" name="add_existing_category" class="add-category-btn">
+                                            <i class="fas fa-plus"></i> Add Selected Category
+                                        </button>
+                                    </div>
+                                <?php endif; ?>
                             </div>
-                        <?php endif; ?>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -788,80 +1011,5 @@ if(isset($_POST['add_existing_category'])) {
             </div>
         <?php endif; ?>
     </div>
-
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Add form validation
-        const categoryForm = document.querySelector('.add-category-form form');
-        if(categoryForm) {
-            categoryForm.addEventListener('submit', function(e) {
-                const category = document.getElementById('category').value.trim();
-                const subCategory = document.getElementById('sub_category').value.trim();
-                
-                if(category.length < 3 || subCategory.length < 3) {
-                    e.preventDefault();
-                    alert('Category and sub-category names must be at least 3 characters long.');
-                    return false;
-                }
-                
-                if(!/^[a-zA-Z\s]+$/.test(category) || !/^[a-zA-Z\s]+$/.test(subCategory)) {
-                    e.preventDefault();
-                    alert('Category and sub-category names should only contain letters and spaces.');
-                    return false;
-                }
-            });
-        }
-        if(categoryForm) {
-            const categoryInput = document.getElementById('category');
-            const subCategoryInput = document.getElementById('sub_category');
-            
-            async function checkCategoryExists() {
-                const category = categoryInput.value.trim();
-                const subCategory = subCategoryInput.value.trim();
-                
-                try {
-                    const response = await fetch('check_category.php', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded',
-                        },
-                        body: `category=${encodeURIComponent(category)}&sub_category=${encodeURIComponent(subCategory)}&farm_id=<?php echo $farm_id; ?>`
-                    });
-                    
-                    const data = await response.json();
-                    return data.exists;
-                } catch (error) {
-                    console.error('Error checking category:', error);
-                    return false;
-                }
-            }
-            
-            categoryForm.addEventListener('submit', async function(e) {
-                e.preventDefault();
-                
-                const category = categoryInput.value.trim();
-                const subCategory = subCategoryInput.value.trim();
-                
-                if(category.length < 3 || subCategory.length < 3) {
-                    alert('Category and sub-category names must be at least 3 characters long.');
-                    return;
-                }
-                
-                if(!/^[a-zA-Z\s]+$/.test(category) || !/^[a-zA-Z\s]+$/.test(subCategory)) {
-                    alert('Category and sub-category names should only contain letters and spaces.');
-                    return;
-                }
-                
-                const exists = await checkCategoryExists();
-                if(exists) {
-                    alert('This category is already added to your farm!');
-                    return;
-                }
-                
-                this.submit();
-            });
-        }
-    });
-    </script>
 </body>
 </html>
