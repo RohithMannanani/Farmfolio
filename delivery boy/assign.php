@@ -697,7 +697,7 @@ body {
         .then(response => response.json())
         .then(data => {
             if(data.success) {
-                alert(data.message);
+                // alert(data.message);
                 location.reload(); // Reload the page to update the order list
             } else {
                 alert('Error: ' + (data.message || 'Failed to process order'));
@@ -727,7 +727,7 @@ body {
     // Logout button handler
     document.querySelector('.logout-btn').addEventListener('click', function() {
         // Add logout logic here
-        alert('Logging out...');
+        // alert('Logging out...');
     });
     </script>
 </body>

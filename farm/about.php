@@ -996,7 +996,7 @@ if(isset($_POST['add_existing_category'])) {
                                         <button type="submit" name="add_existing_category" class="add-category-btn">
                                             <i class="fas fa-plus"></i> Add Selected Category
                                         </button>
-                                    </div>
+                                </div>
                                 <?php endif; ?>
                             </div>
                         </form>

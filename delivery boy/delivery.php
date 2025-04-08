@@ -968,7 +968,7 @@ $current_deliveries_result = mysqli_query($conn, $current_deliveries_query);
     // Logout button handler
     document.querySelector('.logout-btn').addEventListener('click', function() {
         // Add logout logic here
-        alert('Logging out...');
+        // alert('Logging out...');
     });
     </script>
 </body>

@@ -2,17 +2,16 @@
 session_start();
 if(!isset($_SESSION['username'])){
     header('location: http://localhost/mini%20project/login/login.php');
+    exit; // Add exit here
 }
 
-// Include database connection
+// Include database connection and Razorpay setup
 include '../databse/connect.php';
-
-// Add Razorpay configuration at the top with other includes
 require_once('../razorpay-php/Razorpay.php');
 use Razorpay\Api\Api;
 
-$razorpay_key_id = 'rzp_test_46SrjQdO6MetdE'; // Replace with your actual Razorpay key ID
-$razorpay_key_secret = '3fEscmmNDMEPbSvUX4rpYALy'; // Replace with your actual Razorpay key secret
+$razorpay_key_id = 'rzp_test_FjIWY7OUwRhbVn';
+$razorpay_key_secret = 'pxQaQUudekWwLgos0xOd2wUB';
 
 $totalAmount = isset($_POST['total_amount']) ? floatval($_POST['total_amount']) : 0;
 
@@ -86,6 +85,71 @@ if (isset($_SESSION['cart']) && count($_SESSION['cart']) > 0) {
     
     while ($row = mysqli_fetch_assoc($result)) {
         $productDetails[] = $row;
+    }
+}
+
+// Handle Razorpay payment initialization
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['payment_method']) && $_POST['payment_method'] === 'razorpay') {
+    header('Content-Type: application/json');
+    
+    try {
+        // Get form data
+        $userId = $_SESSION['userid'];
+        $full_address = $_POST['house_name'] . ', ' . $_POST['post_office'] . ', ' . $_POST['place'] . ', PIN: ' . $_POST['pin'];
+        $phone = $_POST['phone'];
+        $amount = floatval($_POST['total_amount']);
+
+        // Validate amount
+        if ($amount <= 0) {
+            throw new Exception("Invalid amount");
+        }
+
+        // Initialize Razorpay
+        $api = new Api($razorpay_key_id, $razorpay_key_secret);
+        
+        // Create Razorpay order
+        $razorpayOrder = $api->order->create([
+            'amount' => $amount * 100, // Convert to paise
+            'currency' => 'INR',
+            'payment_capture' => 1
+        ]);
+
+        // Store order details in session
+        $_SESSION['razorpay_order_id'] = $razorpayOrder['id'];
+        $_SESSION['checkout_details'] = [
+            'address' => $full_address,
+            'phone' => $phone,
+            'amount' => $amount,
+            'user_id' => $userId
+        ];
+
+        // Log the order creation
+        error_log("Created Razorpay order: " . print_r($razorpayOrder, true));
+
+        // Return payment details
+        echo json_encode([
+            'status' => 'success',
+            'key' => $razorpay_key_id,
+            'amount' => $amount * 100,
+            'currency' => 'INR',
+            'order_id' => $razorpayOrder['id'],
+            'name' => 'Farmfolio',
+            'description' => 'Order Payment',
+            'prefill' => [
+                'name' => $_SESSION['username'],
+                'contact' => $phone,
+            ]
+        ]);
+        exit;
+
+    } catch (Exception $e) {
+        error_log("Razorpay Error: " . $e->getMessage());
+        http_response_code(400);
+        echo json_encode([
+            'status' => 'error',
+            'message' => $e->getMessage()
+        ]);
+        exit;
     }
 }
 
@@ -297,7 +361,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['razorpay_payment_id']
                     // Insert order item
                     $itemQuery = "INSERT INTO tbl_order_items (order_id, product_id, quantity, price, subtotal) 
                                 VALUES (?, ?, ?, ?, ?)";
-                    $stmt = $conn->prepare($itemQuery);
+                    $stmt->prepare($itemQuery);
                     $stmt->bind_param("iiids", $orderId, $productId, $quantity, $itemPrice, $subtotal);
                     $stmt->execute();
                 }
@@ -558,7 +622,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['razorpay_payment_id']
         }
 
         .item-price p {
-            color: var(--primary-color);
+            color: var (--primary-color);
             font-weight: 600;
             font-size: 1.1rem;
         }
@@ -917,6 +981,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['razorpay_payment_id']
     <!-- Add Razorpay script -->
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <script>
+    // Add this function before your existing JavaScript code
+    function resetSubmitButton() {
+        const btn = document.querySelector('.submit-btn');
+        if (btn) {
+            btn.innerHTML = '<i class="fas fa-shopping-bag"></i> Place Order';
+            btn.disabled = false;
+        }
+    }
+
     // Fetch valid PINs from JSON file
     let validPincodes = [];
     fetch('../sign up/pincode.json')
@@ -1078,7 +1151,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['razorpay_payment_id']
         });
         
         // Form submission validation
-        document.getElementById('checkout-form').addEventListener('submit', function(e) {
+        document.getElementById('checkout-form').addEventListener('submit', async function(e) {
             let isValid = true;
             
             // Validate all required fields
@@ -1112,14 +1185,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['razorpay_payment_id']
             }
             
             if (!isValid) {
-        e.preventDefault();
+                e.preventDefault();
                 return false;
             }
         
-        const paymentMethod = document.querySelector('input[name="payment_method"]:checked').value;
+            const paymentMethod = document.querySelector('input[name="payment_method"]:checked').value;
             console.log('Form validation passed. Payment method:', paymentMethod);
         
-        if (paymentMethod === 'cod') {
+            if (paymentMethod === 'cod') {
                 // For Cash on Delivery, let the form submit normally
                 console.log('COD selected - allowing normal form submission');
                 document.getElementById('checkout-form').setAttribute('action', '');
@@ -1127,66 +1200,95 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['razorpay_payment_id']
             } else {
                 // For Razorpay, prevent the default form submission
                 e.preventDefault();
-                console.log('Razorpay selected - handling through AJAX');
+                console.log('Razorpay selected - handling payment');
                 
-                // Show loading state on button
-                const btn = document.querySelector('.submit-btn');
-                if (btn) {
-                    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
-                    btn.disabled = true;
-                }
-                
-                // Get form data
-            const formData = new FormData(this);
-            
-                // Send AJAX request
-                fetch(window.location.href, {
-                method: 'POST',
-                body: formData
-                })
-                .then(response => response.json())
-                .then(data => {
-                    console.log('Razorpay data received:', data);
-            
-            const options = {
-                key: data.key,
-                amount: data.amount,
-                currency: data.currency,
-                name: data.name,
-                description: data.description,
-                        order_id: data.order_id,
-                prefill: data.prefill,
-                        handler: function(response) {
-                            // Payment successful
-                            document.getElementById('razorpay_payment_id').value = response.razorpay_payment_id;
-                            document.getElementById('razorpay_order_id').value = response.razorpay_order_id;
-                            document.getElementById('razorpay_signature').value = response.razorpay_signature;
-                            
-                            // Submit the payment form
-                            document.getElementById('payment-form').submit();
-                }
-            };
-            
-            const rzp = new Razorpay(options);
-            rzp.open();
-            
-                    // Reset button state if user closes the Razorpay popup
-                    rzp.on('payment.failed', function(response){
-                        alert('Payment failed: ' + response.error.description);
-                        if (btn) {
-                            btn.innerHTML = '<i class="fas fa-shopping-bag"></i> Place Order';
-                            btn.disabled = false;
+                try {
+                    // Show loading state
+                    const btn = document.querySelector('.submit-btn');
+                    if (btn) {
+                        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+                        btn.disabled = true;
+                    }
+                    
+                    // Get form data
+                    const formData = new FormData(this);
+                    formData.append('payment_method', 'razorpay');
+                    
+                    // Initialize payment
+                    const response = await fetch(window.location.href, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'Accept': 'application/json'
                         }
                     });
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Error processing payment. Please try again.');
-                    if (btn) {
-                        btn.innerHTML = '<i class="fas fa-shopping-bag"></i> Place Order';
-                        btn.disabled = false;
+                    
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.message || 'Network response was not ok');
                     }
-                });
+                    
+                    const data = await response.json();
+                    console.log('Razorpay initialization:', data);
+                    
+                    if (data.status === 'error') {
+                        throw new Error(data.message);
+                    }
+
+                    // Configure Razorpay
+                    const options = {
+                        key: data.key,
+                        amount: data.amount,
+                        currency: data.currency,
+                        name: data.name,
+                        description: data.description,
+                        order_id: data.order_id,
+                        prefill: data.prefill,
+                        handler: async function(response) {
+                            try {
+                                console.log('Payment response:', response);
+                                
+                                const verifyData = new FormData();
+                                verifyData.append('razorpay_payment_id', response.razorpay_payment_id);
+                                verifyData.append('razorpay_order_id', data.order_id);
+                                verifyData.append('razorpay_signature', response.razorpay_signature);
+
+                                const verifyResponse = await fetch('verify_payment.php', {
+                                    method: 'POST',
+                                    body: verifyData
+                                });
+
+                                const result = await verifyResponse.json();
+                                console.log('Verification result:', result);
+
+                                if (result.status === 'success') {
+                                    window.location.href = result.redirect;
+                                } else {
+                                    throw new Error(result.message || 'Payment verification failed');
+                                }
+                            } catch (error) {
+                                console.error('Verification error:', error);
+                                alert('Payment verification failed: ' + error.message);
+                                resetSubmitButton();
+                            }
+                        },
+                        modal: {
+                            ondismiss: function() {
+                                console.log('Payment cancelled');
+                                resetSubmitButton();
+                            }
+                        }
+                    };
+
+                    // Initialize Razorpay
+                    const rzp = new Razorpay(options);
+                    rzp.open();
+                    
+                } catch (error) {
+                    console.error('Payment error:', error);
+                    alert('Error processing payment: ' + error.message);
+                    resetSubmitButton();
+                }
             }
         });
     });
