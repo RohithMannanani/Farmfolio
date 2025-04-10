@@ -112,11 +112,11 @@ $result1 = mysqli_query($conn, $stmt1);
         <h2>REGISTER AS</h2>
         <div class="btn">
             <img src="../img/logs/farmer.png" alt="farmer">
-            <a href="/Mini%20project/sign%20up/register_farm_owner.php"><button>FARM OWNER</button></a>
+            <a href="../sign%20up/register_farm_owner.php"><button>FARM OWNER</button></a>
             <img src="../img/logs/customer.png" alt="customer">
-            <a href="/Mini%20project/sign%20up/register_customer.php"><button>CUSTOMER</button></a>
+            <a href="../sign%20up/register_customer.php"><button>CUSTOMER</button></a>
             <img src="../img/logs/delivery.png" alt="delivery">
-            <a href="/Mini%20project/sign%20up/register_delivery_boy.php"><button>DELIVERY BOY</button></a>
+            <a href="../sign%20up/register_delivery_boy.php"><button>DELIVERY BOY</button></a>
         </div>
     </div>
     <script>
