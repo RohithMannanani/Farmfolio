@@ -12,7 +12,7 @@ session_start();
 </head>
 <body>
     <div class="home-button-container">
-        <a href="http://localhost/mini%20project/home/html5up-dimension/index.html" class="home-button">Home</a>
+        <a href="../../html5up-dimension/index.html" class="home-button">Home</a>
     </div>
 
     <div class="left-container">
