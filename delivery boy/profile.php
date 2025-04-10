@@ -627,7 +627,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
         <div class="user-section">
              <span>Welcome, <?php echo ucfirst($_SESSION['username']);?></span>
-            <button class="logout-btn" onclick="window.location.href='http://localhost/mini%20project/logout/logout.php'"><i class="fas fa-sign-out-alt"  ></i> Logout</button>
+            <button class="logout-btn" onclick="window.location.href='../logout/logout.php'"><i class="fas fa-sign-out-alt"  ></i> Logout</button>
         </div>
     </header>
 

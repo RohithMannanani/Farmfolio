@@ -74,7 +74,7 @@ session_start();
                   $_SESSION['password']= $_POST["password"];
                   $_SESSION['type'] = 0;//0-custemer,1-farm,2-delivery 4-admin
                     // Redirect to login page
-                    header('Location: http://localhost/mini%20project/sign%20up/emailverify/send_reset_otp.php');
+                    header('Location: ../sign%20up/emailverify/send_reset_otp.php');
                     exit;
                 
             }
@@ -135,7 +135,7 @@ session_start();
         </form>
 
         <div class="login-link">
-            <p>Already have an account? <a href="http://localhost/Mini%20project/login/login.php">Login</a></p>
+            <p>Already have an account? <a href="../login/login.php">Login</a></p>
         </div>
     </div>
 

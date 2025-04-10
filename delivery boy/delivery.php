@@ -801,7 +801,7 @@ $current_deliveries_result = mysqli_query($conn, $current_deliveries_query);
         </div>
         <div class="user-section">
              <span>Welcome, <?php echo ucfirst($_SESSION['username']);?></span>
-            <button class="logout-btn" onclick="window.location.href='http://localhost/mini%20project/logout/logout.php'"><i class="fas fa-sign-out-alt"></i> Logout</button>
+            <button class="logout-btn" onclick="window.location.href='../logout/logout.php'"><i class="fas fa-sign-out-alt"></i> Logout</button>
         </div>
     </header>
 

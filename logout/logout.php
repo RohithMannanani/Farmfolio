@@ -20,7 +20,7 @@ if (isset($_COOKIE[session_name()]))
 session_destroy();
 
 // Redirect to login page
-header('Location: http://localhost/mini%20project/login/login.php');
+header('Location: ../login/login.php');
 exit();
 ?>
 3

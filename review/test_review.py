@@ -19,7 +19,7 @@ class TestReview():
     self.driver.quit()
   
   def test_review(self):
-    self.driver.get("http://localhost/mini%20project/login/login.php")
+    self.driver.get("../login/login.php")
     self.driver.set_window_size(1057, 803)
     self.driver.find_element(By.ID, "email").click()
     self.driver.find_element(By.ID, "email").send_keys("v7349603@gmail.com")

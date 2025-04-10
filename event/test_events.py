@@ -19,7 +19,7 @@ class TestEvents():
     self.driver.quit()
   
   def test_events(self):
-    self.driver.get("http://localhost/mini%20project/login/login.php")
+    self.driver.get("../login/login.php")
     self.driver.set_window_size(1055, 802)
     self.driver.find_element(By.ID, "email").click()
     self.driver.find_element(By.ID, "email").send_keys("rnairrohith17@gmail.com")

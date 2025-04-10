@@ -19,7 +19,7 @@ if ($conn->connect_error) {
             
             if ($conn->query($sql) === TRUE) {
                 $_SESSION['success_message'] = "Your password has been successfully updated!";
-                header('Location: http://localhost/mini%20project/login/login.php ');
+                header('Location: ../login/login.php ');
                 unset($_SESSION['email']);  
                 exit();
             } else {

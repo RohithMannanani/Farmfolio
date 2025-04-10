@@ -2,7 +2,7 @@
 session_start();
 include '../databse/connect.php';
 if(!isset($_SESSION['username'])){
-    header('location: http://localhost/mini%20project/login/login.php');
+    header('location: ../login/login.php');
 }
 // After successfully inserting farm data and getting the farm_id
 if (isset($_POST['selected_categories']) && is_array($_POST['selected_categories'])) {
@@ -119,13 +119,13 @@ if (isset($_POST['selected_categories']) && is_array($_POST['selected_categories
                 <h1><?php echo $row['farm_name'];?></h1>
                 <div class="user-section">
                     <span>Welcome, <?php echo $_SESSION['username'];?></span>
-                    <a href="http://localhost/mini%20project/logout/logout.php"><button class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</button></a>
+                    <a href="../logout/logout.php"><button class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</button></a>
                 </div>
                 <?php }else{?>
                     <h1>Farm Dashboard</h1>
                 <div class="user-section">
                     <span>Welcome,</span>
-                    <a href="http://localhost/mini%20project/logout/logout.php"><button class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</button></a>
+                    <a href="../logout/logout.php"><button class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</button></a>
                 </div><?php }?>
             </div>
     <div class="container">

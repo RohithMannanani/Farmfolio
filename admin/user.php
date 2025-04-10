@@ -2,7 +2,7 @@
 session_start();
 include '../databse/connect.php';
 if(!isset($_SESSION['type'])){
-    header('location: http://localhost/mini%20project/login/login.php');
+    header('location: ../login/login.php');
 }
 // listed users
 $stmt = "SELECT tbl_signup.username,tbl_signup.email,tbl_signup.mobile,tbl_signup.state,tbl_signup.district,tbl_login.type  FROM tbl_signup INNER JOIN tbl_login  ON tbl_signup.userid=tbl_login.userid AND tbl_login.type IN (0, 1, 2)";
@@ -182,7 +182,7 @@ $result = mysqli_query($conn, $stmt);
             <!-- <button class="icon-btn" data-tooltip="Notifications"><i class="fas fa-bell"></i></button>
             <button class="icon-btn" data-tooltip="Messages"><i class="fas fa-envelope"></i></button>
             <button class="icon-btn" data-tooltip="Profile"><i class="fas fa-user-circle"></i></button> -->
-            <button class="logout-btn" onclick="window.location.href='http://localhost/mini%20project/logout/logout.php'">Logout</button>
+            <button class="logout-btn" onclick="window.location.href='../logout/logout.php'">Logout</button>
         </div>
     </header>
 

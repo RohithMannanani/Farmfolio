@@ -27,7 +27,7 @@ if(isset($_POST['submit'])) {
         }
         
         $_SESSION['success_message'] = "Farm registered successfully!";
-        header("Location: http://localhost/mini%20project/farm/farm.php");
+        header("Location: ../farm/farm.php");
         exit();
     } else {
         echo "<script>alert('Error registering farm: " . mysqli_error($conn) . "');</script>";
@@ -132,13 +132,13 @@ if(isset($_POST['submit'])) {
                 <h1><?php echo $row['farm_name'];?>Farm</h1>
                 <div class="user-section">
                     <span>Welcome, <?php echo $_SESSION['username'];?></span>
-                    <a href="http://localhost/mini%20project/logout/logout.php"><button class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</button></a>
+                    <a href="../logout/logout.php"><button class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</button></a>
                 </div>
                 <?php }else{?>
                     <h1>Farm Dashboard</h1>
                 <div class="user-section">
                     <span>Welcome,</span>
-                    <a href="http://localhost/mini%20project/logout/logout.php"><button class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</button></a>
+                    <a href="../logout/logout.php"><button class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</button></a>
                 </div><?php }?>
             </div>
     <div class="container">

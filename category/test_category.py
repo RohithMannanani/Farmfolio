@@ -19,7 +19,7 @@ class TestCategory():
     self.driver.quit()
   
   def test_category(self):
-    self.driver.get("http://localhost/mini%20project/login/login.php")
+    self.driver.get("../login/login.php")
     self.driver.set_window_size(1058, 804)
     self.driver.find_element(By.ID, "email").click()
     self.driver.find_element(By.ID, "email").send_keys("farmfoliomin@gmail.com")

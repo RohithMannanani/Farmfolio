@@ -19,7 +19,7 @@ class TestPayment():
     self.driver.quit()
   
   def test_payment(self):
-    self.driver.get("http://localhost/mini%20project/login/login.php")
+    self.driver.get("../login/login.php")
     self.driver.set_window_size(1057, 803)
     self.driver.find_element(By.ID, "email").click()
     self.driver.find_element(By.ID, "email").click()

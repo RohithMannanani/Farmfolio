@@ -12,7 +12,7 @@ session_start();
 </head>
 <body>
     <div class="home-button-container">
-        <a href="http://localhost/mini%20project/home/html5up-dimension/index.html" class="home-button">Home</a>
+        <a href="../home/html5up-dimension/index.html" class="home-button">Home</a>
     </div>
 
     <div class="left-container">
@@ -74,7 +74,7 @@ session_start();
                   $_SESSION['password']= $_POST["password"];
                   $_SESSION['type'] = 2;//0-custemer,1-farm,2-delivery 4-admin
                     // Redirect to login page
-                    header('Location: http://localhost/mini%20project/sign%20up/emailverify/send_reset_otp.php');
+                    header('Location: ../sign%20up/emailverify/send_reset_otp.php');
                     exit;
                 
             }
@@ -135,7 +135,7 @@ session_start();
         </form>
 
         <div class="login-link">
-            <p>Already have an account? <a href="http://localhost/Mini%20project/login/login.php">Login</a></p>
+            <p>Already have an account? <a href="../login/login.php">Login</a></p>
         </div>
     </div>
 

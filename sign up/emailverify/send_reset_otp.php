@@ -85,16 +85,16 @@ if (isset($_POST['verify'])) {
                 $conn->commit();
                 switch ($_SESSION['type']) {
                     case 0 :
-                        header('Location: http://localhost/Mini%20project/user/userindex.php');
+                        header('Location: ../user/userindex.php');
                         break;
                     case 2:
-                        header('Location: http://localhost/Mini%20project/delivery%20boy/delivery.php');
+                        header('Location: ../delivery%20boy/delivery.php');
                         break;
                     case 1 :
-                        header('Location: http://localhost/Mini%20project/farm/f.php');
+                        header('Location: ../farm/f.php');
                         break;
                     case 4 :
-                        header('Location: http://localhost/Mini%20project/admin/admin.php');
+                        header('Location: ../admin/admin.php');
                         break;
                     default:
                         echo "Invalid user type.";

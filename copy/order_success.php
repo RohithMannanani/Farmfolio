@@ -1,7 +1,7 @@
 <?php
 session_start();
 if(!isset($_SESSION['username'])){
-    header('location: http://localhost/mini%20project/login/login.php');
+    header('location: ../login/login.php');
 }
 
 $orderId = isset($_GET['order_id']) ? intval($_GET['order_id']) : 0;

@@ -2,7 +2,7 @@
 session_start();
 include '../databse/connect.php';
 if(!isset($_SESSION['type'])){
-    header('location: http://localhost/mini%20project/login/login.php');
+    header('location: ../login/login.php');
 }
 
 // Handle form submission for adding category
@@ -430,7 +430,7 @@ $categories_result = mysqli_query($conn, $categories_query);
             <!-- <button class="icon-btn" data-tooltip="Notifications"><i class="fas fa-bell"></i></button>
             <button class="icon-btn" data-tooltip="Messages"><i class="fas fa-envelope"></i></button>
             <button class="icon-btn" data-tooltip="Profile"><i class="fas fa-user-circle"></i></button> -->
-            <button class="logout-btn" onclick="window.location.href='http://localhost/mini%20project/logout/logout.php'">Logout</button>
+            <button class="logout-btn" onclick="window.location.href='../logout/logout.php'">Logout</button>
         </div>
     </header>
 

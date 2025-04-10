@@ -126,7 +126,7 @@ echo "Error updating profile: " . $query->error;
 </head>
 <body>
     <div class="home-button-container">
-        <a href="http://localhost/mini%20project/home/html5up-dimension/index.html" class="home-button">Home</a>
+        <a href="../home/html5up-dimension/index.html" class="home-button">Home</a>
     </div>
 
     <div class="left-container">

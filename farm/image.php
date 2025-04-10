@@ -4,7 +4,7 @@ include '../databse/connect.php';
 
 // Check if user is logged in and has an active farm
 if(!isset($_SESSION['userid'])) {
-    header('location: http://localhost/mini%20project/login/login.php');
+    header('location: ../login/login.php');
     exit();
 }
 

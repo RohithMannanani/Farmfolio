@@ -3,7 +3,7 @@ session_start();
 include '../databse/connect.php';
 
 if(!isset($_SESSION['username'])){
-    header('location: http://localhost/mini%20project/login/login.php');
+    header('location: ../login/login.php');
 }
 ?>
 <!DOCTYPE html>
@@ -760,7 +760,7 @@ if(!isset($_SESSION['username'])){
                         <p class="profile-name"><?php echo $_SESSION['username'];?></p>
                         <p class="profile-email"><?php echo $_SESSION['email'];?></p>
                         </div>
-                        <button class="popup-logout-btn"  onclick="window.location.href='http://localhost/mini%20project/logout/logout.php'">
+                        <button class="popup-logout-btn"  onclick="window.location.href='../logout/logout.php'">
                             <i class="fas fa-sign-out-alt"></i> Logout
                         </button>
                     </div>

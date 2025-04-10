@@ -2,7 +2,7 @@
 session_start();
 include '../databse/connect.php';
 if(!isset($_SESSION['type'])){
-    header('location: http://localhost/mini%20project/login/login.php');
+    header('location: ../login/login.php');
 }
 
 // Fetch all products with farm and category details
@@ -430,7 +430,7 @@ $products_result = mysqli_query($conn, $products_query);
         <div class="head"><h1>🌱 FarmFolio</h1></div>
         <div class="admin-controls">
             <h2>Welcome, Admin</h2>
-            <button class="logout-btn" onclick="window.location.href='http://localhost/mini%20project/logout/logout.php'">Logout</button>
+            <button class="logout-btn" onclick="window.location.href='../logout/logout.php'">Logout</button>
         </div>
     </header>
 

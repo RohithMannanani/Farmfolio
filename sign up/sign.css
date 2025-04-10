@@ -12,7 +12,7 @@ body {
     min-height: 100vh;
     background: #f0fdf4;
     overflow: auto;
-    background-image: url('http://localhost/mini%20project/sign%20up/farm.jpeg');
+    background-image: url('../sign%20up/farm.jpeg');
     background-size: cover;
     background-repeat: no-repeat;
     background-position: center;

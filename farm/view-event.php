@@ -186,13 +186,13 @@ $participants_result = $stmt->get_result();
                 <h1><?php echo $row['farm_name'];?>Farm</h1>
                 <div class="user-section">
                     <span>Welcome, <?php echo $_SESSION['username'];?></span>
-                    <a href="http://localhost/mini%20project/logout/logout.php"><button class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</button></a>
+                    <a href="../logout/logout.php"><button class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</button></a>
                 </div>
                 <?php }else{?>
                     <h1>Farm Dashboard</h1>
                 <div class="user-section">
                     <span>Welcome,</span>
-                    <a href="http://localhost/mini%20project/logout/logout.php"><button class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</button></a>
+                    <a href="../logout/logout.php"><button class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</button></a>
                 </div><?php }?>
             </div>
         <?php if($is_farm_active): ?>

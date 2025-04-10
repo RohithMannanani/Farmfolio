@@ -2,7 +2,7 @@
 session_start();
 include '../databse/connect.php';
 if(!isset($_SESSION['username'])){
-    header('location: http://localhost/mini%20project/login/login.php');
+    header('location: ../login/login.php');
 }
 
 // Check farm status
@@ -201,7 +201,7 @@ if($is_farm_active) {
                 <h1><?php echo $row['farm_name'];?></h1>
                 <div class="user-section">
                     <span>Welcome, <?php echo $_SESSION['username'];?></span>
-                    <a href="http://localhost/mini%20project/logout/logout.php">
+                    <a href="../logout/logout.php">
                         <button class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</button>
                     </a>
                 </div>
@@ -209,7 +209,7 @@ if($is_farm_active) {
                 <h1>Farm Dashboard</h1>
                 <div class="user-section">
                     <span>Welcome,</span>
-                    <a href="http://localhost/mini%20project/logout/logout.php">
+                    <a href="../logout/logout.php">
                         <button class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</button>
                     </a>
                 </div>

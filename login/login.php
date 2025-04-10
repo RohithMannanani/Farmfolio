@@ -38,16 +38,16 @@ $result1 = mysqli_query($conn, $stmt1);
             // Redirect based on user type
             switch ($type) {
                 case 0 :
-                    header('Location: http://localhost/Mini%20project/user/userindex.php');
+                    header('Location: ../user/userindex.php');
                     break;
                 case 2:
-                    header('Location: http://localhost/Mini%20project/delivery%20boy/delivery.php');
+                    header('Location: ../delivery%20boy/delivery.php');
                     break;
                 case 1 :
-                    header('Location: http://localhost/Mini%20project/farm/farm.php');
+                    header('Location: ../farm/farm.php');
                     break;
                 case 4 :
-                    header('Location: http://localhost/Mini%20project/admin/admin.php');
+                    header('Location: ../admin/admin.php');
                     break;
                 default:
                     echo "Invalid user type.";
